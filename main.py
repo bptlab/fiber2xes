@@ -17,10 +17,10 @@ def timestamp_from_birthdate_and_age(date, age_in_days):
 
 def log_from_cohort(cohort):
     # get necessary data from cohort
-    encounters = cohort.get(Encounter(), limit=3)  # remove limit!
-    diagnoses = cohort.get(Diagnosis(), limit=3)
-    patients = cohort.get(Patient(), limit=3)
-    procedure = cohort.get(Procedure(), limit=3)
+    encounters = cohort.get(Encounter())  # remove limit!
+    diagnoses = cohort.get(Diagnosis())
+    patients = cohort.get(Patient())
+    procedure = cohort.get(Procedure())
 
     # join all facts together into one dataframe
     patient_encounters = pd.merge(patients, encounters,
@@ -33,8 +33,29 @@ def log_from_cohort(cohort):
     facts = pd.concat(
         [patient_encounters, patient_digagnoses, patient_procedures], ignore_index=True, sort=False)
 
+    # encounters = cohort.get(Encounter(), Diagnosis(), Procedure(), Patient(), limit=3)
+
+    facts = pd.merge(patients, encounters,
+                     on='medical_record_number', how='outer')
+    facts = pd.merge(facts, diagnoses, on='medical_record_number', how='outer')
+    facts = pd.merge(facts, procedure, on='medical_record_number', how='outer')
+
+    facts.drop('gender', axis=1, inplace=True)
+    facts.drop('religion', axis=1, inplace=True)
+    facts.drop('race', axis=1, inplace=True)
+    facts.drop('patient_ethnic_group', axis=1, inplace=True)
+    facts.drop('deceased_indicator', axis=1, inplace=True)
+    facts.drop('mother_account_number', axis=1, inplace=True)
+    facts.drop('address_zip', axis=1, inplace=True)
+    facts.drop('marital_status_code', axis=1, inplace=True)
+    facts.drop('begin_date_age_in_days', axis=1, inplace=True)
+    facts.drop('end_date_age_in_days', axis=1, inplace=True)
+
     facts['timestamp'] = facts.apply(lambda row: timestamp_from_birthdate_and_age(
         row.date_of_birth, row.age_in_days), axis=1)
+
+    facts.sort_values(['medical_record_number', 'timestamp'],
+                      ascending=[False, True])
 
     # create log
     log = XFactory.create_log()
