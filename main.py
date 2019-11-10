@@ -17,28 +17,16 @@ def timestamp_from_birthdate_and_age(date, age_in_days):
 
 def log_from_cohort(cohort):
     # get necessary data from cohort
-    encounters = cohort.get(Encounter())  # remove limit!
-    diagnoses = cohort.get(Diagnosis())
     patients = cohort.get(Patient())
-    procedure = cohort.get(Procedure())
+    events = cohort.get(Encounter(), Diagnosis(), Procedure())
 
-    # join all facts together into one dataframe
-    patient_encounters = pd.merge(patients, encounters,
-                                  on='medical_record_number', how='outer')
-    patient_digagnoses = pd.merge(
-        patients, diagnoses, on='medical_record_number', how='outer')
-    patient_procedures = pd.merge(
-        patients, procedure, on='medical_record_number', how='outer')
+    # join patients and events
+    facts = pd.merge(patients, events, on='medical_record_number', how='outer')
 
-    facts = pd.concat(
-        [patient_encounters, patient_digagnoses, patient_procedures], ignore_index=True, sort=False)
+    facts['timestamp'] = facts.apply(lambda row: timestamp_from_birthdate_and_age(
+        row.date_of_birth, row.age_in_days), axis=1)
 
-    # encounters = cohort.get(Encounter(), Diagnosis(), Procedure(), Patient(), limit=3)
-
-    facts = pd.merge(patients, encounters,
-                     on='medical_record_number', how='outer')
-    facts = pd.merge(facts, diagnoses, on='medical_record_number', how='outer')
-    facts = pd.merge(facts, procedure, on='medical_record_number', how='outer')
+    pd.to_datetime(facts.timestamp, errors='coerce')
 
     facts.drop('gender', axis=1, inplace=True)
     facts.drop('religion', axis=1, inplace=True)
@@ -51,11 +39,9 @@ def log_from_cohort(cohort):
     facts.drop('begin_date_age_in_days', axis=1, inplace=True)
     facts.drop('end_date_age_in_days', axis=1, inplace=True)
 
-    facts['timestamp'] = facts.apply(lambda row: timestamp_from_birthdate_and_age(
-        row.date_of_birth, row.age_in_days), axis=1)
-
-    facts.sort_values(['medical_record_number', 'timestamp'],
-                      ascending=[False, True])
+    facts = facts.sort_values(['medical_record_number', 'timestamp'],
+                              ascending=[False, True])
+    display(facts)
 
     # create log
     log = XFactory.create_log()
@@ -68,14 +54,29 @@ def log_from_cohort(cohort):
             # https://github.com/opyenxes/OpyenXes
 
             # https://github.com/maxsumrall/xes
-            # When is diagnosis the event? When is encounter the event? When is procedure the event?
+
+            """ 
+                When is diagnosis the event? When is encounter the event? When is procedure the event?
+
+                context_procedure_code = MSDW_NOT_APPLICABLE
+                context_diagnosis_code = MSDW_NOT_APPLICABLE
+                -> encounter_type is event
+
+                encounter_type set
+                context_diagnosis_code = MSDW_NOT_APPLICABLE | context_diagnosis_code = MSDW_UNKNOWN
+                context_procedure_code set
+                ->  procedure is event
+
+                encounter_type set
+                context_procedure_code = MSDW_NOT_APPLICABLE
+                context_diagnosis_code set
+                -> diagnosis is event 
+            """
 
             # Create timestamp attribute
             patient_date = patient_fact["timestamp"]
             timestamp = datetime.datetime(
                 patient_date.year, patient_date.month, patient_date.day, 0, 1).timestamp()
-            print(timestamp)
-            print(patient_fact["timestamp"])
 
             # Add timestamp to event
 
@@ -84,5 +85,4 @@ def log_from_cohort(cohort):
         # Append trace to log
 
     print(log)
-
     return log  # Todo: make this XES file
