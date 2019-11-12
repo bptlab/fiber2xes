@@ -18,6 +18,10 @@ def timestamp_from_birthdate_and_age(date, age_in_days):
 def log_from_cohort(cohort):
     # get necessary data from cohort
     patients = cohort.get(Patient())
+    # TODO:
+    # This does not take any kind of filtering into account.
+    # All encounters, diagnoses, procedures for all patients belonging to the cohort
+    # are considered, regardless of whether they are relevant to the case or not.
     events = cohort.get(Encounter(), Diagnosis(), Procedure())
 
     # join patients and events
