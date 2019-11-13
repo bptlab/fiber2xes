@@ -15,78 +15,113 @@ def timestamp_from_birthdate_and_age(date, age_in_days):
         return date + datetime.timedelta(days=age_in_days)
 
 
+def get_encounters_per_patient(patients, encounters):
+    patient_mrns = patients.medical_record_number.unique()
+    encounters_per_patient = {}
+    for mrn in patient_mrns:
+        encounters_for_patient = {}
+        all_encounters_for_patient = encounters[(
+            encounters.medical_record_number == mrn)]
+        for index, encounter in all_encounters_for_patient.iterrows():
+            if encounter['timestamp'] in encounters_for_patient:
+                if encounter['timestamp_end'] > encounters_for_patient[encounter['timestamp']]['end_timestamp']:
+                    encounters_for_patient[encounter['timestamp']] = {
+                        "begin_timestamp": encounter['timestamp'],
+                        "end_timestamp": encounter['timestamp_end'],
+                        "mrn": encounter['medical_record_number']}
+            else:
+                encounters_for_patient[encounter['timestamp']] = {
+                    "begin_timestamp": encounter['timestamp'],
+                    "end_timestamp": encounter['timestamp_end'],
+                    "mrn": encounter['medical_record_number']
+                }
+        encounters_per_patient[mrn] = encounters_for_patient
+    return encounters_per_patient
+
+
+def get_patient_events(patients, events):
+    # join patients and events
+    patient_events = pd.merge(
+        patients, events, on='medical_record_number', how='outer')
+
+    patient_events['timestamp'] = patient_events.apply(lambda row: timestamp_from_birthdate_and_age(
+        row.date_of_birth, row.age_in_days), axis=1)
+
+    pd.to_datetime(patient_events.timestamp, errors='coerce')
+    return patient_events
+
+
+def get_patient_encounters(patients, encounters):
+    # join encounters and encounters
+    patient_encounters = pd.merge(
+        patients, encounters, on='medical_record_number', how='outer')
+
+    patient_encounters['timestamp'] = patient_encounters.apply(lambda row: timestamp_from_birthdate_and_age(
+        row.date_of_birth, row.age_in_days), axis=1)
+
+    patient_encounters['timestamp_end'] = patient_encounters.apply(lambda row: timestamp_from_birthdate_and_age(
+        row.timestamp, row.end_date_age_in_days), axis=1)
+
+    pd.to_datetime(patient_encounters.timestamp, errors='coerce')
+    return patient_encounters
+
+
 def log_from_cohort(cohort):
     # get necessary data from cohort
     patients = cohort.get(Patient())
-    # TODO:
-    # This does not take any kind of filtering into account.
-    # All encounters, diagnoses, procedures for all patients belonging to the cohort
-    # are considered, regardless of whether they are relevant to the case or not.
-    events = cohort.get(Encounter(), Diagnosis(), Procedure())
+    encounters = cohort.get(Encounter())
+    events = cohort.get(Diagnosis(), Procedure())
 
-    # join patients and events
-    facts = pd.merge(patients, events, on='medical_record_number', how='outer')
+    patient_events = get_patient_events(patients, events)
 
-    facts['timestamp'] = facts.apply(lambda row: timestamp_from_birthdate_and_age(
-        row.date_of_birth, row.age_in_days), axis=1)
+    patient_encounters = get_patient_encounters(patients, encounters)
 
-    pd.to_datetime(facts.timestamp, errors='coerce')
+    patient_encounter_buckets = get_encounters_per_patient(
+        patients, patient_encounters)
 
-    facts.drop('gender', axis=1, inplace=True)
-    facts.drop('religion', axis=1, inplace=True)
-    facts.drop('race', axis=1, inplace=True)
-    facts.drop('patient_ethnic_group', axis=1, inplace=True)
-    facts.drop('deceased_indicator', axis=1, inplace=True)
-    facts.drop('mother_account_number', axis=1, inplace=True)
-    facts.drop('address_zip', axis=1, inplace=True)
-    facts.drop('marital_status_code', axis=1, inplace=True)
-    facts.drop('begin_date_age_in_days', axis=1, inplace=True)
-    facts.drop('end_date_age_in_days', axis=1, inplace=True)
+    print("encounters per patient buckets")
+    print(patient_encounter_buckets)
 
-    facts = facts.sort_values(['medical_record_number', 'timestamp'],
-                              ascending=[False, True])
-    display(facts)
+    """
+    get list of encounters with start/end date, mrn from patient_encounters
+    for each unique medical record number of patients:
+    get list of encounters for patient
+    get procedures, diagnoses of patient_events for MRN
+    for each encounter, fill encounter_events with events that fit into encounter duration (and match condition)
+    fill trace with encounters of a patient per trace
+    """
+
+    """
+        Encounter -> Case
+        1. Get encounters for a patient
+        2. Get procedures, diagnoses that happened for patient in timespan of encounter
+        3. If one procedure/diagnosis of encounter matches condition
+                -> Encounter (+ procedures/diagnoses) is part of case
+    """
+
+    """
+        When is diagnosis the event? When is encounter the event? When is procedure the event?
+
+        context_procedure_code = MSDW_NOT_APPLICABLE
+        context_diagnosis_code = MSDW_NOT_APPLICABLE
+        -> encounter_type is event
+
+        encounter_type set
+        context_diagnosis_code = MSDW_NOT_APPLICABLE | context_diagnosis_code = MSDW_UNKNOWN
+        context_procedure_code set
+        ->  procedure is event
+
+        encounter_type set
+        context_procedure_code = MSDW_NOT_APPLICABLE
+        context_diagnosis_code set
+        -> diagnosis is event
+    """
 
     # create log
+    # https://github.com/opyenxes/OpyenXes/blob/master/example/Create_random_log.py
+    # https://github.com/opyenxes/OpyenXes
+
+    # https://github.com/maxsumrall/xes
     log = XFactory.create_log()
 
-    facts_per_patient = dict(tuple(facts.groupby('medical_record_number')))
-    for mrn, patient_facts in facts_per_patient.items():
-        trace = XFactory.create_trace()
-        for index, patient_fact in patient_facts.iterrows():
-            # https://github.com/opyenxes/OpyenXes/blob/master/example/Create_random_log.py
-            # https://github.com/opyenxes/OpyenXes
-
-            # https://github.com/maxsumrall/xes
-
-            """ 
-                When is diagnosis the event? When is encounter the event? When is procedure the event?
-
-                context_procedure_code = MSDW_NOT_APPLICABLE
-                context_diagnosis_code = MSDW_NOT_APPLICABLE
-                -> encounter_type is event
-
-                encounter_type set
-                context_diagnosis_code = MSDW_NOT_APPLICABLE | context_diagnosis_code = MSDW_UNKNOWN
-                context_procedure_code set
-                ->  procedure is event
-
-                encounter_type set
-                context_procedure_code = MSDW_NOT_APPLICABLE
-                context_diagnosis_code set
-                -> diagnosis is event 
-            """
-
-            # Create timestamp attribute
-            patient_date = patient_fact["timestamp"]
-            timestamp = datetime.datetime(
-                patient_date.year, patient_date.month, patient_date.day, 0, 1).timestamp()
-
-            # Add timestamp to event
-
-            # Add event to trace
-
-        # Append trace to log
-
-    print(log)
     return log  # Todo: make this XES file
