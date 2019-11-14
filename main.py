@@ -3,9 +3,9 @@ import numpy as np
 import datetime
 import time
 import math
-from opyenxes.factory.XFactory import XFactory
-from opyenxes.id.XIDFactory import XIDFactory
-from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
+# from opyenxes.factory.XFactory import XFactory
+# from opyenxes.id.XIDFactory import XIDFactory
+# from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
 
 
 def timestamp_from_birthdate_and_age(date, age_in_days):
@@ -137,6 +137,14 @@ def log_from_cohort(cohort):
     encounters = cohort.get(Encounter())
     events = cohort.get(Diagnosis(), Procedure())
 
+    """
+    Encounter -> Case
+    1. Get encounters for a patient
+    2. Get procedures, diagnoses that happened for patient in timespan of encounter
+    3. If one procedure/diagnosis of encounter matches condition
+            -> Encounter (+ procedures/diagnoses) is part of case
+    """
+
     patient_events = get_patient_events(patients, events)
 
     patient_encounters = get_patient_encounters(patients, encounters)
@@ -151,13 +159,5 @@ def log_from_cohort(cohort):
         encounter_events_per_patient, "")
 
     log = create_log_from_filtered_encounter_events(filtered_encounter_events)
-
-    """
-        Encounter -> Case
-        1. Get encounters for a patient
-        2. Get procedures, diagnoses that happened for patient in timespan of encounter
-        3. If one procedure/diagnosis of encounter matches condition
-                -> Encounter (+ procedures/diagnoses) is part of case
-    """
 
     return log  # Todo: make this XES file
