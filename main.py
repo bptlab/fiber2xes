@@ -66,6 +66,71 @@ def get_patient_encounters(patients, encounters):
     return patient_encounters
 
 
+def get_encounter_event_per_patient(patients, patient_encounter_buckets, events):
+    patient_mrns = patients.medical_record_number.unique()
+    encounter_events_per_patient = {}
+    for mrn in patient_mrns:
+        patient_encounters = patient_encounter_buckets[mrn]
+        patient_events = events[(
+            events.medical_record_number == mrn)]
+        patient_events_per_encounter = {}
+        for encounter_begin_date in patient_encounters:
+            encounter_end_date = patient_encounters[encounter_begin_date]['end_timestamp']
+            for index, event in patient_events.iterrows():
+                if (event.timestamp == encounter_begin_date and event.timestamp < encounter_end_date) or (event.timestamp > encounter_begin_date and event.timestamp < encounter_end_date) or (event.timestamp > encounter_begin_date and event.timestamp == encounter_end_date) or (event.timestamp == encounter_begin_date and event.timestamp == encounter_end_date):
+                    existing_events_per_encounter = patient_events_per_encounter.get(
+                        encounter_begin_date)
+                    if existing_events_per_encounter is None:
+                        existing_events_per_encounter = [event]
+                    else:
+                        existing_events_per_encounter = existing_events_per_encounter + \
+                            [event]
+                    patient_events_per_encounter[encounter_begin_date] = existing_events_per_encounter
+        encounter_events_per_patient[mrn] = patient_events_per_encounter
+    return encounter_events_per_patient
+
+
+def filter_encounter_events(encounter_events, condition):
+    # iterate over MRN
+    # iterate over encounter
+    # iterate over events
+    # if no event matches description, drop encounter
+    return encounter_events
+
+
+def create_log_from_filtered_encounter_events(filtered_encounter_events):
+    # iterate over MRN
+    # iterate over encounter
+    # create trace per encounter
+    # translate events to proper types
+    # add events of encounter to trace
+
+    # create log
+    # https://github.com/opyenxes/OpyenXes/blob/master/example/Create_random_log.py
+    # https://github.com/opyenxes/OpyenXes
+
+    # https://github.com/maxsumrall/xes
+    # log = XFactory.create_log()
+    return ""
+
+
+def translate_procedure_diagnosis_to_event():
+    """
+    When is diagnosis the event? When is procedure the event?
+
+    encounter_type set
+    context_diagnosis_code = MSDW_NOT_APPLICABLE | context_diagnosis_code = MSDW_UNKNOWN
+    context_procedure_code set
+    ->  procedure is event
+
+    encounter_type set
+    context_procedure_code = MSDW_NOT_APPLICABLE
+    context_diagnosis_code set
+    -> diagnosis is event
+    """
+    return ""
+
+
 def log_from_cohort(cohort):
     # get necessary data from cohort
     patients = cohort.get(Patient())
@@ -79,17 +144,13 @@ def log_from_cohort(cohort):
     patient_encounter_buckets = get_encounters_per_patient(
         patients, patient_encounters)
 
-    print("encounters per patient buckets")
-    print(patient_encounter_buckets)
+    encounter_events_per_patient = get_encounter_event_per_patient(
+        patients, patient_encounter_buckets, patient_events)
 
-    """
-    get list of encounters with start/end date, mrn from patient_encounters
-    for each unique medical record number of patients:
-    get list of encounters for patient
-    get procedures, diagnoses of patient_events for MRN
-    for each encounter, fill encounter_events with events that fit into encounter duration (and match condition)
-    fill trace with encounters of a patient per trace
-    """
+    filtered_encounter_events = filter_encounter_events(
+        encounter_events_per_patient, "")
+
+    log = create_log_from_filtered_encounter_events(filtered_encounter_events)
 
     """
         Encounter -> Case
@@ -98,30 +159,5 @@ def log_from_cohort(cohort):
         3. If one procedure/diagnosis of encounter matches condition
                 -> Encounter (+ procedures/diagnoses) is part of case
     """
-
-    """
-        When is diagnosis the event? When is encounter the event? When is procedure the event?
-
-        context_procedure_code = MSDW_NOT_APPLICABLE
-        context_diagnosis_code = MSDW_NOT_APPLICABLE
-        -> encounter_type is event
-
-        encounter_type set
-        context_diagnosis_code = MSDW_NOT_APPLICABLE | context_diagnosis_code = MSDW_UNKNOWN
-        context_procedure_code set
-        ->  procedure is event
-
-        encounter_type set
-        context_procedure_code = MSDW_NOT_APPLICABLE
-        context_diagnosis_code set
-        -> diagnosis is event
-    """
-
-    # create log
-    # https://github.com/opyenxes/OpyenXes/blob/master/example/Create_random_log.py
-    # https://github.com/opyenxes/OpyenXes
-
-    # https://github.com/maxsumrall/xes
-    log = XFactory.create_log()
 
     return log  # Todo: make this XES file
