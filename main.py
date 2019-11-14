@@ -8,6 +8,9 @@ from opyenxes.id.XIDFactory import XIDFactory
 from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
 from datetime import datetime as dt
 
+# TODO: investigate empty traces
+# TODO: add filtering based on condition
+
 
 def timestamp_from_birthdate_and_age(date, age_in_days):
     if math.isnan(age_in_days):
@@ -91,6 +94,7 @@ def get_encounter_event_per_patient(patients, patient_encounter_buckets, events)
     return encounter_events_per_patient
 
 
+# TODO: Implement filtering based on condition
 def filter_encounter_events(encounter_events, condition):
     # iterate over MRN
     # iterate over encounter
@@ -106,12 +110,6 @@ def create_log_from_filtered_encounter_events(filtered_encounter_events):
     # translate events to proper types
     # add events of encounter to trace
 
-    # create log
-    # https://github.com/opyenxes/OpyenXes/blob/master/example/Create_random_log.py
-    # https://github.com/opyenxes/OpyenXes
-
-    # https://github.com/maxsumrall/xes
-
     log = XFactory.create_log()
     for mrn in filtered_encounter_events:
         encounter_id = 0
@@ -123,7 +121,6 @@ def create_log_from_filtered_encounter_events(filtered_encounter_events):
             trace.get_attributes()["id"] = id_attribute
             encounter_id = encounter_id + 1
 
-            # if encounter contains filtered-in events:
             for event in filtered_encounter_events[mrn][encounter]:
                 event_descriptor = translate_procedure_diagnosis_to_event(
                     event.context_diagnosis_code, event.context_procedure_code)
@@ -196,4 +193,9 @@ def log_from_cohort(cohort):
 
     log = create_log_from_filtered_encounter_events(filtered_encounter_events)
 
-    return log  # Todo: make this XES file
+    return log
+
+
+def save_log_to_file(log):
+    with open("event_log.xes" "w") as file:
+        XesXmlSerializer().serialize(log, file)
