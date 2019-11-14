@@ -3,9 +3,10 @@ import numpy as np
 import datetime
 import time
 import math
-# from opyenxes.factory.XFactory import XFactory
-# from opyenxes.id.XIDFactory import XIDFactory
-# from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
+from opyenxes.factory.XFactory import XFactory
+from opyenxes.id.XIDFactory import XIDFactory
+from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
+from datetime import datetime as dt
 
 
 def timestamp_from_birthdate_and_age(date, age_in_days):
@@ -110,11 +111,41 @@ def create_log_from_filtered_encounter_events(filtered_encounter_events):
     # https://github.com/opyenxes/OpyenXes
 
     # https://github.com/maxsumrall/xes
-    # log = XFactory.create_log()
-    return ""
+
+    log = XFactory.create_log()
+    for mrn in filtered_encounter_events:
+        encounter_id = 0
+        for encounter in filtered_encounter_events[mrn]:
+            trace = XFactory.create_trace()
+
+            id_attribute = XFactory.create_attribute_id(
+                "id", str(mrn) + "_" + str(encounter_id))
+            trace.get_attributes()["id"] = id_attribute
+            encounter_id = encounter_id + 1
+
+            # if encounter contains filtered-in events:
+            for event in filtered_encounter_events[mrn][encounter]:
+                event_descriptor = translate_procedure_diagnosis_to_event(
+                    event.context_diagnosis_code, event.context_procedure_code)
+                if event_descriptor is not None:
+                    log_event = XFactory.create_event()
+                    timestamp = event.timestamp
+
+                    timestamp_int = dt.combine(
+                        timestamp, dt.min.time())
+                    timestamp_attribute = XFactory.create_attribute_timestamp(
+                        "time:timestamp", timestamp_int)
+                    activity_attribute = XFactory.create_attribute_literal(
+                        "concept:name", event_descriptor)
+                    log_event.get_attributes(
+                    )["timestamp"] = timestamp_attribute
+                    log_event.get_attributes()["Activity"] = activity_attribute
+                    trace.append(log_event)
+            log.append(trace)
+    return log
 
 
-def translate_procedure_diagnosis_to_event():
+def translate_procedure_diagnosis_to_event(context_diagnosis_code, context_procedure_code):
     """
     When is diagnosis the event? When is procedure the event?
 
@@ -128,7 +159,12 @@ def translate_procedure_diagnosis_to_event():
     context_diagnosis_code set
     -> diagnosis is event
     """
-    return ""
+    if context_procedure_code != "MSDW_NOT APPLICABLE" and context_procedure_code != "MSDW_UNKNOWN":
+        return "PROCEDURE_" + context_procedure_code
+    elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
+        return "DIAGNOSIS_" + context_diagnosis_code
+    else:
+        return None
 
 
 def log_from_cohort(cohort):
