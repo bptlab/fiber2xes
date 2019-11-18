@@ -197,5 +197,5 @@ def log_from_cohort(cohort):
 
 
 def save_log_to_file(log):
-    with open("event_log.xes" "w") as file:
+    with open("event_log.xes", "w") as file:
         XesXmlSerializer().serialize(log, file)
