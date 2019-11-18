@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import csv
 import datetime
 import time
 import math
@@ -13,6 +14,7 @@ from fiber.condition import (
     Encounter,
     Measurement
 )
+import os
 from opyenxes.factory.XFactory import XFactory
 from opyenxes.id.XIDFactory import XIDFactory
 from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
@@ -135,6 +137,8 @@ class DrugWithTime(MaterialWithTime):
 # TODO: investigate empty traces
 # TODO: add filtering based on condition
 
+PROCEDURE_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-procedure.csv")
+DIAGNOSIS_ICD_10_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd10.csv")
 
 def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key):
     if math.isnan(age_in_days):
@@ -303,8 +307,13 @@ def create_log_from_filtered_encounter_events(filtered_encounter_events):
             encounter_id = encounter_id + 1
 
             for event in filtered_encounter_events[mrn][encounter]:
+                    context_diagnosis_name=event.context_name, 
+                    context_material_code=
                 event_descriptor = translate_procedure_diagnosis_material_to_event(
-                    event.context_diagnosis_code, event.context_procedure_code, event.context_material_code)
+                    context_diagnosis_code=event.context_diagnosis_code, 
+                    context_diagnosis_name=event.context_name, 
+                    context_material_code=event.context_material_code,
+                    context_procedure_code=event.context_procedure_code)
                 if event_descriptor is not None:
                     log_event = XFactory.create_event()
                     timestamp_int = event.timestamp
@@ -319,8 +328,15 @@ def create_log_from_filtered_encounter_events(filtered_encounter_events):
             log.append(trace)
     return log
 
+def vocabulary_lookup(vocabulary_path, search_term, search_column = 0, target_column = 1, delimiter = ","):
+    reader = csv.reader(open(vocabulary_path), delimiter=delimiter)
+    for row in reader:
+        if len(row) > search_column and len(row) > target_column:
+            if re.search("^" + search_term + "$", row[search_column], re.IGNORECASE) != None:
+                return row[target_column]
+    return None
 
-def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, context_procedure_code, context_material_code):
+def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, context_diagnosis_name, context_procedure_code, context_material_code):
     """
     When is diagnosis the event? When is procedure the event?
 
@@ -334,14 +350,42 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
     context_diagnosis_code set
     -> diagnosis is event
     """
+    
+    event_name = None
+    event_name_prefix = None
+
     if context_procedure_code != "MSDW_NOT APPLICABLE" and context_procedure_code != "MSDW_UNKNOWN":
-        return "PROCEDURE_" + str(context_procedure_code)
+        event_name_prefix = "PROCEDURE"
+        event_name = context_procedure_code
+        event_name = vocabulary_lookup(
+            vocabulary_path = PROCEDURE_VOCAB_PATH, 
+            search_term = str(context_procedure_code), 
+            search_column = 0, 
+            target_column = 1
+        )
     elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
-        return "DIAGNOSIS_" + str(context_diagnosis_code)
+        event_name_prefix = "DIAGNOSIS"
+        event_name = context_diagnosis_code
+        if context_diagnosis_name == "ICD-10":
+            event_name_prefix = "ICD-10"
+            event_name = vocabulary_lookup(
+                vocabulary_path = DIAGNOSIS_ICD_10_VOCAB_PATH, 
+                search_term = str(context_diagnosis_code), 
+                search_column = 0, 
+                target_column = 1
+            )
+        elif context_diagnosis_name == "ICD-9":
+            # ICD-9 Lookup is currently not supported
+            event_name_prefix = "ICD-9"
     elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
         return "MATERIAL_" + str(context_material_code)
     else:
         return None
+    
+    if event_prefix != None and event_name != None:
+        return event_prefix + "_" + event_name
+    
+    return None
 
 
 def log_from_cohort(cohort, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
