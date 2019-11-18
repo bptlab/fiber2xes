@@ -95,12 +95,48 @@ def get_encounter_event_per_patient(patients, patient_encounter_buckets, events)
 
 
 # TODO: Implement filtering based on condition
-def filter_encounter_events(encounter_events, condition):
+def filter_encounter_events(encounter_events, relevant_diagnosis=None, relevant_procedure=None, filter_expression=None):
     # iterate over MRN
     # iterate over encounter
     # iterate over events
     # if no event matches description, drop encounter
-    return encounter_events
+
+    filtered_encounter_events = {}
+    for mrn in encounter_events:
+        for begin_date in encounter_events[mrn]:
+            is_relevant = False
+            if relevant_diagnosis is not None:
+                if has_diagnosis(relevant_diagnosis, encounter_events[mrn][begin_date]):
+                    is_relevant = True
+            if relevant_procedure is not None:
+                if is_relevant or has_procedure(relevant_diagnosis, encounter_events[mrn][begin_date]):
+                    is_relevant = True
+            if filter_expression is not None:
+                if is_relevant or filter_expression(encounter_events[mrn][begin_date]):
+                    is_relevant = True
+
+            if is_relevant:
+                if mrn not in filtered_encounter_events:
+                    filtered_encounter_events[mrn] = {}
+                if begin_date not in filtered_encounter_events[mrn]:
+                    filtered_encounter_events[mrn][begin_date] = {}
+                filtered_encounter_events[mrn][begin_date] = encounter_events[mrn][begin_date]
+
+    return filtered_encounter_events
+
+
+def has_diagnosis(diagnosis, encounter):
+    for event in encounter:
+        if event.context_diagnosis_code == diagnosis:
+            return True
+    return False
+
+
+def has_procedure(procedure, encounter):
+    for event in encounter:
+        if event.context_procedure_code == procedure:
+            return True
+    return False
 
 
 def create_log_from_filtered_encounter_events(filtered_encounter_events):
@@ -164,7 +200,7 @@ def translate_procedure_diagnosis_to_event(context_diagnosis_code, context_proce
         return None
 
 
-def log_from_cohort(cohort):
+def log_from_cohort(cohort, relevant_diagnosis=None, relevant_procedure=None, filter_expression=None):
     # get necessary data from cohort
     patients = cohort.get(Patient())
     encounters = cohort.get(Encounter())
@@ -189,7 +225,10 @@ def log_from_cohort(cohort):
         patients, patient_encounter_buckets, patient_events)
 
     filtered_encounter_events = filter_encounter_events(
-        encounter_events_per_patient, "")
+        encounter_events_per_patient,
+        relevant_diagnosis=relevant_diagnosis,
+        relevant_procedure=relevant_procedure,
+        filter_expression=filter_expression)
 
     log = create_log_from_filtered_encounter_events(filtered_encounter_events)
 
