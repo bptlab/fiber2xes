@@ -15,6 +15,7 @@ from fiber.condition import (
     Measurement
 )
 import os
+import re
 from opyenxes.factory.XFactory import XFactory
 from opyenxes.id.XIDFactory import XIDFactory
 from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
