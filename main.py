@@ -157,9 +157,9 @@ def translate_procedure_diagnosis_to_event(context_diagnosis_code, context_proce
     -> diagnosis is event
     """
     if context_procedure_code != "MSDW_NOT APPLICABLE" and context_procedure_code != "MSDW_UNKNOWN":
-        return "PROCEDURE_" + context_procedure_code
+        return "PROCEDURE_" + str(context_procedure_code)
     elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
-        return "DIAGNOSIS_" + context_diagnosis_code
+        return "DIAGNOSIS_" + str(context_diagnosis_code)
     else:
         return None
 
