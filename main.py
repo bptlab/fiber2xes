@@ -366,7 +366,7 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
     elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
         event_name_prefix = "DIAGNOSIS"
         event_name = context_diagnosis_code
-        if context_diagnosis_name == "ICD-10":
+        if context_diagnosis_name.str.contains("ICD-10", regex=False).any():
             event_name_prefix = "ICD-10"
             event_name = vocabulary_lookup(
                 vocabulary_path = DIAGNOSIS_ICD_10_VOCAB_PATH, 
@@ -374,7 +374,7 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
                 search_column = 0, 
                 target_column = 1
             )
-        elif context_diagnosis_name == "ICD-9":
+        elif context_diagnosis_name.str.contains("ICD-9", regex=False).any():
             # ICD-9 Lookup is currently not supported
             event_name_prefix = "ICD-9"
     elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
@@ -382,8 +382,8 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
     else:
         return None
     
-    if event_prefix != None and event_name != None:
-        return event_prefix + "_" + event_name
+    if event_name_prefix != None and event_name != None:
+        return event_name_prefix + "_" + event_name
     
     return None
 
