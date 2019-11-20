@@ -34,6 +34,11 @@ from fiber.database.table import (
     fd_mat,
 )
 
+PROCEDURE_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-procedure.csv")
+DIAGNOSIS_ICD_10_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd10.csv")
+DIAGNOSIS_ICD_9_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd9.csv")
+PROCEDURE_CPT_4_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-cpt4.csv")
+MEDICATION_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-medication.csv")
 
 class ProcedureWithTime(_FactCondition):
     """
@@ -138,10 +143,6 @@ class DrugWithTime(MaterialWithTime):
 # TODO: investigate empty traces
 # TODO: add filtering based on condition
 
-PROCEDURE_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-procedure.csv")
-DIAGNOSIS_ICD_10_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd10.csv")
-DIAGNOSIS_ICD_9_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd9.csv")
-PROCEDURE_CPT_4_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-cpt4.csv")
 
 def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key):
     if math.isnan(age_in_days):
@@ -380,6 +381,7 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
                 target_column = 2
             )
         else:
+            # TODO: Check if procedure vocab assumption is correct
             event_name = vocabulary_lookup(
                 vocabulary_path = PROCEDURE_VOCAB_PATH, 
                 search_term = str(context_procedure_code), 
@@ -410,9 +412,19 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
         else:
             print("Could not lookup diagnosis code " + context_diagnosis_code + " for " + context_diagnosis_name)
     elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
-        return "MATERIAL_" + str(context_material_code)
+        event_name_prefix = "MATERIAL"
+        event_name = str(context_material_code)
+        # TODO: Add material code lookup
+        event_name_prefix = "ICD-9"
+        # Assumption: Material code can be mapped to medication vocab
+        event_name = vocabulary_lookup(
+            vocabulary_path = MEDICATION_VOCAB_PATH, 
+            search_term = str(context_diagnosis_code), 
+            search_column = 0, 
+            target_column = 1
+        )
     else:
-        # Event is neither procedure nor event
+        # Event is neither procedure, material nor diagnosis
         return None
     
     if event_name_prefix != None and event_name != None:
