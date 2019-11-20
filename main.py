@@ -140,6 +140,7 @@ class DrugWithTime(MaterialWithTime):
 
 PROCEDURE_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-procedure.csv")
 DIAGNOSIS_ICD_10_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd10.csv")
+DIAGNOSIS_ICD_9_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd9.csv")
 
 def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key):
     if math.isnan(age_in_days):
@@ -356,6 +357,7 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
     event_name_prefix = None
 
     if context_procedure_code != "MSDW_NOT APPLICABLE" and context_procedure_code != "MSDW_UNKNOWN":
+        # Event is procedure
         event_name_prefix = "PROCEDURE"
         event_name = context_procedure_code
         event_name = vocabulary_lookup(
@@ -365,6 +367,7 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
             target_column = 1
         )
     elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
+        # Event is diagnosis
         event_name_prefix = "DIAGNOSIS"
         event_name = context_diagnosis_code
         if context_diagnosis_name.str.contains("ICD-10", regex=False).any():
@@ -376,15 +379,23 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
                 target_column = 1
             )
         elif context_diagnosis_name.str.contains("ICD-9", regex=False).any():
-            # ICD-9 Lookup is currently not supported
             event_name_prefix = "ICD-9"
+            event_name = vocabulary_lookup(
+                vocabulary_path = DIAGNOSIS_ICD_9_VOCAB_PATH, 
+                search_term = str(context_diagnosis_code), 
+                search_column = 0, 
+                target_column = 1
+            )
+        else:
+            print("Could not lookup diagnosis code " + context_diagnosis_code + " for " + context_diagnosis_name)
     elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
         return "MATERIAL_" + str(context_material_code)
     else:
+        # Event is neither procedure nor event
         return None
     
     if event_name_prefix != None and event_name != None:
-        return event_name_prefix + "_" + event_name
+        return event_name_prefix + ": " + event_name
     
     return None
 
