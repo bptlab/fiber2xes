@@ -141,6 +141,7 @@ class DrugWithTime(MaterialWithTime):
 PROCEDURE_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-procedure.csv")
 DIAGNOSIS_ICD_10_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd10.csv")
 DIAGNOSIS_ICD_9_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd9.csv")
+PROCEDURE_CPT_4_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-cpt4.csv")
 
 def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key):
     if math.isnan(age_in_days):
@@ -360,12 +361,32 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
         # Event is procedure
         event_name_prefix = "PROCEDURE"
         event_name = context_procedure_code
-        event_name = vocabulary_lookup(
-            vocabulary_path = PROCEDURE_VOCAB_PATH, 
-            search_term = str(context_procedure_code), 
-            search_column = 0, 
-            target_column = 1
-        )
+        if context_procedure_name.str.contains("CPT-4", regex=False).any():
+            # Lookup CPT-4
+            event_name_prefix = "CPT-4"
+            event_name = vocabulary_lookup(
+                vocabulary_path = PROCEDURE_CPT_4_VOCAB_PATH, 
+                search_term = str(context_procedure_code), 
+                search_column = 1, 
+                target_column = 2
+            )
+        elif context_procedure_name.str.contains("EPIC CPT-4", regex=False).any():
+            # Lookup CPT-4?
+            event_name_prefix = "EPIC CPT-4"
+            event_name = vocabulary_lookup(
+                vocabulary_path = PROCEDURE_CPT_4_VOCAB_PATH, 
+                search_term = str(context_procedure_code), 
+                search_column = 1, 
+                target_column = 2
+            )
+        else:
+            event_name = vocabulary_lookup(
+                vocabulary_path = PROCEDURE_VOCAB_PATH, 
+                search_term = str(context_procedure_code), 
+                search_column = 0, 
+                target_column = 1
+            )
+
     elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
         # Event is diagnosis
         event_name_prefix = "DIAGNOSIS"
