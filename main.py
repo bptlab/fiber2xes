@@ -3,13 +3,150 @@ import numpy as np
 import datetime
 import time
 import math
+from fiber import Cohort
+from fiber.condition import (
+    Procedure,
+    Patient,
+    Diagnosis,
+    VitalSign,
+    LabValue,
+    Encounter,
+    Measurement
+)
 from opyenxes.factory.XFactory import XFactory
 from opyenxes.id.XIDFactory import XIDFactory
 from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
 from datetime import datetime as dt
 
+from typing import Optional
+from fiber.condition.fact.fact import _FactCondition
+from fiber.condition.database import _multi_like_clause
+from fiber.condition.mixins import ComparisonMixin
+from fiber.database.table import (
+    d_pers,
+    d_uom,
+    fact,
+    fd_proc,
+    fd_diag,
+    fd_mat,
+)
+
+
+class ProcedureWithTime(_FactCondition):
+    """
+    This is an extension of the Procedure Class, to also contain time of day-keys.
+    """
+    dimensions = {'PROCEDURE'}
+    d_table = fd_proc
+    code_column = fd_proc.CONTEXT_PROCEDURE_CODE
+    category_column = fd_proc.PROCEDURE_TYPE
+    description_column = fd_proc.PROCEDURE_DESCRIPTION
+
+    _default_columns = [
+        d_pers.MEDICAL_RECORD_NUMBER,
+        fact.AGE_IN_DAYS,
+        d_table.CONTEXT_NAME,
+        fact.TIME_OF_DAY_KEY,
+        code_column
+    ]
+
+
+class DiagnosisWithTime(_FactCondition):
+    """
+    This is an extension of the Diagnosis Class, to also contain time of day-keys.
+    """
+    dimensions = {'DIAGNOSIS'}
+    d_table = fd_diag
+    code_column = fd_diag.CONTEXT_DIAGNOSIS_CODE
+    category_column = fd_diag.DIAGNOSIS_TYPE
+    description_column = fd_diag.DESCRIPTION
+
+    _default_columns = [
+        d_pers.MEDICAL_RECORD_NUMBER,
+        fact.AGE_IN_DAYS,
+        d_table.CONTEXT_NAME,
+        code_column,
+        fact.TIME_OF_DAY_KEY,
+    ]
+
+
+class MaterialWithTime(_FactCondition):
+    """
+    This is an extension of the Material Class, to also contain time of day-keys.
+    """
+    dimensions = {'MATERIAL'}
+    d_table = fd_mat
+    code_column = fd_mat.CONTEXT_MATERIAL_CODE
+    category_column = fd_mat.MATERIAL_TYPE
+    description_column = fd_mat.MATERIAL_NAME
+
+    _default_columns = [
+        d_pers.MEDICAL_RECORD_NUMBER,
+        fact.AGE_IN_DAYS,
+        d_table.CONTEXT_NAME,
+        code_column
+    ]
+
+
+class DrugWithTime(MaterialWithTime):
+    """
+    This is an extension of the Drug Class, to also contain time of day-keys.
+    """
+
+    def __init__(
+        self,
+        name: Optional[str] = '',
+        brand: Optional[str] = '',
+        generic: Optional[str] = '',
+        *args,
+        **kwargs
+    ):
+        kwargs['category'] = 'Drug'
+        super().__init__(*args, **kwargs)
+        self._attrs['name'] = name
+        self._attrs['brand'] = brand
+        self._attrs['generic'] = generic
+
+    @property
+    def name(self):
+        return self._attrs['name']
+
+    def _create_clause(self):
+        clause = super()._create_clause()
+        if self.name:
+            clause &= (
+                _multi_like_clause(fd_mat.MATERIAL_NAME, self.name) |
+                _multi_like_clause(fd_mat.GENERIC_NAME, self.name) |
+                _multi_like_clause(fd_mat.BRAND1, self.name) |
+                _multi_like_clause(fd_mat.BRAND2, self.name)
+            )
+        if self._attrs['brand']:
+            clause &= (
+                _multi_like_clause(fd_mat.BRAND1, self._attrs['brand']) |
+                _multi_like_clause(fd_mat.BRAND2, self._attrs['brand'])
+            )
+        if self._attrs['generic']:
+            clause &= _multi_like_clause(
+                fd_mat.GENERIC_NAME, self._attrs['generic'])
+
+        return clause
+
+
 # TODO: investigate empty traces
 # TODO: add filtering based on condition
+
+
+def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key):
+    if math.isnan(age_in_days):
+        return date
+    else:
+        timestamp_without_hours_and_minutes = date + \
+            datetime.timedelta(days=age_in_days)
+        date_without_time = pd.to_datetime(
+            timestamp_without_hours_and_minutes, errors='coerce')
+        date_with_time = date_without_time + \
+            datetime.timedelta(minutes=time_of_day_key)
+        return date_with_time
 
 
 def timestamp_from_birthdate_and_age(date, age_in_days):
@@ -48,10 +185,9 @@ def get_patient_events(patients, events):
     patient_events = pd.merge(
         patients, events, on='medical_record_number', how='outer')
 
-    patient_events['timestamp'] = patient_events.apply(lambda row: timestamp_from_birthdate_and_age(
-        row.date_of_birth, row.age_in_days), axis=1)
+    patient_events['timestamp'] = patient_events.apply(lambda row: timestamp_from_birthdate_and_age_and_time(
+        row.date_of_birth, row.age_in_days, row.time_of_day_key), axis=1)
 
-    pd.to_datetime(patient_events.timestamp, errors='coerce')
     return patient_events
 
 
@@ -94,8 +230,7 @@ def get_encounter_event_per_patient(patients, patient_encounter_buckets, events)
     return encounter_events_per_patient
 
 
-# TODO: Implement filtering based on condition
-def filter_encounter_events(encounter_events, relevant_diagnosis=None, relevant_procedure=None, filter_expression=None):
+def filter_encounter_events(encounter_events, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
     # iterate over MRN
     # iterate over encounter
     # iterate over events
@@ -110,6 +245,9 @@ def filter_encounter_events(encounter_events, relevant_diagnosis=None, relevant_
                     is_relevant = True
             if relevant_procedure is not None:
                 if is_relevant or has_procedure(relevant_diagnosis, encounter_events[mrn][begin_date]):
+                    is_relevant = True
+            if relevant_material is not None:
+                if is_relevant or has_material(relevant_diagnosis, encounter_events[mrn][begin_date]):
                     is_relevant = True
             if filter_expression is not None:
                 if is_relevant or filter_expression(encounter_events[mrn][begin_date]):
@@ -139,6 +277,13 @@ def has_procedure(procedure, encounter):
     return False
 
 
+def has_material(material, encounter):
+    for event in encounter:
+        if event.context_material_code == material:
+            return True
+    return False
+
+
 def create_log_from_filtered_encounter_events(filtered_encounter_events):
     # iterate over MRN
     # iterate over encounter
@@ -158,14 +303,11 @@ def create_log_from_filtered_encounter_events(filtered_encounter_events):
             encounter_id = encounter_id + 1
 
             for event in filtered_encounter_events[mrn][encounter]:
-                event_descriptor = translate_procedure_diagnosis_to_event(
-                    event.context_diagnosis_code, event.context_procedure_code)
+                event_descriptor = translate_procedure_diagnosis_material_to_event(
+                    event.context_diagnosis_code, event.context_procedure_code, event.context_material_code)
                 if event_descriptor is not None:
                     log_event = XFactory.create_event()
-                    timestamp = event.timestamp
-
-                    timestamp_int = dt.combine(
-                        timestamp, dt.min.time())
+                    timestamp_int = event.timestamp
                     timestamp_attribute = XFactory.create_attribute_timestamp(
                         "time:timestamp", timestamp_int)
                     activity_attribute = XFactory.create_attribute_literal(
@@ -178,7 +320,7 @@ def create_log_from_filtered_encounter_events(filtered_encounter_events):
     return log
 
 
-def translate_procedure_diagnosis_to_event(context_diagnosis_code, context_procedure_code):
+def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, context_procedure_code, context_material_code):
     """
     When is diagnosis the event? When is procedure the event?
 
@@ -196,15 +338,18 @@ def translate_procedure_diagnosis_to_event(context_diagnosis_code, context_proce
         return "PROCEDURE_" + str(context_procedure_code)
     elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
         return "DIAGNOSIS_" + str(context_diagnosis_code)
+    elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
+        return "MATERIAL_" + str(context_material_code)
     else:
         return None
 
 
-def log_from_cohort(cohort, relevant_diagnosis=None, relevant_procedure=None, filter_expression=None):
+def log_from_cohort(cohort, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
     # get necessary data from cohort
     patients = cohort.get(Patient())
     encounters = cohort.get(Encounter())
-    events = cohort.get(Diagnosis(), Procedure())
+    events = cohort.get(DiagnosisWithTime(),
+                        ProcedureWithTime(), DrugWithTime())
 
     """
     Encounter -> Case
@@ -228,6 +373,7 @@ def log_from_cohort(cohort, relevant_diagnosis=None, relevant_procedure=None, fi
         encounter_events_per_patient,
         relevant_diagnosis=relevant_diagnosis,
         relevant_procedure=relevant_procedure,
+        relevant_material=relevant_material,
         filter_expression=filter_expression)
 
     log = create_log_from_filtered_encounter_events(filtered_encounter_events)
