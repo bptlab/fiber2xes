@@ -258,6 +258,8 @@ def get_encounters_per_patient(patients, encounters):
 
 
 def get_visits_per_patient(patients, visits):
+    # TODO: Ensure that no date occurs in more than one visit!
+    # Alternatively, make sure that each event belongs to the appropriate visit
     patient_mrns = patients.medical_record_number.unique()
     visits_per_patient = {}
     for mrn in patient_mrns:
