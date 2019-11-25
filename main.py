@@ -264,11 +264,20 @@ def get_visits_per_patient(patients, visits):
         visits_for_patient = {}
         all_visits_for_patient = visits[(visits.medical_record_number == mrn)]
         for index, visit in all_visits_for_patient.iterrows():
-            visits_for_patient[visit['age_in_days']] = {
+            existing_visits_for_patient = visits_for_patient.get(
+                visit['encounter_visit_id'])
+            visit_bucket = {
                 "begin_timestamp": visit['timestamp'],
                 "age_in_days": visit['age_in_days'],
                 "mrn": visit['medical_record_number']
             }
+            if existing_visits_for_patient is None:
+                existing_visits_for_patient = [visit_bucket]
+            else:
+                existing_visits_for_patient = existing_visits_for_patient + \
+                    [visit_bucket]
+            visits_for_patient[visit['encounter_visit_id']
+                               ] = existing_visits_for_patient
         visits_per_patient[mrn] = visits_for_patient
     return visits_per_patient
 
@@ -276,11 +285,21 @@ def get_visits_per_patient(patients, visits):
 def get_patient_events(patients, events):
     # join patients and events
     patient_events = pd.merge(
-        patients, events, on='medical_record_number', how='outer')
+        patients, events, on='medical_record_number', how='inner')
 
     patient_events['timestamp'] = patient_events.apply(lambda row: timestamp_from_birthdate_and_age_and_time(
         row.date_of_birth, row.age_in_days, row.time_of_day_key), axis=1)
 
+    indexes_to_drop = []
+    unique_events = set()
+    for index, event in patient_events.iterrows():
+        tup = (event["medical_record_number"], event["timestamp"],
+               event["context_diagnosis_code"], event["context_procedure_code"])
+        if tup not in unique_events:
+            unique_events.add(tup)
+        else:
+            indexes_to_drop.append(index)
+    patient_events.drop(patient_events.index[indexes_to_drop], inplace=True)
     return patient_events
 
 
@@ -342,17 +361,21 @@ def get_visit_event_per_patient(patients, patient_visit_buckets, events):
         patient_visits = patient_visit_buckets[mrn]
         patient_events = events[(events.medical_record_number == mrn)]
         patient_events_per_visit = {}
-        for visit_age_in_days in patient_visits:
+        for visit_key in patient_visits:
+            patient_visit_parameters = patient_visits[visit_key]
+            visit_dates = []
+            for vis in patient_visit_parameters:
+                visit_dates.append(vis['age_in_days'])
             for index, event in patient_events.iterrows():
-                if event.age_in_days == visit_age_in_days:
+                if event.age_in_days in visit_dates:
                     existing_events_per_visit = patient_events_per_visit.get(
-                        visit_age_in_days)
+                        visit_key)
                     if existing_events_per_visit is None:
                         existing_events_per_visit = [event]
                     else:
                         existing_events_per_visit = existing_events_per_visit + \
                             [event]
-                    patient_events_per_visit[visit_age_in_days] = existing_events_per_visit
+                    patient_events_per_visit[visit_key] = existing_events_per_visit
         visit_events_per_patient[mrn] = patient_events_per_visit
     return visit_events_per_patient
 
