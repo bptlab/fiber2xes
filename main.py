@@ -25,15 +25,77 @@ from datetime import datetime as dt
 from typing import Optional
 from fiber.condition.fact.fact import _FactCondition
 from fiber.condition.database import _multi_like_clause
+from fiber.condition.database import _case_insensitive_like
 from fiber.condition.mixins import ComparisonMixin
 from fiber.database.table import (
     d_pers,
+    d_enc,
     d_uom,
     fact,
     fd_proc,
     fd_diag,
     fd_mat,
 )
+import sys
+
+
+"""
+This extends the Encounter Class to also have the Visit key, which allows us to filter based on visits
+"""
+
+
+class EncounterWithVisit(_FactCondition):
+    """
+    Encounters are parts of the building-blocks of FIBER. In order to define
+    Cohorts, Encounters categorize patients as either inpatient or outpatient,
+    meaning they stayed in hospital or were treated somewhere else, and define
+    categories for this, like 'emergency'.
+
+    The Encounter adds functionality to the FactCondition. It allows to combine
+    SQL Statements that shall be performed on the FACT-Table with dimension
+    'ENCOUNTER' (and optionally age-constraints on the dates).
+
+    It also defines default-columns to return, MEDICAL_RECORD_NUMBER,
+    AGE_IN_DAYS, ENCOUNTER_TYPE, ENCOUNTER_CLASS, BEGIN_DATE_AGE_IN_DAYS and
+    END_DATE_AGE_IN_DAYS in this case respectively.
+    """
+    dimensions = {'ENCOUNTER'}
+    d_table = d_enc
+    code_column = d_enc.ENCOUNTER_TYPE
+    category_column = d_enc.ENCOUNTER_TYPE
+    description_column = d_enc.ENCOUNTER_TYPE
+
+    _default_columns = [
+        d_pers.MEDICAL_RECORD_NUMBER,
+        fact.AGE_IN_DAYS,
+        d_enc.ENCOUNTER_TYPE,
+        d_enc.ENCOUNTER_CLASS,
+        d_enc.BEGIN_DATE_AGE_IN_DAYS,
+        d_enc.END_DATE_AGE_IN_DAYS,
+        d_enc.ENCOUNTER_VISIT_ID,
+    ]
+
+    def __init__(self, category: Optional[str] = '', **kwargs):
+        """
+        Args:
+            category: the category of the encounter to query for
+            kwargs: the keyword-arguments to pass higher in the hierarchy
+        """
+        if category:
+            kwargs['category'] = category
+        super().__init__(**kwargs)
+
+    def _create_clause(self):
+        """
+        Used to create a SQLAlchemy clause based on the Encounter-condition.
+        It is used to select the correct encoutners based on the category
+        provided at initialization-time.
+        """
+        clause = super()._create_clause()
+        if self._attrs['category']:
+            clause &= _case_insensitive_like(
+                d_enc.ENCOUNTER_TYPE, self._attrs['category'])
+        return clause
 
 DIAGNOSIS_ICD_10_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd10.csv")
 DIAGNOSIS_ICD_9_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd9.csv")
@@ -195,6 +257,22 @@ def get_encounters_per_patient(patients, encounters):
     return encounters_per_patient
 
 
+def get_visits_per_patient(patients, visits):
+    patient_mrns = patients.medical_record_number.unique()
+    visits_per_patient = {}
+    for mrn in patient_mrns:
+        visits_for_patient = {}
+        all_visits_for_patient = visits[(visits.medical_record_number == mrn)]
+        for index, visit in all_visits_for_patient.iterrows():
+            visits_for_patient[visit['age_in_days']] = {
+                "begin_timestamp": visit['timestamp'],
+                "age_in_days": visit['age_in_days'],
+                "mrn": visit['medical_record_number']
+            }
+        visits_per_patient[mrn] = visits_for_patient
+    return visits_per_patient
+
+
 def get_patient_events(patients, events):
     # join patients and events
     patient_events = pd.merge(
@@ -207,7 +285,7 @@ def get_patient_events(patients, events):
 
 
 def get_patient_encounters(patients, encounters):
-    # join encounters and encounters
+    # join encounters and events
     patient_encounters = pd.merge(
         patients, encounters, on='medical_record_number', how='outer')
 
@@ -219,6 +297,18 @@ def get_patient_encounters(patients, encounters):
 
     pd.to_datetime(patient_encounters.timestamp, errors='coerce')
     return patient_encounters
+
+
+def get_patient_visits(patients, visits):
+    # join encounters and visits
+    patient_visits = pd.merge(
+        patients, visits, on='medical_record_number', how='outer')
+
+    patient_visits['timestamp'] = patient_visits.apply(lambda row: timestamp_from_birthdate_and_age(
+        row.date_of_birth, row.age_in_days), axis=1)
+
+    pd.to_datetime(patient_visits.timestamp, errors='coerce')
+    return patient_visits
 
 
 def get_encounter_event_per_patient(patients, patient_encounter_buckets, events):
@@ -243,6 +333,28 @@ def get_encounter_event_per_patient(patients, patient_encounter_buckets, events)
                     patient_events_per_encounter[encounter_begin_date] = existing_events_per_encounter
         encounter_events_per_patient[mrn] = patient_events_per_encounter
     return encounter_events_per_patient
+
+
+def get_visit_event_per_patient(patients, patient_visit_buckets, events):
+    patient_mrns = patients.medical_record_number.unique()
+    visit_events_per_patient = {}
+    for mrn in patient_mrns:
+        patient_visits = patient_visit_buckets[mrn]
+        patient_events = events[(events.medical_record_number == mrn)]
+        patient_events_per_visit = {}
+        for visit_age_in_days in patient_visits:
+            for index, event in patient_events.iterrows():
+                if event.age_in_days == visit_age_in_days:
+                    existing_events_per_visit = patient_events_per_visit.get(
+                        visit_age_in_days)
+                    if existing_events_per_visit is None:
+                        existing_events_per_visit = [event]
+                    else:
+                        existing_events_per_visit = existing_events_per_visit + \
+                            [event]
+                    patient_events_per_visit[visit_age_in_days] = existing_events_per_visit
+        visit_events_per_patient[mrn] = patient_events_per_visit
+    return visit_events_per_patient
 
 
 def filter_encounter_events(encounter_events, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
@@ -500,10 +612,10 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
     
     return result
 
-def log_from_cohort(cohort, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
+def log_from_cohort(cohort, trace_type, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
     # get necessary data from cohort
     patients = cohort.get(Patient())
-    encounters = cohort.get(Encounter())
+    encounters = cohort.get(EncounterWithVisit())
     events = cohort.get(DiagnosisWithTime(),
                         ProcedureWithTime(), DrugWithTime())
 
@@ -517,16 +629,23 @@ def log_from_cohort(cohort, relevant_diagnosis=None, relevant_procedure=None, re
 
     patient_events = get_patient_events(patients, events)
 
-    patient_encounters = get_patient_encounters(patients, encounters)
-
-    patient_encounter_buckets = get_encounters_per_patient(
-        patients, patient_encounters)
-
-    encounter_events_per_patient = get_encounter_event_per_patient(
-        patients, patient_encounter_buckets, patient_events)
+    if trace_type == "encounter":
+        patient_encounters = get_patient_encounters(patients, encounters)
+        patient_encounter_buckets = get_encounters_per_patient(
+            patients, patient_encounters)
+        events_per_patient = get_encounter_event_per_patient(
+            patients, patient_encounter_buckets, patient_events)
+    elif trace_type == "visit":
+        patient_visits = get_patient_visits(patients, encounters)
+        patient_visit_buckets = get_visits_per_patient(
+            patients, patient_visits)
+        events_per_patient = get_visit_event_per_patient(
+            patients, patient_visit_buckets, patient_events)
+    else:
+        sys.exit("No matching trace type given. Try using encounter or visit")
 
     filtered_encounter_events = filter_encounter_events(
-        encounter_events_per_patient,
+        events_per_patient,
         relevant_diagnosis=relevant_diagnosis,
         relevant_procedure=relevant_procedure,
         relevant_material=relevant_material,
