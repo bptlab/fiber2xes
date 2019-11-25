@@ -355,16 +355,16 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
     
     event_name = None
     event_name_prefix = None
+    translation = None
 
     if context_procedure_code != "MSDW_NOT APPLICABLE" and context_procedure_code != "MSDW_UNKNOWN":
         # Event is procedure
-
         event_name_prefix = "PROCEDURE"
-        event_name = context_procedure_code
+        event_name = str(context_procedure_code)
         if context_name.str.contains("CPT-4", regex=False).any():
             # Lookup CPT-4
             event_name_prefix = "CPT-4"
-            event_name = vocabulary_lookup(
+            translation = vocabulary_lookup(
                 vocabulary_path = PROCEDURE_CPT_4_VOCAB_PATH, 
                 search_term = str(context_procedure_code), 
                 search_column = 1, 
@@ -373,7 +373,7 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
         elif context_name.str.contains("EPIC CPT-4", regex=False).any():
             # Lookup CPT-4?
             event_name_prefix = "EPIC CPT-4"
-            event_name = vocabulary_lookup(
+            translation = vocabulary_lookup(
                 vocabulary_path = PROCEDURE_CPT_4_VOCAB_PATH, 
                 search_term = str(context_procedure_code), 
                 search_column = 1, 
@@ -381,7 +381,7 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
             )
         else:
             # TODO: Check if procedure vocab assumption is correct
-            event_name = vocabulary_lookup(
+            translation = vocabulary_lookup(
                 vocabulary_path = PROCEDURE_VOCAB_PATH, 
                 search_term = str(context_procedure_code), 
                 search_column = 0, 
@@ -394,7 +394,7 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
         event_name = context_diagnosis_code
         if context_name.str.contains("ICD-10", regex=False).any():
             event_name_prefix = "ICD-10"
-            event_name = vocabulary_lookup(
+            translation = vocabulary_lookup(
                 vocabulary_path = DIAGNOSIS_ICD_10_VOCAB_PATH, 
                 search_term = str(context_diagnosis_code), 
                 search_column = 0, 
@@ -402,7 +402,7 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
             )
         elif context_name.str.contains("ICD-9", regex=False).any():
             event_name_prefix = "ICD-9"
-            event_name = vocabulary_lookup(
+            translation = vocabulary_lookup(
                 vocabulary_path = DIAGNOSIS_ICD_9_VOCAB_PATH, 
                 search_term = str(context_diagnosis_code), 
                 search_column = 0, 
@@ -410,13 +410,12 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
             )
         else:
             print("Could not lookup diagnosis code " + context_diagnosis_code + " for " + context_name)
+   
     elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
         event_name_prefix = "MATERIAL"
         event_name = str(context_material_code)
-        # TODO: Add material code lookup
-        print("Material Code " + context_material_code)
         # Assumption: Material code can be mapped to medication vocab
-        event_name = vocabulary_lookup(
+        translation = vocabulary_lookup(
             vocabulary_path = MEDICATION_VOCAB_PATH, 
             search_term = str(context_diagnosis_code), 
             search_column = 0, 
@@ -425,6 +424,9 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
     else:
         # Event is neither procedure, material nor diagnosis
         return None
+    
+    if translation is not None:
+        event_name = translation
     
     if event_name_prefix != None and event_name != None:
         return event_name_prefix + ": " + event_name
