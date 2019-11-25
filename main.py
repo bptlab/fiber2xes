@@ -409,7 +409,7 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
                 target_column = 1
             )
         else:
-            print("Could not lookup diagnosis code " + context_diagnosis_code + " for " + context_name)
+            print("Lookup error " + context_diagnosis_code + " (" + context_name + ")")
    
     elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
         event_name_prefix = "MATERIAL"
