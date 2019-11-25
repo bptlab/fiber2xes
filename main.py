@@ -311,13 +311,11 @@ def create_log_from_filtered_encounter_events(filtered_encounter_events):
             encounter_id = encounter_id + 1
 
             for event in filtered_encounter_events[mrn][encounter]:
-                    context_diagnosis_name=event.context_name, 
-                    context_material_code=
                 event_descriptor = translate_procedure_diagnosis_material_to_event(
                     context_diagnosis_code=event.context_diagnosis_code, 
-                    context_diagnosis_name=event.context_name, 
                     context_material_code=event.context_material_code,
-                    context_procedure_code=event.context_procedure_code)
+                    context_procedure_code=event.context_procedure_code,
+                    context_name=event.context_name)
                 if event_descriptor is not None:
                     log_event = XFactory.create_event()
                     timestamp_int = event.timestamp
@@ -340,7 +338,7 @@ def vocabulary_lookup(vocabulary_path, search_term, search_column = 0, target_co
                 return row[target_column]
     return None
 
-def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, context_diagnosis_name, context_procedure_code, context_material_code):
+def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, context_procedure_code, context_material_code, context_name):
     """
     When is diagnosis the event? When is procedure the event?
 
@@ -360,9 +358,10 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
 
     if context_procedure_code != "MSDW_NOT APPLICABLE" and context_procedure_code != "MSDW_UNKNOWN":
         # Event is procedure
+
         event_name_prefix = "PROCEDURE"
         event_name = context_procedure_code
-        if context_procedure_name.str.contains("CPT-4", regex=False).any():
+        if context_name.str.contains("CPT-4", regex=False).any():
             # Lookup CPT-4
             event_name_prefix = "CPT-4"
             event_name = vocabulary_lookup(
@@ -371,7 +370,7 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
                 search_column = 1, 
                 target_column = 2
             )
-        elif context_procedure_name.str.contains("EPIC CPT-4", regex=False).any():
+        elif context_name.str.contains("EPIC CPT-4", regex=False).any():
             # Lookup CPT-4?
             event_name_prefix = "EPIC CPT-4"
             event_name = vocabulary_lookup(
@@ -393,7 +392,7 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
         # Event is diagnosis
         event_name_prefix = "DIAGNOSIS"
         event_name = context_diagnosis_code
-        if context_diagnosis_name.str.contains("ICD-10", regex=False).any():
+        if context_name.str.contains("ICD-10", regex=False).any():
             event_name_prefix = "ICD-10"
             event_name = vocabulary_lookup(
                 vocabulary_path = DIAGNOSIS_ICD_10_VOCAB_PATH, 
@@ -401,7 +400,7 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
                 search_column = 0, 
                 target_column = 1
             )
-        elif context_diagnosis_name.str.contains("ICD-9", regex=False).any():
+        elif context_name.str.contains("ICD-9", regex=False).any():
             event_name_prefix = "ICD-9"
             event_name = vocabulary_lookup(
                 vocabulary_path = DIAGNOSIS_ICD_9_VOCAB_PATH, 
@@ -410,12 +409,12 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
                 target_column = 1
             )
         else:
-            print("Could not lookup diagnosis code " + context_diagnosis_code + " for " + context_diagnosis_name)
+            print("Could not lookup diagnosis code " + context_diagnosis_code + " for " + context_name)
     elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
         event_name_prefix = "MATERIAL"
         event_name = str(context_material_code)
         # TODO: Add material code lookup
-        event_name_prefix = "ICD-9"
+        print("Material Code " + context_material_code)
         # Assumption: Material code can be mapped to medication vocab
         event_name = vocabulary_lookup(
             vocabulary_path = MEDICATION_VOCAB_PATH, 
