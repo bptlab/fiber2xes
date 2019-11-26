@@ -55,6 +55,7 @@ class ProcedureWithTime(_FactCondition):
         fact.AGE_IN_DAYS,
         d_table.CONTEXT_NAME,
         fact.TIME_OF_DAY_KEY,
+        description_column,
         code_column
     ]
 
@@ -73,6 +74,7 @@ class DiagnosisWithTime(_FactCondition):
         d_pers.MEDICAL_RECORD_NUMBER,
         fact.AGE_IN_DAYS,
         d_table.CONTEXT_NAME,
+        description_column,
         code_column,
         fact.TIME_OF_DAY_KEY,
     ]
@@ -92,6 +94,7 @@ class MaterialWithTime(_FactCondition):
         d_pers.MEDICAL_RECORD_NUMBER,
         fact.AGE_IN_DAYS,
         d_table.CONTEXT_NAME,
+        description_column,
         code_column
     ]
 
@@ -312,10 +315,9 @@ def create_log_from_filtered_encounter_events(filtered_encounter_events):
 
             for event in filtered_encounter_events[mrn][encounter]:
                 event_descriptor = translate_procedure_diagnosis_material_to_event(
-                    context_diagnosis_code=event.context_diagnosis_code, 
-                    context_material_code=event.context_material_code,
-                    context_procedure_code=event.context_procedure_code,
-                    context_name=event.context_name)
+                    event=event,
+                    verbose=True
+                )
                 if event_descriptor is not None:
                     log_event = XFactory.create_event()
                     timestamp_int = event.timestamp
@@ -338,7 +340,7 @@ def vocabulary_lookup(vocabulary_path, search_term, search_column = 0, target_co
                 return row[target_column]
     return None
 
-def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, context_procedure_code, context_material_code, context_name):
+def translate_procedure_diagnosis_material_to_event(event, verbose=False):
     """
     When is diagnosis the event? When is procedure the event?
 
@@ -353,47 +355,68 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
     -> diagnosis is event
     """
     
+    context_diagnosis_code=event.context_diagnosis_code 
+    context_material_code=event.context_material_code
+    context_procedure_code=event.context_procedure_code
+    context_name=event.context_name
+    
     event_name = None
-    event_name_prefix = None
-    translation = None
+    event_context = None
+    event_type = ""
 
     if context_procedure_code != "MSDW_NOT APPLICABLE" and context_procedure_code != "MSDW_UNKNOWN":
         # Event is procedure
-        event_name_prefix = "PROCEDURE"
-        event_name = str(context_procedure_code)
-        if context_name.str.contains("CPT-4", regex=False).any():
-            # Lookup CPT-4
-            event_name_prefix = "CPT-4"
+        event_type = "PROCEDURE"
+        translation = None
+        
+        # Look up CPT-4 standard
+        if context_name.str.contains("(EPIC )*CPT-4", regex=True).any():
+            event_context = "CPT-4"
             translation = vocabulary_lookup(
                 vocabulary_path = PROCEDURE_CPT_4_VOCAB_PATH, 
                 search_term = str(context_procedure_code), 
                 search_column = 1, 
                 target_column = 2
             )
-        elif context_name.str.contains("EPIC CPT-4", regex=False).any():
-            # Lookup CPT-4?
-            event_name_prefix = "EPIC CPT-4"
+        # Look up ICD standard
+        elif context_name.str.contains("ICD-10", regex=False).any():
+            event_context = "ICD-10"
             translation = vocabulary_lookup(
-                vocabulary_path = PROCEDURE_CPT_4_VOCAB_PATH, 
-                search_term = str(context_procedure_code), 
-                search_column = 1, 
-                target_column = 2
-            )
-        else:
-            # TODO: Check if procedure vocab assumption is correct
-            translation = vocabulary_lookup(
-                vocabulary_path = PROCEDURE_VOCAB_PATH, 
+                vocabulary_path = DIAGNOSIS_ICD_10_VOCAB_PATH, 
                 search_term = str(context_procedure_code), 
                 search_column = 0, 
                 target_column = 1
             )
-
+        elif context_name.str.contains("ICD-9", regex=False).any():
+            event_context = "ICD-9"
+            translation = vocabulary_lookup(
+                vocabulary_path = DIAGNOSIS_ICD_9_VOCAB_PATH, 
+                search_term = str(context_procedure_code), 
+                search_column = 0, 
+                target_column = 1
+            )
+        elif context_name.str.contains("SYSTEM", regex=False).any():
+            event_context = "SYSTEM"
+        elif context_name.str.contains("IMO", regex=False).any():
+            event_context = "IMO"
+        elif context_name.str.contains("EPIC", regex=False).any():
+            event_context = "EPIC"
+        elif verbose:
+            print("Unknown Procedure Context: " + context_name)
+            
+        if translation is not None:
+            event_name = translation
+        else:
+            event_name = event.procedure_description
+            
     elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
         # Event is diagnosis
-        event_name_prefix = "DIAGNOSIS"
-        event_name = context_diagnosis_code
+        event_type = "DIAGNOSIS"
+        translation = None
+        
+        # Look up ICD standard
         if context_name.str.contains("ICD-10", regex=False).any():
-            event_name_prefix = "ICD-10"
+            event_context = "ICD-10"
             translation = vocabulary_lookup(
                 vocabulary_path = DIAGNOSIS_ICD_10_VOCAB_PATH, 
                 search_term = str(context_diagnosis_code), 
@@ -401,38 +424,50 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
                 target_column = 1
             )
         elif context_name.str.contains("ICD-9", regex=False).any():
-            event_name_prefix = "ICD-9"
+            event_context = "ICD-9"
             translation = vocabulary_lookup(
                 vocabulary_path = DIAGNOSIS_ICD_9_VOCAB_PATH, 
                 search_term = str(context_diagnosis_code), 
                 search_column = 0, 
                 target_column = 1
-            )
+            )            
+        elif context_name.str.contains("SYSTEM", regex=False).any():
+            event_context = "SYSTEM"
+        elif context_name.str.contains("IMO", regex=False).any():
+            event_context = "IMO"
+        elif context_name.str.contains("EPIC", regex=False).any():
+            event_context = "EPIC"
+        elif verbose:
+            print("Unknown Diagnosis Context: " + context_name)
+        
+        if translation is not None:
+            event_name = translation
         else:
-            print("Lookup error " + context_diagnosis_code + " (" + context_name + ")")
+            event_name = event.description
    
     elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
-        event_name_prefix = "MATERIAL"
-        event_name = str(context_material_code)
-        # Assumption: Material code can be mapped to medication vocab
-        translation = vocabulary_lookup(
-            vocabulary_path = MEDICATION_VOCAB_PATH, 
-            search_term = str(context_diagnosis_code), 
-            search_column = 0, 
-            target_column = 1
-        )
+        # Event is material
+        event_type = "MATERIAL"
+        event_name = event.material_name
+        
+        if context_name.str.contains("EPIC MEDICATION", regex=False).any():
+            event_context = "EPIC MEDICATION"
+        elif verbose:
+            print("Unknown Material Context: " + context_name)
+            
     else:
         # Event is neither procedure, material nor diagnosis
         return None
     
-    if translation is not None:
-        event_name = translation
+    result = event_type
     
-    if event_name_prefix != None and event_name != None:
-        return event_name_prefix + ": " + event_name
+    if event_context is not None and verbose:
+        result += (" (" + event_context + ")")
     
-    return None
-
+    if event_name is not None:
+        result += (": " + event_name)
+    
+    return result
 
 def log_from_cohort(cohort, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
     # get necessary data from cohort
