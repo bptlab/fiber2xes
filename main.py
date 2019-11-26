@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import csv
 import datetime
+from enum import Enum
 import time
 import math
 from fiber import Cohort
@@ -40,6 +41,11 @@ DIAGNOSIS_ICD_9_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes
 PROCEDURE_CPT_4_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-cpt4.csv")
 MEDICATION_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-medication.csv")
 
+class EventType(Enum):
+    DIAGNOSIS = 0
+    PROCEDURE = 1
+    MATERIAL = 2
+    
 class ProcedureWithTime(_FactCondition):
     """
     This is an extension of the Procedure Class, to also contain time of day-keys.
@@ -340,6 +346,20 @@ def vocabulary_lookup(vocabulary_path, search_term, search_column = 0, target_co
                 return row[target_column]
     return None
 
+def get_abstract_event_name(event_name, event_type):
+    # TODO: Add abstraction vocabularies to merge similar events
+    if (event_type is EventType.DIAGNOSIS):
+        # TODO
+        return event_name
+    elif (event_type is EventType.PROCEDURE):
+        # TODO
+        return event_name
+    elif (event_type is EventType.MATERIAL):
+        # TODO
+        return event_name
+    else:
+        return event_name
+
 def translate_procedure_diagnosis_material_to_event(event, verbose=False):
     """
     When is diagnosis the event? When is procedure the event?
@@ -361,12 +381,17 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
     context_name=event.context_name
     
     event_name = None
-    event_context = None
     event_type = ""
+    
+    # For verbose output
+    event_context = None
+    event_code = ""
 
+    # Identify event type
     if context_procedure_code != "MSDW_NOT APPLICABLE" and context_procedure_code != "MSDW_UNKNOWN":
         # Event is procedure
         event_type = "PROCEDURE"
+        event_code = context_procedure_code
         translation = None
         
         # Look up CPT-4 standard
@@ -408,10 +433,13 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
             event_name = translation
         else:
             event_name = event.procedure_description
+        
+        event_name = get_abstract_event_name(event_name, EventType.PROCEDURE)
             
     elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
         # Event is diagnosis
         event_type = "DIAGNOSIS"
+        event_code = context_diagnosis_code
         translation = None
         
         # Look up ICD standard
@@ -444,16 +472,21 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
             event_name = translation
         else:
             event_name = event.description
+        
+        event_name = get_abstract_event_name(event_name, EventType.DIAGNOSIS)
    
     elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
         # Event is material
         event_type = "MATERIAL"
+        event_code = context_material_code
         event_name = event.material_name
         
         if context_name.str.contains("EPIC MEDICATION", regex=False).any():
             event_context = "EPIC MEDICATION"
         elif verbose:
             print("Unknown Material Context: " + context_name)
+        
+        event_name = get_abstract_event_name(event_name, EventType.MATERIAL)
             
     else:
         # Event is neither procedure, material nor diagnosis
@@ -462,7 +495,7 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
     result = event_type
     
     if event_context is not None and verbose:
-        result += (" (" + event_context + ")")
+        result += (" (" + event_context + " " + event_code + ")")
     
     if event_name is not None:
         result += (": " + event_name)
