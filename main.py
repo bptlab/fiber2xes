@@ -534,7 +534,7 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
         event_type = "MATERIAL"
         event_code = context_material_code
         event_name = event.material_name
-        
+
         if context_name.str.contains("EPIC MEDICATION", regex=False).any():
             event_context = "EPIC MEDICATION"
         elif verbose:
@@ -579,7 +579,6 @@ def log_from_cohort(cohort, trace_type, relevant_diagnosis=None, relevant_proced
         patient_encounter_keys = get_encounter_keys_per_patient(patient_encounters)
         # mrn -> encounter_key -> events
         events_per_patient = get_patient_events_per_encounter(patients, patient_encounter_keys, patient_events)
-        
     elif trace_type == "visit":
         patient_encounters = get_patient_encounters(patients, encounters)
         # mrn -> encounter_visit_ids -> encounter_key
