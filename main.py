@@ -122,6 +122,7 @@ class ProcedureWithTime(_FactCondition):
         d_table.CONTEXT_NAME,
         fact.TIME_OF_DAY_KEY,
         description_column,
+        d_enc.ENCOUNTER_VISIT_ID,
         code_column
     ]
 
@@ -141,6 +142,7 @@ class DiagnosisWithTime(_FactCondition):
         fact.AGE_IN_DAYS,
         d_table.CONTEXT_NAME,
         description_column,
+        d_enc.ENCOUNTER_VISIT_ID,
         code_column,
         fact.TIME_OF_DAY_KEY,
     ]
@@ -160,6 +162,7 @@ class MaterialWithTime(_FactCondition):
         d_pers.MEDICAL_RECORD_NUMBER,
         fact.AGE_IN_DAYS,
         d_table.CONTEXT_NAME,
+        d_enc.ENCOUNTER_VISIT_ID,
         description_column,
         code_column
     ]
@@ -279,7 +282,7 @@ def get_visits_per_patient(patients, visits):
                 existing_visits_for_patient = existing_visits_for_patient + \
                     [visit_bucket]
             visits_for_patient[visit['encounter_visit_id']
-                               ] = existing_visits_for_patient
+                            ] = existing_visits_for_patient
         visits_per_patient[mrn] = visits_for_patient
     return visits_per_patient
 
@@ -296,7 +299,7 @@ def get_patient_events(patients, events):
     unique_events = set()
     for index, event in patient_events.iterrows():
         tup = (event["medical_record_number"], event["timestamp"],
-               event["context_diagnosis_code"], event["context_procedure_code"])
+            event["context_diagnosis_code"], event["context_procedure_code"])
         if tup not in unique_events:
             unique_events.add(tup)
         else:
@@ -609,7 +612,7 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
             event_name = event.description
         
         event_name = get_abstract_event_name(event_name, EventType.DIAGNOSIS)
-   
+
     elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
         # Event is material
         event_type = "MATERIAL"
