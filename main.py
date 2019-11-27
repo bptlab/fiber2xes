@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
+import csv
 import datetime
+from enum import Enum
 import time
 import math
 from fiber import Cohort
@@ -13,6 +15,8 @@ from fiber.condition import (
     Encounter,
     Measurement
 )
+import os
+import re
 from opyenxes.factory.XFactory import XFactory
 from opyenxes.id.XIDFactory import XIDFactory
 from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
@@ -31,7 +35,15 @@ from fiber.database.table import (
     fd_mat,
 )
 
+DIAGNOSIS_ICD_10_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd10.csv")
+DIAGNOSIS_ICD_9_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd9.csv")
+PROCEDURE_CPT_4_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-cpt4.csv")
 
+class EventType(Enum):
+    DIAGNOSIS = 0
+    PROCEDURE = 1
+    MATERIAL = 2
+    
 class ProcedureWithTime(_FactCondition):
     """
     This is an extension of the Procedure Class, to also contain time of day-keys.
@@ -47,6 +59,7 @@ class ProcedureWithTime(_FactCondition):
         fact.AGE_IN_DAYS,
         d_table.CONTEXT_NAME,
         fact.TIME_OF_DAY_KEY,
+        description_column,
         code_column
     ]
 
@@ -65,6 +78,7 @@ class DiagnosisWithTime(_FactCondition):
         d_pers.MEDICAL_RECORD_NUMBER,
         fact.AGE_IN_DAYS,
         d_table.CONTEXT_NAME,
+        description_column,
         code_column,
         fact.TIME_OF_DAY_KEY,
     ]
@@ -84,6 +98,7 @@ class MaterialWithTime(_FactCondition):
         d_pers.MEDICAL_RECORD_NUMBER,
         fact.AGE_IN_DAYS,
         d_table.CONTEXT_NAME,
+        description_column,
         code_column
     ]
 
@@ -304,7 +319,9 @@ def create_log_from_filtered_encounter_events(filtered_encounter_events):
 
             for event in filtered_encounter_events[mrn][encounter]:
                 event_descriptor = translate_procedure_diagnosis_material_to_event(
-                    event.context_diagnosis_code, event.context_procedure_code, event.context_material_code)
+                    event=event,
+                    verbose=True
+                )
                 if event_descriptor is not None:
                     log_event = XFactory.create_event()
                     timestamp_int = event.timestamp
@@ -319,8 +336,29 @@ def create_log_from_filtered_encounter_events(filtered_encounter_events):
             log.append(trace)
     return log
 
+def vocabulary_lookup(vocabulary_path, search_term, search_column = 0, target_column = 1, delimiter = ","):
+    reader = csv.reader(open(vocabulary_path), delimiter=delimiter)
+    for row in reader:
+        if len(row) > search_column and len(row) > target_column:
+            if re.search("^" + search_term + "$", row[search_column], re.IGNORECASE) != None:
+                return row[target_column]
+    return None
 
-def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, context_procedure_code, context_material_code):
+def get_abstract_event_name(event_name, event_type):
+    # TODO: Add abstraction vocabularies to merge similar events
+    if (event_type is EventType.DIAGNOSIS):
+        # TODO
+        return event_name
+    elif (event_type is EventType.PROCEDURE):
+        # TODO
+        return event_name
+    elif (event_type is EventType.MATERIAL):
+        # TODO
+        return event_name
+    else:
+        return event_name
+
+def translate_procedure_diagnosis_material_to_event(event, verbose=False):
     """
     When is diagnosis the event? When is procedure the event?
 
@@ -334,15 +372,133 @@ def translate_procedure_diagnosis_material_to_event(context_diagnosis_code, cont
     context_diagnosis_code set
     -> diagnosis is event
     """
-    if context_procedure_code != "MSDW_NOT APPLICABLE" and context_procedure_code != "MSDW_UNKNOWN":
-        return "PROCEDURE_" + str(context_procedure_code)
-    elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
-        return "DIAGNOSIS_" + str(context_diagnosis_code)
-    elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
-        return "MATERIAL_" + str(context_material_code)
-    else:
-        return None
+    
+    context_diagnosis_code=event.context_diagnosis_code 
+    context_material_code=event.context_material_code
+    context_procedure_code=event.context_procedure_code
+    context_name=event.context_name
+    
+    event_name = None
+    event_type = ""
+    
+    # For verbose output
+    event_context = None
+    event_code = ""
 
+    # Identify event type
+    if context_procedure_code != "MSDW_NOT APPLICABLE" and context_procedure_code != "MSDW_UNKNOWN":
+        # Event is procedure
+        event_type = "PROCEDURE"
+        event_code = context_procedure_code
+        translation = None
+        
+        # Look up CPT-4 standard
+        if context_name.str.contains("(EPIC )*CPT-4", regex=True).any():
+            event_context = "CPT-4"
+            translation = vocabulary_lookup(
+                vocabulary_path = PROCEDURE_CPT_4_VOCAB_PATH, 
+                search_term = str(context_procedure_code), 
+                search_column = 1, 
+                target_column = 2
+            )
+        # Look up ICD standard
+        elif context_name.str.contains("ICD-10", regex=False).any():
+            event_context = "ICD-10"
+            translation = vocabulary_lookup(
+                vocabulary_path = DIAGNOSIS_ICD_10_VOCAB_PATH, 
+                search_term = str(context_procedure_code), 
+                search_column = 0, 
+                target_column = 1
+            )
+        elif context_name.str.contains("ICD-9", regex=False).any():
+            event_context = "ICD-9"
+            translation = vocabulary_lookup(
+                vocabulary_path = DIAGNOSIS_ICD_9_VOCAB_PATH, 
+                search_term = str(context_procedure_code), 
+                search_column = 0, 
+                target_column = 1
+            )
+        elif context_name.str.contains("SYSTEM", regex=False).any():
+            event_context = "SYSTEM"
+        elif context_name.str.contains("IMO", regex=False).any():
+            event_context = "IMO"
+        elif context_name.str.contains("EPIC", regex=False).any():
+            event_context = "EPIC"
+        elif verbose:
+            print("Unknown Procedure Context: " + context_name)
+            
+        if translation is not None:
+            event_name = translation
+        else:
+            event_name = event.procedure_description
+        
+        event_name = get_abstract_event_name(event_name, EventType.PROCEDURE)
+            
+    elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
+        # Event is diagnosis
+        event_type = "DIAGNOSIS"
+        event_code = context_diagnosis_code
+        translation = None
+        
+        # Look up ICD standard
+        if context_name.str.contains("ICD-10", regex=False).any():
+            event_context = "ICD-10"
+            translation = vocabulary_lookup(
+                vocabulary_path = DIAGNOSIS_ICD_10_VOCAB_PATH, 
+                search_term = str(context_diagnosis_code), 
+                search_column = 0, 
+                target_column = 1
+            )
+        elif context_name.str.contains("ICD-9", regex=False).any():
+            event_context = "ICD-9"
+            translation = vocabulary_lookup(
+                vocabulary_path = DIAGNOSIS_ICD_9_VOCAB_PATH, 
+                search_term = str(context_diagnosis_code), 
+                search_column = 0, 
+                target_column = 1
+            )            
+        elif context_name.str.contains("SYSTEM", regex=False).any():
+            event_context = "SYSTEM"
+        elif context_name.str.contains("IMO", regex=False).any():
+            event_context = "IMO"
+        elif context_name.str.contains("EPIC", regex=False).any():
+            event_context = "EPIC"
+        elif verbose:
+            print("Unknown Diagnosis Context: " + context_name)
+        
+        if translation is not None:
+            event_name = translation
+        else:
+            event_name = event.description
+        
+        event_name = get_abstract_event_name(event_name, EventType.DIAGNOSIS)
+   
+    elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
+        # Event is material
+        event_type = "MATERIAL"
+        event_code = context_material_code
+        event_name = event.material_name
+        
+        if context_name.str.contains("EPIC MEDICATION", regex=False).any():
+            event_context = "EPIC MEDICATION"
+        elif verbose:
+            print("Unknown Material Context: " + context_name)
+        
+        event_name = get_abstract_event_name(event_name, EventType.MATERIAL)
+            
+    else:
+        # Event is neither procedure, material nor diagnosis
+        return None
+    
+    result = event_type
+    
+    if event_context is not None and verbose:
+        result += (" (" + event_context + " " + event_code + ")")
+    
+    if event_name is not None:
+        result += (": " + event_name)
+    
+    return result
 
 def log_from_cohort(cohort, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
     # get necessary data from cohort
