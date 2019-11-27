@@ -255,6 +255,8 @@ def filter_encounter_events(encounter_events, relevant_diagnosis=None, relevant_
     for mrn in encounter_events:
         for begin_date in encounter_events[mrn]:
             is_relevant = False
+            if relevant_diagnosis is None and relevant_procedure is None and relevant_material is None and filter_expression is None:
+                is_relevant = True
             if relevant_diagnosis is not None:
                 if has_diagnosis(relevant_diagnosis, encounter_events[mrn][begin_date]):
                     is_relevant = True
