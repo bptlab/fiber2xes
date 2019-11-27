@@ -31,6 +31,11 @@ from fiberpatch.DiagnosisWithTime import DiagnosisWithTime
 from fiberpatch.MaterialWithTime import MaterialWithTime
 from fiberpatch.DrugWithTime import DrugWithTime
 
+DIAGNOSIS_ICD_10_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd10.csv")
+DIAGNOSIS_ICD_9_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd9.csv")
+PROCEDURE_CPT_4_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-cpt4.csv")
+ABSTRACTION_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "abstraction.csv")
+
 def timer(func):
     # Decorator to benchmark functions
     @functools.wraps(func)
@@ -255,16 +260,17 @@ def create_log_from_filtered_events(filtered_events):
     return log
 
 
-def get_abstract_event_name(event_name, event_type):
+def get_abstract_event_name(event_name, event_type, delimiter=";"):
     # TODO: Add abstraction vocabularies to merge similar events
     if (event_type is EventType.DIAGNOSIS):
         # TODO
         return event_name
-    elif (event_type is EventType.PROCEDURE):
-        # TODO
-        return event_name
-    elif (event_type is EventType.MATERIAL):
-        # TODO
+    elif (event_type is EventType.PROCEDURE) or (event_type is EventType.MATERIAL):
+        table = csv.reader(open(ABSTRACTION_VOCAB_PATH), delimiter=delimiter)
+        for row in table:
+            for i, entry in enumerate(row):
+                if re.search(str(entry), str(event_name), re.IGNORECASE) != None:
+                    return table[0][i]
         return event_name
     else:
         return event_name
