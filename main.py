@@ -267,10 +267,11 @@ def get_abstract_event_name(event_name, event_type, delimiter=";"):
         return event_name
     elif (event_type is EventType.PROCEDURE) or (event_type is EventType.MATERIAL):
         table = csv.reader(open(ABSTRACTION_VOCAB_PATH), delimiter=delimiter)
+        first_row = next(table)
         for row in table:
             for i, entry in enumerate(row):
-                if re.search(str(entry), str(event_name), re.IGNORECASE) != None:
-                    return table[0][i]
+                if entry and re.search(str(entry), str(event_name), re.IGNORECASE) != None:
+                    return first_row[i]
         return event_name
     else:
         return event_name
