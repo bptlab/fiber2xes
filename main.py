@@ -1,3 +1,4 @@
+from translation.translation import Translation
 import pandas as pd
 import numpy as np
 import datetime
@@ -97,13 +98,13 @@ class EncounterWithVisit(_FactCondition):
                 d_enc.ENCOUNTER_TYPE, self._attrs['category'])
         return clause
 
-from translation.translation import Translation
 
 class EventType(Enum):
     DIAGNOSIS = 0
     PROCEDURE = 1
     MATERIAL = 2
-    
+
+
 class ProcedureWithTime(_FactCondition):
     """
     This is an extension of the Procedure Class, to also contain time of day-keys.
@@ -228,22 +229,28 @@ def get_visits_and_encounters_per_patient(patients, encounters):
     visits_and_encounters_per_patient = {}
     for mrn in patient_mrns:
         visits_for_patient = {}
-        all_visits_for_patient = encounters[(encounters.medical_record_number == mrn)].encounter_visit_id.unique()
+        all_visits_for_patient = encounters[(
+            encounters.medical_record_number == mrn)].encounter_visit_id.unique()
         for encounter_visit_id in all_visits_for_patient:
             visits_for_patient[encounter_visit_id] = []
-            all_encounter_keys = encounters[(encounters.encounter_visit_id == encounter_visit_id)].encounter_key.unique()
+            all_encounter_keys = encounters[(
+                encounters.encounter_visit_id == encounter_visit_id)].encounter_key.unique()
             for encounter_key in all_encounter_keys:
-                visits_for_patient[encounter_visit_id] = visits_for_patient[encounter_visit_id] + [encounter_key]
+                visits_for_patient[encounter_visit_id] = visits_for_patient[encounter_visit_id] + [
+                    encounter_key]
         visits_and_encounters_per_patient[mrn] = visits_for_patient
     return visits_and_encounters_per_patient
+
 
 def get_encounter_keys_per_patient(patient_encounters):
     patient_mrns = patient_encounters.medical_record_number.unique()
     encounters_per_patient = {}
     for mrn in patient_mrns:
-        encounters_for_patient = patient_encounters[(patient_encounters.medical_record_number == mrn)].encounter_key.unique()
+        encounters_for_patient = patient_encounters[(
+            patient_encounters.medical_record_number == mrn)].encounter_key.unique()
         encounters_per_patient[mrn] = encounters_for_patient
     return encounters_per_patient
+
 
 def get_patient_events_per_encounter(patients, patient_encounters, patient_events):
     patient_mrns = patients.medical_record_number.unique()
@@ -252,15 +259,19 @@ def get_patient_events_per_encounter(patients, patient_encounters, patient_event
         events_per_patient[mrn] = {}
         encounters = patient_encounters[mrn]
         for encounter in encounters:
-                events_per_patient[mrn][encounter] = []
-                events = patient_events[(patient_events.encounter_key == encounter)]
-                for index, event in events.iterrows():
-                    events_per_patient[mrn][encounter] = events_per_patient[mrn][encounter] + [event] 
+            events_per_patient[mrn][encounter] = []
+            events = patient_events[(
+                patient_events.encounter_key == encounter)]
+            for index, event in events.iterrows():
+                events_per_patient[mrn][encounter] = events_per_patient[mrn][encounter] + [event]
     return events_per_patient
 
+
 def get_patient_encounters(patients, encounters):
-    patient_encounters = pd.merge(patients, encounters, on='medical_record_number', how='inner')
+    patient_encounters = pd.merge(
+        patients, encounters, on='medical_record_number', how='inner')
     return patient_encounters
+
 
 def get_patient_events_per_visit(patients, patient_visits_and_encounters, patient_events):
     patient_mrns = patients.medical_record_number.unique()
@@ -272,10 +283,24 @@ def get_patient_events_per_visit(patients, patient_visits_and_encounters, patien
             events_per_patient[mrn][visit] = []
             encounters = patient_visits[visit]
             for encounter in encounters:
-                events = patient_events[(patient_events.encounter_key == encounter)]
+                events = patient_events[(
+                    patient_events.encounter_key == encounter)]
                 for index, event in events.iterrows():
                     events_per_patient[mrn][visit] = events_per_patient[mrn][visit] + [event]
     return events_per_patient
+
+
+def get_patient_events_per_patient(patients, patient_events):
+    patient_mrns = patients.medical_record_number.unique()
+    events_per_patient = {}
+    for mrn in patient_mrns:
+        events_per_patient[mrn] = {}
+        events_per_patient[mrn][mrn] = []
+        events = patient_events[(patient_events.mrn == mrn)]
+        for index, event in events.iterrows():
+            events_per_patient[mrn][mrn] = events_per_patient[mrn][mrn] + [event]
+    return events_per_patient
+
 
 def get_patient_events(patients, events):
     # join patients and events
@@ -289,7 +314,7 @@ def get_patient_events(patients, events):
     unique_events = set()
     for index, event in patient_events.iterrows():
         tup = (event["medical_record_number"], event["timestamp"],
-            event["context_diagnosis_code"], event["context_procedure_code"])
+               event["context_diagnosis_code"], event["context_procedure_code"])
         if tup not in unique_events:
             unique_events.add(tup)
         else:
@@ -328,7 +353,7 @@ def filter_events(events_to_filter, relevant_diagnosis=None, relevant_procedure=
                     filtered_events[mrn] = {}
                 if trace_key not in filtered_events[mrn]:
                     filtered_events[mrn][trace_key] = {}
-                filtered_events[mrn][trace_key] = events_to_filter[mrn][trace_key] 
+                filtered_events[mrn][trace_key] = events_to_filter[mrn][trace_key]
 
     return filtered_events
 
@@ -391,6 +416,7 @@ def create_log_from_filtered_events(filtered_events):
             log.append(trace)
     return log
 
+
 def get_abstract_event_name(event_name, event_type):
     # TODO: Add abstraction vocabularies to merge similar events
     if (event_type is EventType.DIAGNOSIS):
@@ -404,6 +430,7 @@ def get_abstract_event_name(event_name, event_type):
         return event_name
     else:
         return event_name
+
 
 def translate_procedure_diagnosis_material_to_event(event, verbose=False):
     """
@@ -419,15 +446,15 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
     context_diagnosis_code set
     -> diagnosis is event
     """
-    
-    context_diagnosis_code=event.context_diagnosis_code 
-    context_material_code=event.context_material_code
-    context_procedure_code=event.context_procedure_code
-    context_name=event.context_name
-    
+
+    context_diagnosis_code = event.context_diagnosis_code
+    context_material_code = event.context_material_code
+    context_procedure_code = event.context_procedure_code
+    context_name = event.context_name
+
     event_name = None
     event_type = ""
-    
+
     # For verbose output
     event_context = None
     event_code = ""
@@ -437,28 +464,30 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
         # Event is procedure
         event_type = "PROCEDURE"
         event_code = context_procedure_code
-        
-        event_context, translation = Translation.translate_procedure(context_name, context_procedure_code, verbose)
+
+        event_context, translation = Translation.translate_procedure(
+            context_name, context_procedure_code, verbose)
 
         if translation is not None:
             event_name = translation
         else:
             event_name = event.procedure_description
-        
+
         event_name = get_abstract_event_name(event_name, EventType.PROCEDURE)
-            
+
     elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
         # Event is diagnosis
         event_type = "DIAGNOSIS"
         event_code = context_diagnosis_code
-        
-        event_context, translation = Translation.translate_diagnosis(context_name, context_diagnosis_code, verbose)
-        
+
+        event_context, translation = Translation.translate_diagnosis(
+            context_name, context_diagnosis_code, verbose)
+
         if translation is not None:
             event_name = translation
         else:
             event_name = event.description
-        
+
         event_name = get_abstract_event_name(event_name, EventType.DIAGNOSIS)
 
     elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
@@ -466,24 +495,26 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
         event_type = "MATERIAL"
         event_code = context_material_code
         event_name = event.material_name
-        
-        event_context, translation = Translation.translate_material(context_name, context_material_code, verbose)
-        
+
+        event_context, translation = Translation.translate_material(
+            context_name, context_material_code, verbose)
+
         event_name = get_abstract_event_name(event_name, EventType.MATERIAL)
-            
+
     else:
         # Event is neither procedure, material nor diagnosis
         return None
-    
+
     result = event_type
-    
+
     if event_context is not None and verbose:
         result += (" (" + event_context + " " + event_code + ")")
-    
+
     if event_name is not None:
         result += (": " + event_name)
-    
+
     return result
+
 
 def log_from_cohort(cohort, trace_type, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
     # get necessary data from cohort
@@ -505,19 +536,24 @@ def log_from_cohort(cohort, trace_type, relevant_diagnosis=None, relevant_proced
     if trace_type == "encounter":
         # mrn -> encounter_keys
         patient_encounters = get_patient_encounters(patients, encounters)
-        patient_encounter_keys = get_encounter_keys_per_patient(patient_encounters)
+        patient_encounter_keys = get_encounter_keys_per_patient(
+            patient_encounters)
         # mrn -> encounter_key -> events
-        events_per_patient = get_patient_events_per_encounter(patients, patient_encounter_keys, patient_events)
+        events_per_patient = get_patient_events_per_encounter(
+            patients, patient_encounter_keys, patient_events)
     elif trace_type == "visit":
         patient_encounters = get_patient_encounters(patients, encounters)
         # mrn -> encounter_visit_ids -> encounter_key
-        patient_visits_and_encounters = get_visits_and_encounters_per_patient(patients, patient_encounters)
+        patient_visits_and_encounters = get_visits_and_encounters_per_patient(
+            patients, patient_encounters)
         # mrn -> encounter_visit_ids -> events
-        events_per_patient = get_patient_events_per_visit(patients, patient_visits_and_encounters, patient_events)
+        events_per_patient = get_patient_events_per_visit(
+            patients, patient_visits_and_encounters, patient_events)
     elif trace_type == "mrn":
-        sys.exit("Building traces based on MRN is not yet implemented :(")
+        events_per_patient = get_patient_events_per_patient(
+            patients, patient_events)
     else:
-        sys.exit("No matching trace type given. Try using encounter or visit")
+        sys.exit("No matching trace type given. Try using encounter, visit, or mrn")
 
     filtered_events = filter_events(
         events_per_patient,
