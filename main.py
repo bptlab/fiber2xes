@@ -296,7 +296,7 @@ def get_patient_events_per_patient(patients, patient_events):
     for mrn in patient_mrns:
         events_per_patient[mrn] = {}
         events_per_patient[mrn][mrn] = []
-        events = patient_events[(patient_events.mrn == mrn)]
+        events = patient_events[(patient_events.medical_record_number == mrn)]
         for index, event in events.iterrows():
             events_per_patient[mrn][mrn] = events_per_patient[mrn][mrn] + [event]
     return events_per_patient
