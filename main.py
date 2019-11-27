@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import csv
 import datetime
 from enum import Enum
 import time
@@ -98,9 +97,7 @@ class EncounterWithVisit(_FactCondition):
                 d_enc.ENCOUNTER_TYPE, self._attrs['category'])
         return clause
 
-DIAGNOSIS_ICD_10_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd10.csv")
-DIAGNOSIS_ICD_9_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd9.csv")
-PROCEDURE_CPT_4_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-cpt4.csv")
+from translation.translation import Translation
 
 class EventType(Enum):
     DIAGNOSIS = 0
@@ -394,14 +391,6 @@ def create_log_from_filtered_events(filtered_events):
             log.append(trace)
     return log
 
-def vocabulary_lookup(vocabulary_path, search_term, search_column = 0, target_column = 1, delimiter = ","):
-    reader = csv.reader(open(vocabulary_path), delimiter=delimiter)
-    for row in reader:
-        if len(row) > search_column and len(row) > target_column:
-            if re.search("^" + search_term + "$", row[search_column], re.IGNORECASE) != None:
-                return row[target_column]
-    return None
-
 def get_abstract_event_name(event_name, event_type):
     # TODO: Add abstraction vocabularies to merge similar events
     if (event_type is EventType.DIAGNOSIS):
@@ -448,43 +437,9 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
         # Event is procedure
         event_type = "PROCEDURE"
         event_code = context_procedure_code
-        translation = None
         
-        # Look up CPT-4 standard
-        if context_name.str.contains("(EPIC )*CPT-4", regex=True).any():
-            event_context = "CPT-4"
-            translation = vocabulary_lookup(
-                vocabulary_path = PROCEDURE_CPT_4_VOCAB_PATH, 
-                search_term = str(context_procedure_code), 
-                search_column = 1, 
-                target_column = 2
-            )
-        # Look up ICD standard
-        elif context_name.str.contains("ICD-10", regex=False).any():
-            event_context = "ICD-10"
-            translation = vocabulary_lookup(
-                vocabulary_path = DIAGNOSIS_ICD_10_VOCAB_PATH, 
-                search_term = str(context_procedure_code), 
-                search_column = 0, 
-                target_column = 1
-            )
-        elif context_name.str.contains("ICD-9", regex=False).any():
-            event_context = "ICD-9"
-            translation = vocabulary_lookup(
-                vocabulary_path = DIAGNOSIS_ICD_9_VOCAB_PATH, 
-                search_term = str(context_procedure_code), 
-                search_column = 0, 
-                target_column = 1
-            )
-        elif context_name.str.contains("SYSTEM", regex=False).any():
-            event_context = "SYSTEM"
-        elif context_name.str.contains("IMO", regex=False).any():
-            event_context = "IMO"
-        elif context_name.str.contains("EPIC", regex=False).any():
-            event_context = "EPIC"
-        elif verbose:
-            print("Unknown Procedure Context: " + context_name)
-            
+        event_context, translation = Translation.translate_procedure(context_name, context_procedure_code, verbose)
+
         if translation is not None:
             event_name = translation
         else:
@@ -496,33 +451,8 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
         # Event is diagnosis
         event_type = "DIAGNOSIS"
         event_code = context_diagnosis_code
-        translation = None
         
-        # Look up ICD standard
-        if context_name.str.contains("ICD-10", regex=False).any():
-            event_context = "ICD-10"
-            translation = vocabulary_lookup(
-                vocabulary_path = DIAGNOSIS_ICD_10_VOCAB_PATH, 
-                search_term = str(context_diagnosis_code), 
-                search_column = 0, 
-                target_column = 1
-            )
-        elif context_name.str.contains("ICD-9", regex=False).any():
-            event_context = "ICD-9"
-            translation = vocabulary_lookup(
-                vocabulary_path = DIAGNOSIS_ICD_9_VOCAB_PATH, 
-                search_term = str(context_diagnosis_code), 
-                search_column = 0, 
-                target_column = 1
-            )            
-        elif context_name.str.contains("SYSTEM", regex=False).any():
-            event_context = "SYSTEM"
-        elif context_name.str.contains("IMO", regex=False).any():
-            event_context = "IMO"
-        elif context_name.str.contains("EPIC", regex=False).any():
-            event_context = "EPIC"
-        elif verbose:
-            print("Unknown Diagnosis Context: " + context_name)
+        event_context, translation = Translation.translate_diagnosis(context_name, context_diagnosis_code, verbose)
         
         if translation is not None:
             event_name = translation
@@ -536,11 +466,8 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
         event_type = "MATERIAL"
         event_code = context_material_code
         event_name = event.material_name
-
-        if context_name.str.contains("EPIC MEDICATION", regex=False).any():
-            event_context = "EPIC MEDICATION"
-        elif verbose:
-            print("Unknown Material Context: " + context_name)
+        
+        event_context, translation = Translation.translate_material(context_name, context_material_code, verbose)
         
         event_name = get_abstract_event_name(event_name, EventType.MATERIAL)
             
