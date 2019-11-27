@@ -262,7 +262,7 @@ def get_patient_events_per_encounter(patients, patient_encounters, patient_event
     return events_per_patient
 
 def get_patient_encounters(patients, encounters):
-    patient_encounters = pd.merge(patients, encounters, on='medical_record_number', how='outer')
+    patient_encounters = pd.merge(patients, encounters, on='medical_record_number', how='inner')
     return patient_encounters
 
 def get_patient_events_per_visit(patients, patient_visits_and_encounters, patient_events):
