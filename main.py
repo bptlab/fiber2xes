@@ -73,6 +73,7 @@ class EncounterWithVisit(_FactCondition):
         d_enc.BEGIN_DATE_AGE_IN_DAYS,
         d_enc.END_DATE_AGE_IN_DAYS,
         d_enc.ENCOUNTER_VISIT_ID,
+        d_enc.ENCOUNTER_KEY
     ]
 
     def __init__(self, category: Optional[str] = '', **kwargs):
@@ -122,8 +123,8 @@ class ProcedureWithTime(_FactCondition):
         d_table.CONTEXT_NAME,
         fact.TIME_OF_DAY_KEY,
         description_column,
-        d_enc.ENCOUNTER_VISIT_ID,
-        code_column
+        code_column,
+        fact.ENCOUNTER_KEY,
     ]
 
 
@@ -141,10 +142,10 @@ class DiagnosisWithTime(_FactCondition):
         d_pers.MEDICAL_RECORD_NUMBER,
         fact.AGE_IN_DAYS,
         d_table.CONTEXT_NAME,
-        description_column,
-        d_enc.ENCOUNTER_VISIT_ID,
-        code_column,
         fact.TIME_OF_DAY_KEY,
+        description_column,
+        code_column,
+        fact.ENCOUNTER_KEY,
     ]
 
 
@@ -162,9 +163,9 @@ class MaterialWithTime(_FactCondition):
         d_pers.MEDICAL_RECORD_NUMBER,
         fact.AGE_IN_DAYS,
         d_table.CONTEXT_NAME,
-        d_enc.ENCOUNTER_VISIT_ID,
+        fact.ENCOUNTER_KEY,
         description_column,
-        code_column
+        code_column,
     ]
 
 
