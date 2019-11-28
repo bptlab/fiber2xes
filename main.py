@@ -162,6 +162,7 @@ class MaterialWithTime(_FactCondition):
         fact.AGE_IN_DAYS,
         d_table.CONTEXT_NAME,
         fact.ENCOUNTER_KEY,
+        fact.TIME_OF_DAY_KEY,
         description_column,
         code_column,
     ]
