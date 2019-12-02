@@ -1,10 +1,17 @@
-from translation.translation import Translation
+import os
+import re
+import sys
 import pandas as pd
 import numpy as np
 import datetime
 from enum import Enum
 import time
 import math
+
+from opyenxes.factory.XFactory import XFactory
+from opyenxes.id.XIDFactory import XIDFactory
+from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
+
 from fiber import Cohort
 from fiber.condition import (
     Procedure,
@@ -15,119 +22,18 @@ from fiber.condition import (
     Encounter,
     Measurement
 )
-import os
-import re
-from opyenxes.factory.XFactory import XFactory
-from opyenxes.id.XIDFactory import XIDFactory
-from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
-from datetime import datetime as dt
 
-from typing import Optional
-from fiber.condition.fact.fact import _FactCondition
-from fiber.condition.database import _multi_like_clause
-from fiber.condition.database import _case_insensitive_like
-from fiber.condition.mixins import ComparisonMixin
-from fiber.database.table import (
-    d_pers,
-    d_enc,
-    d_uom,
-    fact,
-    fd_proc,
-    fd_diag,
-    fd_mat,
-)
-import sys
+from translation.translation import Translation
 from fiberpatch.EncounterWithVisit import EncounterWithVisit
 from fiberpatch.ProcedureWithTime import ProcedureWithTime
+from fiberpatch.DiagnosisWithTime import DiagnosisWithTime
+from fiberpatch.MaterialWithTime import MaterialWithTime
+from fiberpatch.DrugWithTime import DrugWithTime
 
 class EventType(Enum):
     DIAGNOSIS = 0
     PROCEDURE = 1
     MATERIAL = 2
-
-class DiagnosisWithTime(_FactCondition):
-    """
-    This is an extension of the Diagnosis Class, to also contain time of day-keys.
-    """
-    dimensions = {'DIAGNOSIS'}
-    d_table = fd_diag
-    code_column = fd_diag.CONTEXT_DIAGNOSIS_CODE
-    category_column = fd_diag.DIAGNOSIS_TYPE
-    description_column = fd_diag.DESCRIPTION
-
-    _default_columns = [
-        d_pers.MEDICAL_RECORD_NUMBER,
-        fact.AGE_IN_DAYS,
-        d_table.CONTEXT_NAME,
-        fact.TIME_OF_DAY_KEY,
-        description_column,
-        code_column,
-        fact.ENCOUNTER_KEY,
-    ]
-
-
-class MaterialWithTime(_FactCondition):
-    """
-    This is an extension of the Material Class, to also contain time of day-keys.
-    """
-    dimensions = {'MATERIAL'}
-    d_table = fd_mat
-    code_column = fd_mat.CONTEXT_MATERIAL_CODE
-    category_column = fd_mat.MATERIAL_TYPE
-    description_column = fd_mat.MATERIAL_NAME
-
-    _default_columns = [
-        d_pers.MEDICAL_RECORD_NUMBER,
-        fact.AGE_IN_DAYS,
-        d_table.CONTEXT_NAME,
-        fact.ENCOUNTER_KEY,
-        description_column,
-        code_column,
-    ]
-
-
-class DrugWithTime(MaterialWithTime):
-    """
-    This is an extension of the Drug Class, to also contain time of day-keys.
-    """
-
-    def __init__(
-        self,
-        name: Optional[str] = '',
-        brand: Optional[str] = '',
-        generic: Optional[str] = '',
-        *args,
-        **kwargs
-    ):
-        kwargs['category'] = 'Drug'
-        super().__init__(*args, **kwargs)
-        self._attrs['name'] = name
-        self._attrs['brand'] = brand
-        self._attrs['generic'] = generic
-
-    @property
-    def name(self):
-        return self._attrs['name']
-
-    def _create_clause(self):
-        clause = super()._create_clause()
-        if self.name:
-            clause &= (
-                _multi_like_clause(fd_mat.MATERIAL_NAME, self.name) |
-                _multi_like_clause(fd_mat.GENERIC_NAME, self.name) |
-                _multi_like_clause(fd_mat.BRAND1, self.name) |
-                _multi_like_clause(fd_mat.BRAND2, self.name)
-            )
-        if self._attrs['brand']:
-            clause &= (
-                _multi_like_clause(fd_mat.BRAND1, self._attrs['brand']) |
-                _multi_like_clause(fd_mat.BRAND2, self._attrs['brand'])
-            )
-        if self._attrs['generic']:
-            clause &= _multi_like_clause(
-                fd_mat.GENERIC_NAME, self._attrs['generic'])
-
-        return clause
 
 
 def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key):
