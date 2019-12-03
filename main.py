@@ -347,15 +347,7 @@ def log_from_cohort(cohort, trace_type, relevant_diagnosis=None, relevant_proced
     encounters = cohort.get(EncounterWithVisit())
     events = cohort.get(DiagnosisWithTime(),
                         ProcedureWithTime(), DrugWithTime())
-
-    """
-    Encounter -> Case
-    1. Get encounters for a patient
-    2. Get procedures, diagnoses that happened for patient in timespan of encounter
-    3. If one procedure/diagnosis of encounter matches condition
-            -> Encounter (+ procedures/diagnoses) is part of case
-    """
-
+                        
     patient_events = get_patient_events(patients, events)
 
     if trace_type == "encounter":
