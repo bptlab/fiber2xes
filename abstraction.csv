@@ -1,48 +1,48 @@
-Nonpharmacologic Treatment;PT (NSAID);PT (Skeletal muscle relaxants);PT (Opioid + Duloxetine);PT (Anitdepressants (SSRI + SNRI));PT (Costerioids);PT (Benzodiazepines);!Remove
-Superficial heat;acetylsalicylic acid;Dysport;Tramadol;citalopram;methylprednisolone;alprazolam;Diastolic Blood Pressure
-Massage;Aspirin;Gablofen, Lioresal;Buprenorphine;escitalopram;Prednisolone;clobazam;Systolic Blood Pressure
-Acupuncture;Diflunisal;Soma, Vanadom;Tapentadol;fluoxetine;bethamethasone;clonazepam;PULSE
-Spinal manipulation;Dolobid;Lorzone;Morphine;fluvoxamine;Celestone;clorazepate;Temperature, Tympanic
-Exercise;Salicylic acid;Amrix, Flexeril, Fexmid;Hydromorphone;paroxetine;Orapred;chlordiazepoxide;Respirations
-Ultrasound;Salsalate;Dantrium;Oxymorphone;sertraline;Prelone;diazepam;O2 SATURATION
-Kinesio taping;Disalcid;Botox;Duloxetine;vilazodone;Prednisone;estazolam;PAIN SCORE
-Multidisciplinary rehabilitation;Ibuprofen;Norflex;;Celexa;Intensol;lorazepam;HEIGHT
-Mindfulness-bades stress reduction;Dexibuprofen;Skelaxin;;Lexapro;triamcinolone;oxazepam;WEIGHT
-Tai chi;Naproxen;Robaxin;;Prozac, Sarafem;Aristospan;temazepam;R APACHE TEMPERATURE
-Yoga;Fenoprofen;Mybloc;;Luvox;Kenalog;triazolam;TEMPERATURE
-Motor control exercise;Ketoprofen;Zanaflex;;Brisdelle, Paxil, Pexeva;Intralesional;Xanax;NOT AVAILABLE
-Progressive relaxation;Dexketoprofen;abobotulinumtoxinA;;Zoloft;Aristospan;Onfi;
-Electromyography biofeedback (TENS);Flurbiprofen;baclofen;;Viibrid;Medrol;Klonopin;
-Low-level laser therapy (LLLT);Oxaprozin;carisoprodol;;desvenlafaxine;Depo-Medrol;Tranxene;
-Operant therapy;Loxoprofen;chlorzoxazone;;duloxetine;Solu-Medrol;Librium;
-Cognitive behavioral therapy;Indomethacin;cyclobenzaprine;;levomilnacipran;dexamethasone;Valium;
-;Tolmetin;dantrolene;;milnacipran;DexPak;Diastat;
-;Sulindac;onabotulinumtoxinA;;venlafaxine;;Prosom;
-;Etodolac;orphenadrine;;Khedezla;;Ativan;
-;Ketorolac;metaxalone;;Cymbalta;;Serax;
-;Diclofenac;methocarbamol;;Fetzima;;Restoril;
-;Aceclofenac;rimabotulinumtoxinB;;Savella;;Halcion;
-;Nabumetone;tizanidine;;Effexor;;;
-;Piroxicam;;;Pristiq;;;
-;Meloxicam;;;Irenka;;;
-;Tenoxicam;;;;;;
-;Droxicam;;;;;;
-;Lornoxicam;;;;;;
-;Isoxicam;;;;;;
-;Phenylbutazone;;;;;;
-;Bute;;;;;;
-;Mefenamic acid;;;;;;
-;Meclofenamic acid;;;;;;
-;Flufenamic acid;;;;;;
-;Tolfenamic acid;;;;;;
-;Celecoxib;;;;;;
-;Rofecoxib;;;;;;
-;Valdecoxib;;;;;;
-;Parecoxib;;;;;;
-;Lumiracoxib;;;;;;
-;Etoricoxib;;;;;;
-;Firocoxib;;;;;;
-;Nimesulide;;;;;;
-;Clonixin;;;;;;
-;Licofelone;;;;;;
-;Tiaprofenic acid;;;;;;
+Nonpharmacologic Treatment;PT (NSAID);PT (Skeletal muscle relaxants);PT (Opioid + Duloxetine);PT (Antidepressants (SSRI + SNRI));PT (Costerioids);PT (Benzodiazepines);Blacklist;Whitelist;Low Back Pain;Back Pain
+Superficial heat;acetylsalicylic acid;Dysport;Tramadol;citalopram;methylprednisolone;alprazolam;Diastolic Blood Pressure;;low back pain;back pain
+Massage;Aspirin;Gablofen;Buprenorphine;escitalopram;Prednisolone;clobazam;Systolic Blood Pressure;;;lumbago
+Acupuncture;Diflunisal;Soma;Tapentadol;fluoxetine;bethamethasone;clonazepam;PULSE;;;
+Spinal manipulation;Dolobid;Lorzone;Morphine;fluvoxamine;Celestone;clorazepate;Temperature, Tympanic;;;
+Exercise;Salicylic acid;Amrix;Hydromorphone;paroxetine;Orapred;chlordiazepoxide;Respirations;;;
+Ultrasound;Salsalate;Dantrium;Oxymorphone;sertraline;Prelone;diazepam;O2 SATURATION;;;
+Kinesio taping;Disalcid;Botox;Duloxetine;vilazodone;Prednisone;estazolam;PAIN SCORE;;;
+Multidisciplinary rehabilitation;Ibuprofen;Norflex;;Celexa;Intensol;lorazepam;HEIGHT;;;
+Mindfulness-bades stress reduction;Dexibuprofen;Skelaxin;;Lexapro;triamcinolone;oxazepam;WEIGHT;;;
+Tai chi;Naproxen;Robaxin;;Prozac;Aristospan;temazepam;R APACHE TEMPERATURE;;;
+Yoga;Fenoprofen;Mybloc;;Luvox;Kenalog;triazolam;TEMPERATURE;;;
+Motor control exercise;Ketoprofen;Zanaflex;;Brisdelle;Intralesional;Xanax;NOT AVAILABLE;;;
+Progressive relaxation;Dexketoprofen;abobotulinumtoxinA;;Zoloft;Aristospan;Onfi;;;;
+Electromyography biofeedback (TENS);Flurbiprofen;baclofen;;Viibrid;Medrol;Klonopin;;;;
+Low-level laser therapy (LLLT);Oxaprozin;carisoprodol;;desvenlafaxine;Depo-Medrol;Tranxene;;;;
+Operant therapy;Loxoprofen;chlorzoxazone;;duloxetine;Solu-Medrol;Librium;;;;
+Cognitive behavioral therapy;Indomethacin;cyclobenzaprine;;levomilnacipran;dexamethasone;Valium;;;;
+;Tolmetin;dantrolene;;milnacipran;DexPak;Diastat;;;;
+;Sulindac;onabotulinumtoxinA;;venlafaxine;;Prosom;;;;
+;Etodolac;orphenadrine;;Khedezla;;Ativan;;;;
+;Ketorolac;metaxalone;;Cymbalta;;Serax;;;;
+;Diclofenac;methocarbamol;;Fetzima;;Restoril;;;;
+;Aceclofenac;rimabotulinumtoxinB;;Savella;;Halcion;;;;
+;Nabumetone;tizanidine;;Effexor;;;;;;
+;Piroxicam;Vanadom;;Pristiq;;;;;;
+;Meloxicam;Lioresal;;Irenka;;;;;;
+;Tenoxicam;Fexmid;;Sarafem;;;;;;
+;Droxicam;Flexeril;;Pexeva;;;;;;
+;Lornoxicam;;;Paxil;;;;;;
+;Isoxicam;;;;;;;;;
+;Phenylbutazone;;;;;;;;;
+;Bute;;;;;;;;;
+;Mefenamic acid;;;;;;;;;
+;Meclofenamic acid;;;;;;;;;
+;Flufenamic acid;;;;;;;;;
+;Tolfenamic acid;;;;;;;;;
+;Celecoxib;;;;;;;;;
+;Rofecoxib;;;;;;;;;
+;Valdecoxib;;;;;;;;;
+;Parecoxib;;;;;;;;;
+;Lumiracoxib;;;;;;;;;
+;Etoricoxib;;;;;;;;;
+;Firocoxib;;;;;;;;;
+;Nimesulide;;;;;;;;;
+;Clonixin;;;;;;;;;
+;Licofelone;;;;;;;;;
+;Tiaprofenic acid;;;;;;;;;

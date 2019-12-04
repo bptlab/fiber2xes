@@ -260,23 +260,23 @@ def create_log_from_filtered_events(filtered_events):
     return log
 
 
-def get_abstract_event_name(event_name, event_type, delimiter=";"):
-    # Returns abstract name if possible and wheter the entry should be removed
-    if (event_type is EventType.DIAGNOSIS):
-        # TODO
-        return event_name, False
-    elif (event_type is EventType.PROCEDURE) or (event_type is EventType.MATERIAL):
-        table = csv.reader(open(ABSTRACTION_VOCAB_PATH), delimiter=delimiter)
-        first_row = next(table)
-        for row in table:
-            for i, entry in enumerate(row):
-                if entry and re.search(str(entry), str(event_name), re.IGNORECASE) != None:
-                    if first_row[i].lower() == "!Remove".lower():
-                        return None, True
-                    return first_row[i], False
-        return event_name, False
-    else:
-        return event_name, False
+def get_abstract_event_name(event_name, remove_unlisted=False, delimiter=";"):
+    # Returns abstract name if possible and remove unlisted entries
+    table = csv.reader(open(ABSTRACTION_VOCAB_PATH), delimiter=delimiter)
+    first_row = next(table)
+    for row in table:
+        for i, entry in enumerate(row):
+            if entry and re.search(str(entry), str(event_name), re.IGNORECASE) != None:
+                if remove_unlisted and first_row[i].lower() == "Blacklist".lower():
+                    return None, True
+                elif first_row[i].lower() == "Whitelist".lower():
+                    return event_name, True
+                return first_row[i], False
+    
+    if remove_unlisted:
+        return None, True
+    
+    return event_name, False
 
 def identify_consultation(procedure_description):
     result = re.search("^CONSULT TO ", procedure_description, re.IGNORECASE)
@@ -335,8 +335,6 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
             event_name = consultation
             event_type = "CONSULTATION"
 
-        event_name, remove_entry = get_abstract_event_name(event_name, EventType.PROCEDURE)
-
     elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
         # Event is diagnosis
         event_type = "DIAGNOSIS"
@@ -350,8 +348,6 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
         else:
             event_name = event.description
         
-        event_name, remove_entry = get_abstract_event_name(event_name, EventType.DIAGNOSIS)
-   
     elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
         # Event is material
         event_type = "MATERIAL"
@@ -362,12 +358,12 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
             event_context = "EPIC MEDICATION"
         elif verbose:
             print("Unknown Material Context: " + context_name)
-        
-        event_name, remove_entry = get_abstract_event_name(event_name, EventType.MATERIAL)
-            
+
     else:
         # Event is neither procedure, material nor diagnosis
         return None
+
+    event_name, remove_entry = get_abstract_event_name(event_name, True)
     
     if remove_entry:
         return None
