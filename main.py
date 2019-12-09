@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import functools
 import pandas as pd
 import numpy as np
 import datetime
@@ -29,6 +30,18 @@ from fiberpatch.ProcedureWithTime import ProcedureWithTime
 from fiberpatch.DiagnosisWithTime import DiagnosisWithTime
 from fiberpatch.MaterialWithTime import MaterialWithTime
 from fiberpatch.DrugWithTime import DrugWithTime
+
+def timer(func):
+    # Decorator to benchmark functions
+    @functools.wraps(func)
+    def wrapper_timer(*args, **kwargs):
+        start_time = time.perf_counter()
+        value = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        run_time = end_time - start_time
+        print(f"Finished {func.__name__!r} in {run_time:.4f} s")
+        return value
+    return wrapper_timer
 
 class EventType(Enum):
     DIAGNOSIS = 0
@@ -76,7 +89,7 @@ def get_encounter_keys_per_patient(patient_encounters):
         encounters_per_patient[mrn] = encounters_for_patient
     return encounters_per_patient
 
-
+@timer
 def get_patient_events_per_encounter(patients, patient_encounters, patient_events):
     patient_mrns = patients.medical_record_number.unique()
     events_per_patient = {}
@@ -97,7 +110,7 @@ def get_patient_encounters(patients, encounters):
         patients, encounters, on='medical_record_number', how='inner')
     return patient_encounters
 
-
+@timer
 def get_patient_events_per_visit(patients, patient_visits_and_encounters, patient_events):
     patient_mrns = patients.medical_record_number.unique()
     events_per_patient = {}
@@ -114,7 +127,7 @@ def get_patient_events_per_visit(patients, patient_visits_and_encounters, patien
                     events_per_patient[mrn][visit] = events_per_patient[mrn][visit] + [event]
     return events_per_patient
 
-
+@timer
 def get_patient_events_per_patient(patients, patient_events):
     patient_mrns = patients.medical_record_number.unique()
     events_per_patient = {}
@@ -126,7 +139,7 @@ def get_patient_events_per_patient(patients, patient_events):
             events_per_patient[mrn][mrn] = events_per_patient[mrn][mrn] + [event]
     return events_per_patient
 
-
+@timer
 def get_patient_events(patients, events):
     # join patients and events
     patient_events = pd.merge(
@@ -147,7 +160,7 @@ def get_patient_events(patients, events):
     patient_events.drop(patient_events.index[indexes_to_drop], inplace=True)
     return patient_events
 
-
+@timer
 def filter_events(events_to_filter, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
     # iterate over MRN
     # iterate over trace keys
@@ -203,7 +216,7 @@ def has_material(material, encounter):
             return True
     return False
 
-
+@timer
 def create_log_from_filtered_events(filtered_events):
     # iterate over MRN
     # iterate over encounter
@@ -340,14 +353,14 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
 
     return result
 
-
+@timer
 def log_from_cohort(cohort, trace_type, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
     # get necessary data from cohort
     patients = cohort.get(Patient())
     encounters = cohort.get(EncounterWithVisit())
     events = cohort.get(DiagnosisWithTime(),
                         ProcedureWithTime(), DrugWithTime())
-                        
+    
     patient_events = get_patient_events(patients, events)
 
     if trace_type == "encounter":
