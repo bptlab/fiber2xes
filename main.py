@@ -25,6 +25,7 @@ from fiber.condition import (
     Measurement
 )
 
+from abstraction.abstraction import Abstraction
 from translation.translation import Translation
 from fiberpatch.EncounterWithVisit import EncounterWithVisit
 from fiberpatch.ProcedureWithTime import ProcedureWithTime
@@ -32,10 +33,6 @@ from fiberpatch.DiagnosisWithTime import DiagnosisWithTime
 from fiberpatch.MaterialWithTime import MaterialWithTime
 from fiberpatch.DrugWithTime import DrugWithTime
 
-DIAGNOSIS_ICD_10_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd10.csv")
-DIAGNOSIS_ICD_9_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-icd9.csv")
-PROCEDURE_CPT_4_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "msdw-vocabularies", "vocab-cpt4.csv")
-ABSTRACTION_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "abstraction.csv")
 
 def timer(func):
     # Decorator to benchmark functions
@@ -261,30 +258,6 @@ def create_log_from_filtered_events(filtered_events):
     return log
 
 
-def get_abstract_event_name(event_name, remove_unlisted=False, delimiter=";"):
-    # Returns abstract name if possible and remove unlisted entries
-    table = csv.reader(open(ABSTRACTION_VOCAB_PATH), delimiter=delimiter)
-    first_row = next(table)
-    for row in table:
-        for i, entry in enumerate(row):
-            if entry and re.search(str(entry), str(event_name), re.IGNORECASE) != None:
-                if remove_unlisted and first_row[i].lower() == "Blacklist".lower():
-                    return None, True
-                elif first_row[i].lower() == "Whitelist".lower():
-                    return event_name, True
-                return first_row[i], False
-    
-    if remove_unlisted:
-        return None, True
-    
-    return event_name, False
-
-def identify_consultation(procedure_description):
-    result = re.search("^CONSULT TO ", procedure_description, re.IGNORECASE)
-    if result != None:
-        return procedure_description[result.end():]
-    return None
-
 
 def translate_procedure_diagnosis_material_to_event(event, verbose=False):
     """
@@ -330,7 +303,7 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
         else:
             event_name = event.procedure_description
         
-        consultation = identify_consultation(event_name)
+        consultation = Translation.identify_consultation(event_name)
 
         if consultation is not None:
             event_name = consultation
@@ -355,16 +328,18 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
         event_code = context_material_code
         event_name = event.material_name
         
-        if context_name.str.contains("EPIC MEDICATION", regex=False).any():
-            event_context = "EPIC MEDICATION"
-        elif verbose:
-            print("Unknown Material Context: " + context_name)
+        event_context, translation = Translation.translate_material(
+            context_name, context_material_code, verbose)
 
+        if translation is not None:
+            event_name = translation
+        else:
+            event_name = event.description
     else:
         # Event is neither procedure, material nor diagnosis
         return None
 
-    event_name, remove_entry = get_abstract_event_name(event_name, True)
+    event_name, remove_entry = Abstraction.get_abstract_event_name(event_name, True)
     
     if remove_entry:
         return None
