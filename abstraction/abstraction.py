@@ -12,9 +12,7 @@ class Abstraction(object):
         abstraction_names = next(table)
         for row in table:
             for i, entry in enumerate(row):
-                if entry and 
-                ((exact_match and re.search(str(entry), str(event_name), re.IGNORECASE) != None) or
-                (not exact_match and str(entry).lower() == str(event_name).lower())):
+                if entry and ((not exact_match and re.search(str(entry), str(event_name), re.IGNORECASE) != None) or (exact_match and str(entry).lower() == str(event_name).lower())):
                     if abstraction_names[i].lower() == "blacklist":
                         return None, True
                     elif abstraction_names[i].lower() == "whitelist":

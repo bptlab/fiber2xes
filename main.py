@@ -334,7 +334,7 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
         if translation is not None:
             event_name = translation
         else:
-            event_name = event.description
+            event_name = event.material_name
     else:
         # Event is neither procedure, material nor diagnosis
         return None
