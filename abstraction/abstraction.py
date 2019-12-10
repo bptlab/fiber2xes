@@ -6,18 +6,20 @@ ABSTRACTION_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "
 
 class Abstraction(object):
 
-    def get_abstract_event_name(event_name, remove_unlisted=False, delimiter=";"):
+    def get_abstract_event_name(event_name, remove_unlisted=False, exact_match=False, delimiter=";"):
         # Returns abstract name if possible and remove unlisted entries
         table = csv.reader(open(ABSTRACTION_VOCAB_PATH), delimiter=delimiter)
-        first_row = next(table)
+        abstraction_names = next(table)
         for row in table:
             for i, entry in enumerate(row):
-                if entry and re.search(str(entry), str(event_name), re.IGNORECASE) != None:
-                    if remove_unlisted and first_row[i].lower() == "Blacklist".lower():
+                if entry and 
+                ((exact_match and re.search(str(entry), str(event_name), re.IGNORECASE) != None) or
+                (not exact_match and str(entry).lower() == str(event_name).lower())):
+                    if abstraction_names[i].lower() == "blacklist":
                         return None, True
-                    elif first_row[i].lower() == "Whitelist".lower():
-                        return event_name, True
-                    return first_row[i], False
+                    elif abstraction_names[i].lower() == "whitelist":
+                        return event_name, False
+                    return abstraction_names[i], False
         
         if remove_unlisted:
             return None, True
