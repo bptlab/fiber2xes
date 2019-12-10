@@ -339,7 +339,7 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
         # Event is neither procedure, material nor diagnosis
         return None
 
-    event_name, remove_entry = Abstraction.get_abstract_event_name(event_name, True)
+    event_name, remove_entry = Abstraction.get_abstract_event_name(event_name, remove_unlisted=(not verbose))
     
     if remove_entry:
         return None
