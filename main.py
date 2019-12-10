@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import functools
+import csv
 import pandas as pd
 import numpy as np
 import datetime
@@ -24,12 +25,14 @@ from fiber.condition import (
     Measurement
 )
 
+from abstraction.abstraction import Abstraction
 from translation.translation import Translation
 from fiberpatch.EncounterWithVisit import EncounterWithVisit
 from fiberpatch.ProcedureWithTime import ProcedureWithTime
 from fiberpatch.DiagnosisWithTime import DiagnosisWithTime
 from fiberpatch.MaterialWithTime import MaterialWithTime
 from fiberpatch.DrugWithTime import DrugWithTime
+
 
 def timer(func):
     # Decorator to benchmark functions
@@ -238,7 +241,7 @@ def create_log_from_filtered_events(filtered_events):
             for event in filtered_events[mrn][trace_key]:
                 event_descriptor = translate_procedure_diagnosis_material_to_event(
                     event=event,
-                    verbose=True
+                    verbose=False
                 )
                 if event_descriptor is not None:
                     log_event = XFactory.create_event()
@@ -254,20 +257,6 @@ def create_log_from_filtered_events(filtered_events):
             log.append(trace)
     return log
 
-
-def get_abstract_event_name(event_name, event_type):
-    # TODO: Add abstraction vocabularies to merge similar events
-    if (event_type is EventType.DIAGNOSIS):
-        # TODO
-        return event_name
-    elif (event_type is EventType.PROCEDURE):
-        # TODO
-        return event_name
-    elif (event_type is EventType.MATERIAL):
-        # TODO
-        return event_name
-    else:
-        return event_name
 
 
 def translate_procedure_diagnosis_material_to_event(event, verbose=False):
@@ -296,6 +285,9 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
     # For verbose output
     event_context = None
     event_code = ""
+    
+    # For filtering
+    remove_entry = False
 
     # Identify event type
     if context_procedure_code != "MSDW_NOT APPLICABLE" and context_procedure_code != "MSDW_UNKNOWN":
@@ -310,8 +302,12 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
             event_name = translation
         else:
             event_name = event.procedure_description
+        
+        consultation = Translation.identify_consultation(event_name)
 
-        event_name = get_abstract_event_name(event_name, EventType.PROCEDURE)
+        if consultation is not None:
+            event_name = consultation
+            event_type = "CONSULTATION"
 
     elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
         # Event is diagnosis
@@ -325,24 +321,29 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
             event_name = translation
         else:
             event_name = event.description
-
-        event_name = get_abstract_event_name(event_name, EventType.DIAGNOSIS)
-
+        
     elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
         # Event is material
         event_type = "MATERIAL"
         event_code = context_material_code
         event_name = event.material_name
-
+        
         event_context, translation = Translation.translate_material(
             context_name, context_material_code, verbose)
 
-        event_name = get_abstract_event_name(event_name, EventType.MATERIAL)
-
+        if translation is not None:
+            event_name = translation
+        else:
+            event_name = event.description
     else:
         # Event is neither procedure, material nor diagnosis
         return None
 
+    event_name, remove_entry = Abstraction.get_abstract_event_name(event_name, remove_unlisted=(not verbose))
+    
+    if remove_entry:
+        return None
+    
     result = event_type
 
     if event_context is not None and verbose:

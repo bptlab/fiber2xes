@@ -99,3 +99,9 @@ class Translation(object):
             print("Unknown Material Context: " + context_name)
         
         return event_context, translation
+
+    def identify_consultation(procedure_description):
+        result = re.search("^CONSULT TO ", procedure_description, re.IGNORECASE)
+        if result != None:
+            return procedure_description[result.end():]
+        return None
