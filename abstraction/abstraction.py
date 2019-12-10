@@ -1,9 +1,10 @@
 import csv
+import os
 import re
 
-ABSTRACTION_VOCAB_PATH = os.path.join(".", "abstraction.csv")
+ABSTRACTION_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "abstraction", "abstraction.csv")
 
-class Translation(object):
+class Abstraction(object):
 
     def get_abstract_event_name(event_name, remove_unlisted=False, delimiter=";"):
         # Returns abstract name if possible and remove unlisted entries

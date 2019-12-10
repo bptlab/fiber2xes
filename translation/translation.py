@@ -2,9 +2,9 @@ import os
 import re
 import csv
 
-DIAGNOSIS_ICD_10_VOCAB_PATH = os.path.join(".", "vocab-icd10.csv")
-DIAGNOSIS_ICD_9_VOCAB_PATH = os.path.join(".", "vocab-icd9.csv")
-PROCEDURE_CPT_4_VOCAB_PATH = os.path.join(".", "vocab-cpt4.csv")
+DIAGNOSIS_ICD_10_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "translation", "vocab-icd10.csv")
+DIAGNOSIS_ICD_9_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "translation", "vocab-icd9.csv")
+PROCEDURE_CPT_4_VOCAB_PATH = os.path.join(os.path.expanduser("~"), "fiber-to-xes", "translation", "vocab-cpt4.csv")
 
 class Translation(object):
     
