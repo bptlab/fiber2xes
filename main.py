@@ -25,13 +25,15 @@ from fiber.condition import (
     Measurement
 )
 
-from abstraction.abstraction import Abstraction
-from translation.translation import Translation
-from fiberpatch.EncounterWithVisit import EncounterWithVisit
-from fiberpatch.ProcedureWithTime import ProcedureWithTime
-from fiberpatch.DiagnosisWithTime import DiagnosisWithTime
-from fiberpatch.MaterialWithTime import MaterialWithTime
-from fiberpatch.DrugWithTime import DrugWithTime
+from .translation import Translation
+from .abstraction import Abstraction
+from .fiberpatch import (
+    EncounterWithVisit,
+    ProcedureWithTime,
+    DiagnosisWithTime,
+    MaterialWithTime,
+    DrugWithTime
+)
 
 
 def timer(func):
@@ -355,7 +357,7 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
     return result
 
 @timer
-def log_from_cohort(cohort, trace_type, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
+def cohort_to_event_log(cohort, trace_type, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
     # get necessary data from cohort
     patients = cohort.get(Patient())
     encounters = cohort.get(EncounterWithVisit())
@@ -398,6 +400,6 @@ def log_from_cohort(cohort, trace_type, relevant_diagnosis=None, relevant_proced
     return log
 
 
-def save_log_to_file(log):
-    with open("event_log.xes", "w") as file:
+def save_event_log_to_file(log, file_path):
+    with open(file_path, "w") as file:
         XesXmlSerializer().serialize(log, file)
