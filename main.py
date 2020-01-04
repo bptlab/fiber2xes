@@ -190,27 +190,6 @@ def filter_events(events_to_filter, trace_filter=None):
 
     return filtered_events
 
-
-def has_diagnosis(diagnosis, encounter):
-    for event in encounter:
-        if event.context_diagnosis_code == diagnosis:
-            return True
-    return False
-
-
-def has_procedure(procedure, encounter):
-    for event in encounter:
-        if event.context_procedure_code == procedure:
-            return True
-    return False
-
-
-def has_material(material, encounter):
-    for event in encounter:
-        if event.context_material_code == material:
-            return True
-    return False
-
 @timer
 def create_log_from_filtered_events(filtered_events):
     # iterate over MRN
