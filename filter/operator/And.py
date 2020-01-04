@@ -3,8 +3,8 @@ class And(object):
         self.filter1 = filter1
         self.filter2 = filter2
     
-    def is_relevant_trace(trace):
+    def is_relevant_trace(self, trace):
         return self.filter1.is_relevant_trace(trace) and self.filter2.is_relevant_trace(trace)
     
-    def is_relevant_event(event):
+    def is_relevant_event(self, event):
         return self.filter1.is_relevant_event(event) and self.filter2.is_relevant_event(event)
