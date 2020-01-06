@@ -226,7 +226,7 @@ def has_material(material, encounter):
     return False
 
 @timer
-def create_log_from_filtered_events(filtered_events):
+def create_log_from_filtered_events(filtered_events, patient_events):
     # iterate over MRN
     # iterate over encounter
     # create trace per encounter
@@ -236,12 +236,23 @@ def create_log_from_filtered_events(filtered_events):
     log = XFactory.create_log()
     for mrn in filtered_events:
         trace_id = 0
+        display(patient_events.where(patient_events["mrn"] == mrn))
+        break
         for trace_key in filtered_events[mrn]:
             trace = XFactory.create_trace()
 
             id_attribute = XFactory.create_attribute_id(
                 "id", str(mrn) + "_" + str(trace_id))
             trace.get_attributes()["id"] = id_attribute
+
+            # trace.get_attributes()["patient:address_zip"] =
+            # trace.get_attributes()["patient:date_of_birth"] =
+            # trace.get_attributes()["patient:gender"] =
+            # trace.get_attributes()["patient:language"] =
+            # trace.get_attributes()["patient:patient_ethnic_group"] =
+            # trace.get_attributes()["patient:race"] =
+            # trace.get_attributes()["patient:religion"] =
+
             trace_id = trace_id + 1
 
             for event in filtered_events[mrn][trace_key]:
@@ -400,7 +411,7 @@ def cohort_to_event_log(cohort, trace_type, relevant_diagnosis=None, relevant_pr
         relevant_material=relevant_material,
         filter_expression=filter_expression)
 
-    log = create_log_from_filtered_events(filtered_events)
+    log = create_log_from_filtered_events(filtered_events, patient_events)
 
     return log
 
