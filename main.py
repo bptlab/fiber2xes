@@ -199,7 +199,7 @@ def filter_events(events_to_filter, trace_filter=None):
 
 
 @timer
-def create_log_from_filtered_events(filtered_events, event_filter=None):
+def create_log_from_filtered_events(filtered_events, verbose, remove_unlisted, event_filter):
     # iterate over MRN
     # iterate over encounter
     # create trace per encounter
@@ -229,7 +229,8 @@ def create_log_from_filtered_events(filtered_events, event_filter=None):
 
                 event_descriptor = translate_procedure_diagnosis_material_to_event(
                     event=event,
-                    verbose=False
+                    verbose,
+                    remove_unlisted
                 )
                 if event_descriptor is not None:
                     log_event = XFactory.create_event()
@@ -247,90 +248,18 @@ def create_log_from_filtered_events(filtered_events, event_filter=None):
     return log
 
 
-def translate_procedure_diagnosis_material_to_event(event, verbose=False):
-    """
-    When is diagnosis the event? When is procedure the event?
+def translate_procedure_diagnosis_material_to_event(event, verbose, remove_unlisted):
 
-    encounter_type set
-    context_diagnosis_code = MSDW_NOT_APPLICABLE | context_diagnosis_code = MSDW_UNKNOWN
-    context_procedure_code set
-    ->  procedure is event
-
-    encounter_type set
-    context_procedure_code = MSDW_NOT_APPLICABLE
-    context_diagnosis_code set
-    -> diagnosis is event
-    """
-
-    context_diagnosis_code = event.context_diagnosis_code
-    context_material_code = event.context_material_code
-    context_procedure_code = event.context_procedure_code
-    context_name = event.context_name
-
-    event_name = None
-    event_type = ""
-
-    # For verbose output
-    event_context = None
-    event_code = ""
-
-    # For filtering
-    remove_entry = False
-
-    # Identify event type
-    if context_procedure_code != "MSDW_NOT APPLICABLE" and context_procedure_code != "MSDW_UNKNOWN":
-        # Event is procedure
-        event_type = "PROCEDURE"
-        event_code = context_procedure_code
-
-        event_context, translation = Translation.translate_procedure(
-            context_name, context_procedure_code, verbose)
-
-        if translation is not None:
-            event_name = translation
-        else:
-            event_name = event.procedure_description
-
-        consultation = Translation.identify_consultation(event_name)
-
-        if consultation is not None:
-            event_name = consultation
-            event_type = "CONSULTATION"
-
-    elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
-        # Event is diagnosis
-        event_type = "DIAGNOSIS"
-        event_code = context_diagnosis_code
-
-        event_context, translation = Translation.translate_diagnosis(
-            context_name, context_diagnosis_code, verbose)
-
-        if translation is not None:
-            event_name = translation
-        else:
-            event_name = event.description
-
-    elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
-        # Event is material
-        event_type = "MATERIAL"
-        event_code = context_material_code
-        event_name = event.material_name
-
-        event_context, translation = Translation.translate_material(
-            context_name, context_material_code, verbose)
-
-        if translation is not None:
-            event_name = translation
-        else:
-            event_name = event.material_name
-    else:
-        # Event is neither procedure, material nor diagnosis
+    if not Translation.is_known_event(event):
         return None
 
-    event_name, remove_entry = Abstraction.get_abstract_event_name(
-        event_name, remove_unlisted=(not verbose))
+    event_name, event_type, event_context, event_code = Translation.translate_to_event(
+        event, verbose)
 
-    if remove_entry:
+    event_name = Abstraction.get_abstract_event_name(
+        event_name, remove_unlisted)
+
+    if event_name is None:
         return None
 
     result = event_type
@@ -345,7 +274,7 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
 
 
 @timer
-def cohort_to_event_log(cohort, trace_type, event_filter=None, trace_filter=None):
+def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, event_filter=None, trace_filter=None):
     # get necessary data from cohort
     patients = cohort.get(Patient())
     encounters = cohort.get(EncounterWithVisit())
@@ -380,7 +309,7 @@ def cohort_to_event_log(cohort, trace_type, event_filter=None, trace_filter=None
         events_per_patient, trace_filter=trace_filter)
 
     log = create_log_from_filtered_events(
-        filtered_events, event_filter=event_filter)
+        filtered_events, verbose, remove_unlisted, event_filter=event_filter)
 
     return log
 
