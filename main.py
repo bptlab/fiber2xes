@@ -28,11 +28,12 @@ from fiber.condition import (
 from .translation import Translation
 from .abstraction import Abstraction
 from .fiberpatch import (
-    EncounterWithVisit,
-    ProcedureWithTime,
     DiagnosisWithTime,
+    DrugWithTime,
+    EncounterWithVisit,
     MaterialWithTime,
-    DrugWithTime
+    PatientWithAttributes,
+    ProcedureWithTime
 )
 
 
@@ -287,7 +288,7 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
     # For verbose output
     event_context = None
     event_code = ""
-    
+
     # For filtering
     remove_entry = False
 
@@ -304,7 +305,7 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
             event_name = translation
         else:
             event_name = event.procedure_description
-        
+
         consultation = Translation.identify_consultation(event_name)
 
         if consultation is not None:
@@ -323,13 +324,13 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
             event_name = translation
         else:
             event_name = event.description
-        
+
     elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
         # Event is material
         event_type = "MATERIAL"
         event_code = context_material_code
         event_name = event.material_name
-        
+
         event_context, translation = Translation.translate_material(
             context_name, context_material_code, verbose)
 
@@ -342,10 +343,10 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
         return None
 
     event_name, remove_entry = Abstraction.get_abstract_event_name(event_name, remove_unlisted=(not verbose))
-    
+
     if remove_entry:
         return None
-    
+
     result = event_type
 
     if event_context is not None and verbose:
@@ -359,11 +360,12 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
 @timer
 def cohort_to_event_log(cohort, trace_type, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
     # get necessary data from cohort
-    patients = cohort.get(Patient())
+
+    patients = cohort.get(PatientWithAttributes())
     encounters = cohort.get(EncounterWithVisit())
     events = cohort.get(DiagnosisWithTime(),
                         ProcedureWithTime(), DrugWithTime())
-    
+
     patient_events = get_patient_events(patients, events)
 
     if trace_type == "encounter":
