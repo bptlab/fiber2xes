@@ -236,7 +236,7 @@ def create_log_from_filtered_events(filtered_events, patient_events):
     log = XFactory.create_log()
     for mrn in filtered_events:
         trace_id = 0
-        display(patient_events.where(patient_events["mrn"] == mrn))
+        display(patient_events.where(patient_events["medical_record_number"] == mrn))
         break
         for trace_key in filtered_events[mrn]:
             trace = XFactory.create_trace()
