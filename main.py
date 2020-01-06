@@ -158,7 +158,10 @@ def get_patient_events(patients, events):
     unique_events = set()
     for index, event in patient_events.iterrows():
         tup = (event["medical_record_number"], event["timestamp"],
-               event["context_diagnosis_code"], event["context_procedure_code"])
+               event["context_diagnosis_code"], event["context_procedure_code"],
+               event["gender"], event["religion"], event["race"],
+               event["patient_ethnic_group"], event["language"],
+               event["citizenship"])
         if tup not in unique_events:
             unique_events.add(tup)
         else:
