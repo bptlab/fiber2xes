@@ -1,13 +1,15 @@
 from .EncounterWithVisit import EncounterWithVisit
-from .ProcedureWithTime import ProcedureWithTime
 from .DiagnosisWithTime import DiagnosisWithTime
-from .MaterialWithTime import MaterialWithTime
 from .DrugWithTime import DrugWithTime
+from .MaterialWithTime import MaterialWithTime
+from .PatientWithAttributes import PatientWithAttributes
+from .ProcedureWithTime import ProcedureWithTime
 
 __all__ = [
-    'EncounterWithVisit',
-    'ProcedureWithTime',
     'DiagnosisWithTime',
+    'DrugWithTime',
+    'EncounterWithVisit',
     'MaterialWithTime',
-    'DrugWithTime'
+    'PatientWithAttributes',
+    'ProcedureWithTime'
 ]
