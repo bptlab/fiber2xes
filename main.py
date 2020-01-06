@@ -158,10 +158,7 @@ def get_patient_events(patients, events):
     unique_events = set()
     for index, event in patient_events.iterrows():
         tup = (event["medical_record_number"], event["timestamp"],
-               event["context_diagnosis_code"], event["context_procedure_code"],
-               event["gender"], event["religion"], event["race"],
-               event["patient_ethnic_group"], event["language"],
-               event["citizenship"])
+               event["context_diagnosis_code"], event["context_procedure_code"])
         if tup not in unique_events:
             unique_events.add(tup)
         else:
@@ -226,7 +223,7 @@ def has_material(material, encounter):
     return False
 
 @timer
-def create_log_from_filtered_events(filtered_events, patient_events):
+def create_log_from_filtered_events(filtered_events, patients):
     # iterate over MRN
     # iterate over encounter
     # create trace per encounter
@@ -236,8 +233,7 @@ def create_log_from_filtered_events(filtered_events, patient_events):
     log = XFactory.create_log()
     for mrn in filtered_events:
         trace_id = 0
-        display(patient_events.where(patient_events["medical_record_number"] == mrn))
-        break
+        patient_data = patients.loc[patients["medical_record_number"] == mrn]
         for trace_key in filtered_events[mrn]:
             trace = XFactory.create_trace()
 
@@ -245,14 +241,16 @@ def create_log_from_filtered_events(filtered_events, patient_events):
                 "id", str(mrn) + "_" + str(trace_id))
             trace.get_attributes()["id"] = id_attribute
 
-            # trace.get_attributes()["patient:address_zip"] =
-            # trace.get_attributes()["patient:date_of_birth"] =
-            # trace.get_attributes()["patient:gender"] =
-            # trace.get_attributes()["patient:language"] =
-            # trace.get_attributes()["patient:patient_ethnic_group"] =
-            # trace.get_attributes()["patient:race"] =
-            # trace.get_attributes()["patient:religion"] =
-
+            if patient_data is not None:
+                trace.get_attributes()["patient:date_of_birth"] = XFactory.create_attribute_literal("patient:date_of_birth", patient_data["date_of_birth"].values[0])
+                trace.get_attributes()["patient:address_zip"] = XFactory.create_attribute_literal("patient:address_zip", patient_data["address_zip"].values[0])
+                trace.get_attributes()["patient:gender"] = XFactory.create_attribute_literal("patient:gender", patient_data["gender"].values[0])
+                trace.get_attributes()["patient:language"] = XFactory.create_attribute_literal("patient:language", patient_data["language"].values[0])
+                trace.get_attributes()["patient:patient_ethnic_group"] = XFactory.create_attribute_literal("patient:patient_ethnic_group", patient_data["patient_ethnic_group"].values[0])
+                trace.get_attributes()["patient:race"] = XFactory.create_attribute_literal("patient:race", patient_data["race"].values[0])
+                trace.get_attributes()["patient:religion"] = XFactory.create_attribute_literal("patient:religion", patient_data["religion"].values[0])
+                trace.get_attributes()["patient:citizenship"] = XFactory.create_attribute_literal("patient:citizenship", patient_data["citizenship"].values[0])
+                trace.get_attributes()["patient:marital_status_code"] = XFactory.create_attribute_literal("patient:marital_status_code", patient_data["marital_status_code"].values[0])
             trace_id = trace_id + 1
 
             for event in filtered_events[mrn][trace_key]:
@@ -411,7 +409,7 @@ def cohort_to_event_log(cohort, trace_type, relevant_diagnosis=None, relevant_pr
         relevant_material=relevant_material,
         filter_expression=filter_expression)
 
-    log = create_log_from_filtered_events(filtered_events, patient_events)
+    log = create_log_from_filtered_events(filtered_events, patients)
 
     return log
 
