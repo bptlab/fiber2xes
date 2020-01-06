@@ -6,7 +6,7 @@ from fiber.condition import _BaseCondition, _DatabaseCondition
 from fiber.condition.database import _case_insensitive_like
 from fiber.database.table import d_pers, fact
 
-class PatientWithAttribute(_FactCondition):
+class PatientWithAttributes(_DatabaseCondition):
     """
     This is an extension of the Patient Class, to contain more attributes.
     """
