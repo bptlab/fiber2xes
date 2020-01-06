@@ -14,12 +14,12 @@ class Abstraction(object):
             for i, entry in enumerate(row):
                 if entry and ((not exact_match and re.search(str(entry), str(event_name), re.IGNORECASE) != None) or (exact_match and str(entry).lower() == str(event_name).lower())):
                     if abstraction_names[i].lower() == "blacklist":
-                        return None, True
+                        return None
                     elif abstraction_names[i].lower() == "whitelist":
-                        return event_name, False
-                    return abstraction_names[i], False
+                        return event_name
+                    return abstraction_names[i]
         
         if remove_unlisted:
-            return None, True
+            return None
         
-        return event_name, False
+        return event_name
