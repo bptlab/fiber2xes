@@ -332,7 +332,7 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
         events_per_patient, trace_filter=trace_filter)
 
     log = create_log_from_filtered_events(
-        filtered_events, verbose, remove_unlisted, event_filter=event_filter, patients)
+        filtered_events, verbose, remove_unlisted, event_filter=event_filter, patients=patients)
 
     return log
 
