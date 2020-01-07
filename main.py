@@ -219,15 +219,24 @@ def create_log_from_filtered_events(filtered_events, verbose, remove_unlisted, e
             trace.get_attributes()["id"] = id_attribute
 
             if patient_data is not None:
-                trace.get_attributes()["patient:date_of_birth"] = XFactory.create_attribute_literal("patient:date_of_birth", patient_data["date_of_birth"].values[0])
-                trace.get_attributes()["patient:address_zip"] = XFactory.create_attribute_literal("patient:address_zip", patient_data["address_zip"].values[0])
-                trace.get_attributes()["patient:gender"] = XFactory.create_attribute_literal("patient:gender", patient_data["gender"].values[0])
-                trace.get_attributes()["patient:language"] = XFactory.create_attribute_literal("patient:language", patient_data["language"].values[0])
-                trace.get_attributes()["patient:patient_ethnic_group"] = XFactory.create_attribute_literal("patient:patient_ethnic_group", patient_data["patient_ethnic_group"].values[0])
-                trace.get_attributes()["patient:race"] = XFactory.create_attribute_literal("patient:race", patient_data["race"].values[0])
-                trace.get_attributes()["patient:religion"] = XFactory.create_attribute_literal("patient:religion", patient_data["religion"].values[0])
-                trace.get_attributes()["patient:citizenship"] = XFactory.create_attribute_literal("patient:citizenship", patient_data["citizenship"].values[0])
-                trace.get_attributes()["patient:marital_status_code"] = XFactory.create_attribute_literal("patient:marital_status_code", patient_data["marital_status_code"].values[0])
+                trace.get_attributes()["patient:date_of_birth"] = XFactory.create_attribute_literal(
+                    "patient:date_of_birth", patient_data["date_of_birth"].values[0])
+                trace.get_attributes()["patient:address_zip"] = XFactory.create_attribute_literal(
+                    "patient:address_zip", patient_data["address_zip"].values[0])
+                trace.get_attributes()["patient:gender"] = XFactory.create_attribute_literal(
+                    "patient:gender", patient_data["gender"].values[0])
+                trace.get_attributes()["patient:language"] = XFactory.create_attribute_literal(
+                    "patient:language", patient_data["language"].values[0])
+                trace.get_attributes()["patient:patient_ethnic_group"] = XFactory.create_attribute_literal(
+                    "patient:patient_ethnic_group", patient_data["patient_ethnic_group"].values[0])
+                trace.get_attributes()["patient:race"] = XFactory.create_attribute_literal(
+                    "patient:race", patient_data["race"].values[0])
+                trace.get_attributes()["patient:religion"] = XFactory.create_attribute_literal(
+                    "patient:religion", patient_data["religion"].values[0])
+                trace.get_attributes()["patient:citizenship"] = XFactory.create_attribute_literal(
+                    "patient:citizenship", patient_data["citizenship"].values[0])
+                trace.get_attributes()["patient:marital_status_code"] = XFactory.create_attribute_literal(
+                    "patient:marital_status_code", patient_data["marital_status_code"].values[0])
             trace_id = trace_id + 1
 
             for event in filtered_events[mrn][trace_key]:
@@ -242,8 +251,8 @@ def create_log_from_filtered_events(filtered_events, verbose, remove_unlisted, e
 
                 event_descriptor = translate_procedure_diagnosis_material_to_event(
                     event=event,
-                    verbose,
-                    remove_unlisted
+                    verbose=verbose,
+                    remove_unlisted=remove_unlisted
                 )
                 if event_descriptor is not None:
                     log_event = XFactory.create_event()
