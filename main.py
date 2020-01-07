@@ -249,21 +249,35 @@ def create_log_from_filtered_events(filtered_events, verbose, remove_unlisted, e
                 if not is_relevant:
                     continue
 
-                event_descriptor = translate_procedure_diagnosis_material_to_event(
+                event_descriptor, event_name, event_context, event_code = translate_procedure_diagnosis_material_to_event(
                     event=event,
                     verbose=verbose,
                     remove_unlisted=remove_unlisted
                 )
                 if event_descriptor is not None:
                     log_event = XFactory.create_event()
+
                     timestamp_int = event.timestamp
                     timestamp_attribute = XFactory.create_attribute_timestamp(
                         "time:timestamp", timestamp_int)
+                    log_event.get_attributes()["timestamp"] = timestamp_attribute
+                    
                     activity_attribute = XFactory.create_attribute_literal(
                         "concept:name", event_descriptor)
-                    log_event.get_attributes(
-                    )["timestamp"] = timestamp_attribute
                     log_event.get_attributes()["Activity"] = activity_attribute
+
+                    description_attribute = XFactory.create_attribute_literal(
+                        "event:description", event_name)
+                    log_event.get_attributes()["event:description"] = description_attribute
+
+                    context_attribute = XFactory.create_attribute_literal(
+                        "event:context", event_context)
+                    log_event.get_attributes()["event:context"] = context_attribute
+
+                    code_attribute = XFactory.create_attribute_literal(
+                        "event:code", event_code)
+                    log_event.get_attributes()["event:code"] = code_attribute
+
                     trace.append(log_event)
             if len(trace) > 0:
                 log.append(trace)
@@ -273,16 +287,18 @@ def create_log_from_filtered_events(filtered_events, verbose, remove_unlisted, e
 def translate_procedure_diagnosis_material_to_event(event, verbose, remove_unlisted):
 
     if not Translation.is_known_event(event):
-        return None
+        return None, None, None, None
 
     event_name, event_type, event_context, event_code = Translation.translate_to_event(
         event, verbose)
 
-    event_name = Abstraction.get_abstract_event_name(
+    abstract_event_name = Abstraction.get_abstract_event_name(
         event_name, remove_unlisted)
 
-    if event_name is None:
-        return None
+    if abstract_event_name is None:
+        return None, event_name, event_context, event_code 
+    elif not verbose:
+        return abstract_event_name, event_name, event_context, event_code
 
     result = event_type
 
@@ -290,9 +306,9 @@ def translate_procedure_diagnosis_material_to_event(event, verbose, remove_unlis
         result += (" (" + event_context + " " + event_code + ")")
 
     if event_name is not None:
-        result += (": " + event_name)
+        result += (": " + abstract_event_name)
 
-    return result
+    return result, event_name, event_context, event_code
 
 
 @timer
