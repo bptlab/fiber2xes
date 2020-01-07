@@ -49,6 +49,7 @@ def timer(func):
         return value
     return wrapper_timer
 
+
 class EventType(Enum):
     DIAGNOSIS = 0
     PROCEDURE = 1
@@ -95,6 +96,7 @@ def get_encounter_keys_per_patient(patient_encounters):
         encounters_per_patient[mrn] = encounters_for_patient
     return encounters_per_patient
 
+
 @timer
 def get_patient_events_per_encounter(patients, patient_encounters, patient_events):
     patient_mrns = patients.medical_record_number.unique()
@@ -116,6 +118,7 @@ def get_patient_encounters(patients, encounters):
         patients, encounters, on='medical_record_number', how='inner')
     return patient_encounters
 
+
 @timer
 def get_patient_events_per_visit(patients, patient_visits_and_encounters, patient_events):
     patient_mrns = patients.medical_record_number.unique()
@@ -133,6 +136,7 @@ def get_patient_events_per_visit(patients, patient_visits_and_encounters, patien
                     events_per_patient[mrn][visit] = events_per_patient[mrn][visit] + [event]
     return events_per_patient
 
+
 @timer
 def get_patient_events_per_patient(patients, patient_events):
     patient_mrns = patients.medical_record_number.unique()
@@ -144,6 +148,7 @@ def get_patient_events_per_patient(patients, patient_events):
         for index, event in events.iterrows():
             events_per_patient[mrn][mrn] = events_per_patient[mrn][mrn] + [event]
     return events_per_patient
+
 
 @timer
 def get_patient_events(patients, events):
@@ -166,8 +171,9 @@ def get_patient_events(patients, events):
     patient_events.drop(patient_events.index[indexes_to_drop], inplace=True)
     return patient_events
 
+
 @timer
-def filter_events(events_to_filter, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
+def filter_events(events_to_filter, trace_filter=None):
     # iterate over MRN
     # iterate over trace keys
     # iterate over events
@@ -177,20 +183,11 @@ def filter_events(events_to_filter, relevant_diagnosis=None, relevant_procedure=
     for mrn in events_to_filter:
         for trace_key in events_to_filter[mrn]:
             is_relevant = False
-            if relevant_diagnosis is None and relevant_procedure is None and relevant_material is None and filter_expression is None:
+            if trace_filter is None:
                 is_relevant = True
-            if relevant_diagnosis is not None:
-                if has_diagnosis(relevant_diagnosis, events_to_filter[mrn][trace_key]):
-                    is_relevant = True
-            if relevant_procedure is not None:
-                if is_relevant or has_procedure(relevant_diagnosis, events_to_filter[mrn][trace_key]):
-                    is_relevant = True
-            if relevant_material is not None:
-                if is_relevant or has_material(relevant_diagnosis, events_to_filter[mrn][trace_key]):
-                    is_relevant = True
-            if filter_expression is not None:
-                if is_relevant or filter_expression(events_to_filter[mrn][trace_key]):
-                    is_relevant = True
+            else:
+                is_relevant = trace_filter.is_relevant_trace(
+                    events_to_filter[mrn][trace_key])
 
             if is_relevant:
                 if mrn not in filtered_events:
@@ -202,28 +199,8 @@ def filter_events(events_to_filter, relevant_diagnosis=None, relevant_procedure=
     return filtered_events
 
 
-def has_diagnosis(diagnosis, encounter):
-    for event in encounter:
-        if event.context_diagnosis_code == diagnosis:
-            return True
-    return False
-
-
-def has_procedure(procedure, encounter):
-    for event in encounter:
-        if event.context_procedure_code == procedure:
-            return True
-    return False
-
-
-def has_material(material, encounter):
-    for event in encounter:
-        if event.context_material_code == material:
-            return True
-    return False
-
 @timer
-def create_log_from_filtered_events(filtered_events, patients):
+def create_log_from_filtered_events(filtered_events, verbose, remove_unlisted, event_filter, patients):
     # iterate over MRN
     # iterate over encounter
     # create trace per encounter
@@ -254,9 +231,19 @@ def create_log_from_filtered_events(filtered_events, patients):
             trace_id = trace_id + 1
 
             for event in filtered_events[mrn][trace_key]:
+                is_relevant = False
+                if event_filter is None:
+                    is_relevant = True
+                else:
+                    is_relevant = event_filter.is_relevant_event(event)
+
+                if not is_relevant:
+                    continue
+
                 event_descriptor = translate_procedure_diagnosis_material_to_event(
                     event=event,
-                    verbose=False
+                    verbose,
+                    remove_unlisted
                 )
                 if event_descriptor is not None:
                     log_event = XFactory.create_event()
@@ -269,94 +256,23 @@ def create_log_from_filtered_events(filtered_events, patients):
                     )["timestamp"] = timestamp_attribute
                     log_event.get_attributes()["Activity"] = activity_attribute
                     trace.append(log_event)
-            log.append(trace)
+            if len(trace) > 0:
+                log.append(trace)
     return log
 
 
+def translate_procedure_diagnosis_material_to_event(event, verbose, remove_unlisted):
 
-def translate_procedure_diagnosis_material_to_event(event, verbose=False):
-    """
-    When is diagnosis the event? When is procedure the event?
-
-    encounter_type set
-    context_diagnosis_code = MSDW_NOT_APPLICABLE | context_diagnosis_code = MSDW_UNKNOWN
-    context_procedure_code set
-    ->  procedure is event
-
-    encounter_type set
-    context_procedure_code = MSDW_NOT_APPLICABLE
-    context_diagnosis_code set
-    -> diagnosis is event
-    """
-
-    context_diagnosis_code = event.context_diagnosis_code
-    context_material_code = event.context_material_code
-    context_procedure_code = event.context_procedure_code
-    context_name = event.context_name
-
-    event_name = None
-    event_type = ""
-
-    # For verbose output
-    event_context = None
-    event_code = ""
-
-    # For filtering
-    remove_entry = False
-
-    # Identify event type
-    if context_procedure_code != "MSDW_NOT APPLICABLE" and context_procedure_code != "MSDW_UNKNOWN":
-        # Event is procedure
-        event_type = "PROCEDURE"
-        event_code = context_procedure_code
-
-        event_context, translation = Translation.translate_procedure(
-            context_name, context_procedure_code, verbose)
-
-        if translation is not None:
-            event_name = translation
-        else:
-            event_name = event.procedure_description
-
-        consultation = Translation.identify_consultation(event_name)
-
-        if consultation is not None:
-            event_name = consultation
-            event_type = "CONSULTATION"
-
-    elif context_diagnosis_code != "MSDW_NOT APPLICABLE" and context_diagnosis_code != "MSDW_UNKNOWN":
-        # Event is diagnosis
-        event_type = "DIAGNOSIS"
-        event_code = context_diagnosis_code
-
-        event_context, translation = Translation.translate_diagnosis(
-            context_name, context_diagnosis_code, verbose)
-
-        if translation is not None:
-            event_name = translation
-        else:
-            event_name = event.description
-
-    elif context_material_code != "MSDW_NOT APPLICABLE" and context_material_code != "MSDW_UNKNOWN":
-        # Event is material
-        event_type = "MATERIAL"
-        event_code = context_material_code
-        event_name = event.material_name
-
-        event_context, translation = Translation.translate_material(
-            context_name, context_material_code, verbose)
-
-        if translation is not None:
-            event_name = translation
-        else:
-            event_name = event.material_name
-    else:
-        # Event is neither procedure, material nor diagnosis
+    if not Translation.is_known_event(event):
         return None
 
-    event_name, remove_entry = Abstraction.get_abstract_event_name(event_name, remove_unlisted=(not verbose))
+    event_name, event_type, event_context, event_code = Translation.translate_to_event(
+        event, verbose)
 
-    if remove_entry:
+    event_name = Abstraction.get_abstract_event_name(
+        event_name, remove_unlisted)
+
+    if event_name is None:
         return None
 
     result = event_type
@@ -369,8 +285,9 @@ def translate_procedure_diagnosis_material_to_event(event, verbose=False):
 
     return result
 
+
 @timer
-def cohort_to_event_log(cohort, trace_type, relevant_diagnosis=None, relevant_procedure=None, relevant_material=None, filter_expression=None):
+def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, event_filter=None, trace_filter=None):
     # get necessary data from cohort
 
     patients = cohort.get(PatientWithAttributes())
@@ -403,13 +320,10 @@ def cohort_to_event_log(cohort, trace_type, relevant_diagnosis=None, relevant_pr
         sys.exit("No matching trace type given. Try using encounter, visit, or mrn")
 
     filtered_events = filter_events(
-        events_per_patient,
-        relevant_diagnosis=relevant_diagnosis,
-        relevant_procedure=relevant_procedure,
-        relevant_material=relevant_material,
-        filter_expression=filter_expression)
+        events_per_patient, trace_filter=trace_filter)
 
-    log = create_log_from_filtered_events(filtered_events, patients)
+    log = create_log_from_filtered_events(
+        filtered_events, verbose, remove_unlisted, event_filter=event_filter, patients)
 
     return log
 

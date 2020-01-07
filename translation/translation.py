@@ -14,6 +14,93 @@ class Translation(object):
 
     csv_reader = {}
 
+    def is_event_procedure(event):
+        return event.context_procedure_code != "MSDW_NOT APPLICABLE" and event.context_procedure_code != "MSDW_UNKNOWN"
+
+    def is_event_diagnosis(event):
+        return event.context_diagnosis_code != "MSDW_NOT APPLICABLE" and event.context_diagnosis_code != "MSDW_UNKNOWN"
+
+    def is_event_material(event):
+        return event.context_material_code != "MSDW_NOT APPLICABLE" and event.context_material_code != "MSDW_UNKNOWN"
+
+    def is_known_event(event):
+        return Translation.is_event_procedure(event) or Translation.is_event_diagnosis(event) or Translation.is_event_material(event)
+
+    def translate_to_event(event, verbose):
+        """
+        When is diagnosis the event? When is procedure the event?
+
+        encounter_type set
+        context_diagnosis_code = MSDW_NOT_APPLICABLE | context_diagnosis_code = MSDW_UNKNOWN
+        context_procedure_code set
+        ->  procedure is event
+
+        encounter_type set
+        context_procedure_code = MSDW_NOT_APPLICABLE
+        context_diagnosis_code set
+        -> diagnosis is event
+        """
+        context_diagnosis_code = event.context_diagnosis_code
+        context_material_code = event.context_material_code
+        context_procedure_code = event.context_procedure_code
+        context_name = event.context_name
+
+        event_name = None
+        event_type = ""
+
+        # For verbose output
+        event_context = None
+        event_code = ""
+
+        # Identify event type
+        if Translation.is_event_procedure(event):
+            # Event is procedure
+            event_type = "PROCEDURE"
+            event_code = context_procedure_code
+
+            event_context, translation = Translation.translate_procedure(
+                context_name, context_procedure_code, verbose)
+
+            if translation is not None:
+                event_name = translation
+            else:
+                event_name = event.procedure_description
+
+            consultation = Translation.identify_consultation(event_name)
+
+            if consultation is not None:
+                event_name = consultation
+                event_type = "CONSULTATION"
+
+        elif Translation.is_event_diagnosis(event):
+            # Event is diagnosis
+            event_type = "DIAGNOSIS"
+            event_code = context_diagnosis_code
+
+            event_context, translation = Translation.translate_diagnosis(
+                context_name, context_diagnosis_code, verbose)
+
+            if translation is not None:
+                event_name = translation
+            else:
+                event_name = event.description
+
+        elif Translation.is_event_material(event):
+            # Event is material
+            event_type = "MATERIAL"
+            event_code = context_material_code
+            event_name = event.material_name
+
+            event_context, translation = Translation.translate_material(
+                context_name, context_material_code, verbose)
+
+            if translation is not None:
+                event_name = translation
+            else:
+                event_name = event.material_name
+
+        return event_name, event_type, event_context, event_code
+
     def vocabulary_lookup(vocabulary_path, search_term, search_column=0, target_column=1, delimiter=","):
         if vocabulary_path not in Translation.csv_reader:
             Translation.csv_reader[vocabulary_path] = csv.reader(
