@@ -7,10 +7,10 @@ from .abstraction import Abstraction
 
 
 class XESFactory(object):
-    def create_xml_log_from_traces(traces_of_patients, verbose, remove_unlisted, event_filter, patients):
+    def create_xes_log_from_traces(traces_of_patients, verbose, remove_unlisted, event_filter, patients):
         # iterate over MRN
-        # iterate over encounter
-        # create trace per encounter
+        # iterate over trace keys
+        # create trace per trace key
         # translate events to proper types
         # add events of encounter to trace
 

@@ -35,16 +35,16 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     # get necessary data from cohort
 
     patients = cohort.get(PatientWithAttributes())
-    encounter = cohort.get(EncounterWithVisit())
+    encounters = cohort.get(EncounterWithVisit())
     events = cohort.get(DiagnosisWithTime(),
                         ProcedureWithTime(), DrugWithTime())
 
     patient_events = get_patient_events(patients, events)
 
     if trace_type == "encounter":
-        traces_per_patient = EncounterBasedTraces.get_traces_per_patient(patients, encounter, patient_events)
+        traces_per_patient = EncounterBasedTraces.get_traces_per_patient(patients, encounters, patient_events)
     elif trace_type == "visit":
-        traces_per_patient = VisitBasedTraces.get_traces_per_patient(patients, encounter, patient_events)
+        traces_per_patient = VisitBasedTraces.get_traces_per_patient(patients, encounters, patient_events)
     elif trace_type == "mrn":
         traces_per_patient = MRNBasedTraces.get_traces_per_patient(patients, patient_events)
     else:
@@ -52,7 +52,7 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
 
     filtered_traces_per_patient = filter_traces(traces_per_patient, trace_filter=trace_filter)
 
-    log = XESFactory.create_xml_log_from_traces(
+    log = XESFactory.create_xes_log_from_traces(
         filtered_traces_per_patient,
         verbose,
         remove_unlisted,
