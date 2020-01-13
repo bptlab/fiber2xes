@@ -9,6 +9,7 @@ import datetime
 from enum import Enum
 import time
 import math
+import uuid
 
 from opyenxes.factory.XFactory import XFactory
 from opyenxes.id.XIDFactory import XIDFactory
@@ -215,7 +216,7 @@ def create_log_from_filtered_events(filtered_events, verbose, remove_unlisted, e
             trace = XFactory.create_trace()
 
             id_attribute = XFactory.create_attribute_id(
-                "id", str(mrn) + "_" + str(trace_id))
+                "id", str(uuid.uuid4()))
             trace.get_attributes()["id"] = id_attribute
 
             if patient_data is not None:
