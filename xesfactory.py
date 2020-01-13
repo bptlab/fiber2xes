@@ -116,6 +116,6 @@ class XESFactory(object):
 
         return result, event_name, event_context, event_code
 
-    def save_event_log_to_file(log, file_path):
-        with open(file_path, "w") as file:
-            XesXmlSerializer().serialize(log, file)
+def save_event_log_to_file(log, file_path):
+    with open(file_path, "w") as file:
+        XesXmlSerializer().serialize(log, file)
