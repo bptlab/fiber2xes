@@ -5,8 +5,9 @@ import uuid
 from .translation import Translation
 from .abstraction import Abstraction
 
+
 class XESFactory(object):
-    def create_log_from_traces(traces_of_patients, verbose, remove_unlisted, event_filter, patients):
+    def create_xml_log_from_traces(traces_of_patients, verbose, remove_unlisted, event_filter, patients):
         # iterate over MRN
         # iterate over encounter
         # create trace per encounter
@@ -88,7 +89,6 @@ class XESFactory(object):
                 if len(trace) > 0:
                     log.append(trace)
         return log
-
 
     def translate_and_abstract_event(event, verbose, remove_unlisted):
 

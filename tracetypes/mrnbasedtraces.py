@@ -1,5 +1,5 @@
 class MRNBasedTraces(object):
-    def get_traces_per_patient(patients, events): # once
+    def get_traces_per_patient(patients, events):
         patient_mrns = patients.medical_record_number.unique()
         traces_per_patient = {}
         for mrn in patient_mrns:

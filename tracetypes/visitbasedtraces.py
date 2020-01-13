@@ -1,19 +1,21 @@
+import pandas as pd
+
+
 class VisitBasedTraces(object):
     def get_traces_per_patient(patients, encounters, events):
-        patient_encounters = get_patient_encounters(patients, encounters)
+        patient_encounters = VisitBasedTraces.get_patient_encounters(patients, encounters)
         # mrn -> encounter_visit_ids -> encounter_key
-        patient_visits_and_encounters = get_visits_and_encounters_per_patient(
+        patient_visits_and_encounters = VisitBasedTraces.get_visits_and_encounters_per_patient(
             patients, patient_encounters)
         # mrn -> encounter_visit_ids -> events
-        return get_patient_events_per_visit(
-            patients, patient_visits_and_encounters, events)
+        return VisitBasedTraces.get_patient_events_per_visit(patients, patient_visits_and_encounters, events)
 
-    def get_patient_encounters(patients, encounters): # twice
+    def get_patient_encounters(patients, encounters):
         patient_encounters = pd.merge(
             patients, encounters, on='medical_record_number', how='inner')
         return patient_encounters
 
-    def get_visits_and_encounters_per_patient(patients, encounters): # once
+    def get_visits_and_encounters_per_patient(patients, encounters):
         patient_mrns = patients.medical_record_number.unique()
         visits_and_encounters_per_patient = {}
         for mrn in patient_mrns:
@@ -30,7 +32,7 @@ class VisitBasedTraces(object):
             visits_and_encounters_per_patient[mrn] = visits_for_patient
         return visits_and_encounters_per_patient
 
-    def get_patient_events_per_visit(patients, patient_visits_and_encounters, patient_events): # once
+    def get_patient_events_per_visit(patients, patient_visits_and_encounters, patient_events):
         patient_mrns = patients.medical_record_number.unique()
         events_per_patient = {}
         for mrn in patient_mrns:

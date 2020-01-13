@@ -1,13 +1,14 @@
 import pandas as pd
 
+
 class EncounterBasedTraces(object):
     def get_traces_per_patient(patients, encounters, events):
         # mrn -> encounter_keys
-        patient_encounters = get_patient_encounters(patients, encounters)
-        patient_encounter_keys = get_encounter_keys_per_patient(
+        patient_encounters = EncounterBasedTraces.get_patient_encounters(patients, encounters)
+        patient_encounter_keys = EncounterBasedTraces.get_encounter_keys_per_patient(
             patient_encounters)
         # mrn -> encounter_key -> events
-        return get_patient_events_per_encounter(patients, patient_encounter_keys, events)
+        return EncounterBasedTraces.get_patient_events_per_encounter(patients, patient_encounter_keys, events)
 
     def get_patient_encounters(patients, encounters):
         patient_encounters = pd.merge(
