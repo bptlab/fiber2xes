@@ -4,6 +4,12 @@ import sys
 import functools
 import csv
 import pandas as pd
+from multiprocessing import (
+    cpu_count,
+    Process,
+    Lock,
+    Manager,
+)
 import numpy as np
 import datetime
 from enum import Enum
@@ -26,6 +32,7 @@ from fiber.condition import (
     Measurement
 )
 
+from .log_creator import create_log_part
 from .translation import Translation
 from .abstraction import Abstraction
 from .fiberpatch import (
@@ -199,6 +206,20 @@ def filter_events(events_to_filter, trace_filter=None):
 
     return filtered_events
 
+def split_dict_equally(input_dict, chunks=2):
+    "Splits dict by keys. Returns a list of dictionaries."
+    # prep with empty dicts
+    return_list = [dict() for idx in range(chunks)]
+    idx = 0
+    for k,v in input_dict.items():
+        return_list[idx][k] = v
+        if idx < chunks-1:  # indexes start at 0
+            idx += 1
+        else:
+            idx = 0
+    return return_list
+
+flatten = lambda l: [item for sublist in l for item in sublist]
 
 @timer
 def create_log_from_filtered_events(filtered_events, verbose, remove_unlisted, event_filter, patients):
@@ -207,110 +228,31 @@ def create_log_from_filtered_events(filtered_events, verbose, remove_unlisted, e
     # create trace per encounter
     # translate events to proper types
     # add events of encounter to trace
-
     log = XFactory.create_log()
-    for mrn in filtered_events:
-        trace_id = 0
-        patient_data = patients.loc[patients["medical_record_number"] == mrn]
-        for trace_key in filtered_events[mrn]:
-            trace = XFactory.create_trace()
 
-            id_attribute = XFactory.create_attribute_id(
-                "id", str(uuid.uuid4()))
-            trace.get_attributes()["id"] = id_attribute
+    ### START MULTIPROCESSING ###
 
-            if patient_data is not None:
-                trace.get_attributes()["patient:date_of_birth"] = XFactory.create_attribute_literal(
-                    "patient:date_of_birth", patient_data["date_of_birth"].values[0])
-                trace.get_attributes()["patient:address_zip"] = XFactory.create_attribute_literal(
-                    "patient:address_zip", patient_data["address_zip"].values[0])
-                trace.get_attributes()["patient:gender"] = XFactory.create_attribute_literal(
-                    "patient:gender", patient_data["gender"].values[0])
-                trace.get_attributes()["patient:language"] = XFactory.create_attribute_literal(
-                    "patient:language", patient_data["language"].values[0])
-                trace.get_attributes()["patient:patient_ethnic_group"] = XFactory.create_attribute_literal(
-                    "patient:patient_ethnic_group", patient_data["patient_ethnic_group"].values[0])
-                trace.get_attributes()["patient:race"] = XFactory.create_attribute_literal(
-                    "patient:race", patient_data["race"].values[0])
-                trace.get_attributes()["patient:religion"] = XFactory.create_attribute_literal(
-                    "patient:religion", patient_data["religion"].values[0])
-                trace.get_attributes()["patient:citizenship"] = XFactory.create_attribute_literal(
-                    "patient:citizenship", patient_data["citizenship"].values[0])
-                trace.get_attributes()["patient:marital_status_code"] = XFactory.create_attribute_literal(
-                    "patient:marital_status_code", patient_data["marital_status_code"].values[0])
-            trace_id = trace_id + 1
+    processes = []
+    cores = cpu_count()
+    return_lock = Lock()
+    manager = Manager()
+    return_dict = manager.dict()
 
-            for event in filtered_events[mrn][trace_key]:
-                is_relevant = False
-                if event_filter is None:
-                    is_relevant = True
-                else:
-                    is_relevant = event_filter.is_relevant_event(event)
+    partitioned_filtered_events = split_dict_equally(filtered_events, cores)
 
-                if not is_relevant:
-                    continue
+    for process_index in range(0, cores):
+        process = Process(target=create_log_part, args=(return_lock, return_dict, process_index, partitioned_filtered_events[process_index], verbose, remove_unlisted, event_filter, patients,))
+        processes.append(process)
+        process.start()
 
-                event_descriptor, event_name, event_context, event_code = translate_procedure_diagnosis_material_to_event(
-                    event=event,
-                    verbose=verbose,
-                    remove_unlisted=remove_unlisted
-                )
-                if event_descriptor is not None:
-                    log_event = XFactory.create_event()
+    for process in processes:
+        process.join()
+    
+    for entry in flatten(return_dict.values()):
+        log.append(entry)
 
-                    timestamp_int = event.timestamp
-                    timestamp_attribute = XFactory.create_attribute_timestamp(
-                        "time:timestamp", timestamp_int)
-                    log_event.get_attributes()["timestamp"] = timestamp_attribute
-                    
-                    activity_attribute = XFactory.create_attribute_literal(
-                        "concept:name", event_descriptor)
-                    log_event.get_attributes()["Activity"] = activity_attribute
-
-                    description_attribute = XFactory.create_attribute_literal(
-                        "event:description", event_name)
-                    log_event.get_attributes()["event:description"] = description_attribute
-
-                    context_attribute = XFactory.create_attribute_literal(
-                        "event:context", event_context)
-                    log_event.get_attributes()["event:context"] = context_attribute
-
-                    code_attribute = XFactory.create_attribute_literal(
-                        "event:code", event_code)
-                    log_event.get_attributes()["event:code"] = code_attribute
-
-                    trace.append(log_event)
-            if len(trace) > 0:
-                log.append(trace)
     return log
-
-
-def translate_procedure_diagnosis_material_to_event(event, verbose, remove_unlisted):
-
-    if not Translation.is_known_event(event):
-        return None, None, None, None
-
-    event_name, event_type, event_context, event_code = Translation.translate_to_event(
-        event, verbose)
-
-    abstract_event_name = Abstraction.get_abstract_event_name(
-        event_name, remove_unlisted)
-
-    if abstract_event_name is None:
-        return None, event_name, event_context, event_code 
-    elif not verbose:
-        return abstract_event_name, event_name, event_context, event_code
-
-    result = event_type
-
-    if event_context is not None and verbose:
-        result += (" (" + event_context + " " + event_code + ")")
-
-    if event_name is not None:
-        result += (": " + abstract_event_name)
-
-    return result, event_name, event_context, event_code
-
+    ### END MULTIPROCESSING ###
 
 @timer
 def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, event_filter=None, trace_filter=None):
