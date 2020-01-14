@@ -224,7 +224,7 @@ def create_log_from_filtered_events(filtered_events, verbose, remove_unlisted, e
     log = XFactory.create_log()
 
     processes = []
-    cores = cpu_count()
+    cores = cpu_count() * 2
     return_lock = Lock()
     manager = Manager()
     return_dict = manager.dict()
