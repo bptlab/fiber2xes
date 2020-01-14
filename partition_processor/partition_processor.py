@@ -30,8 +30,16 @@ def translate_procedure_diagnosis_material_to_event(event, verbose, remove_unlis
 
     return result, event_name, event_context, event_code
 
-def create_log_part(lock, return_dict, process_index, event_range, verbose, remove_unlisted, event_filter, patients):
-    print("Start lock creation process " + str(process_index))
+def process_partition_events_to_traces(lock, return_dict, process_index, event_range, verbose, remove_unlisted, event_filter, patients):
+    # iterate over MRN
+    # iterate over encounter
+    # create trace per encounter
+    # translate events to proper types
+    # add events of encounter to trace
+    print("[Subprocess " + str(process_index) + "] - Start processing log partition")
+
+    event_counter = 0
+
     traces = []
     for mrn in event_range:
         trace_id = 0
@@ -63,6 +71,8 @@ def create_log_part(lock, return_dict, process_index, event_range, verbose, remo
                 trace.get_attributes()["patient:marital_status_code"] = XFactory.create_attribute_literal(
                     "patient:marital_status_code", patient_data["marital_status_code"].values[0])
             trace_id = trace_id + 1
+
+            event_counter += len(event_range[mrn][trace_key])
 
             for event in event_range[mrn][trace_key]:
                 is_relevant = False
@@ -106,10 +116,11 @@ def create_log_part(lock, return_dict, process_index, event_range, verbose, remo
                     trace.append(log_event)
             if len(trace) > 0:
                 traces.append(trace)
-    print("Finished lock creation process " + str(process_index) + "... writing result")    
+
+    print("[Subprocess " + str(process_index) + "] - Done processing log partition")
+    print("[Subprocess " + str(process_index) + "] - Processed " + str(len(event_range.items())) + " patients, " + str(len(traces)) + " traces, " + str(event_counter) + " events")
+    print("[Subprocess " + str(process_index) + "] - Write result")
     lock.acquire()
     return_dict[process_index] = traces
     lock.release()
-    print(str(process_index) + " done writing result")    
-        
-        
+    print("[Subprocess " + str(process_index) + "] - Done writing result")

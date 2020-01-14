@@ -32,7 +32,7 @@ from fiber.condition import (
     Measurement
 )
 
-from .log_creator import create_log_part
+from .partition_processor import process_partition_events_to_traces
 from .translation import Translation
 from .abstraction import Abstraction
 from .fiberpatch import (
@@ -206,31 +206,22 @@ def filter_events(events_to_filter, trace_filter=None):
 
     return filtered_events
 
-def split_dict_equally(input_dict, chunks=2):
-    "Splits dict by keys. Returns a list of dictionaries."
-    # prep with empty dicts
-    return_list = [dict() for idx in range(chunks)]
-    idx = 0
+def partition_dictionary(input_dict, partitions=2):
+    return_list = [dict() for idx in range(partitions)]
+    dictionary_index = 0
     for k,v in input_dict.items():
-        return_list[idx][k] = v
-        if idx < chunks-1:  # indexes start at 0
-            idx += 1
+        return_list[dictionary_index][k] = v
+        if dictionary_index < partitions - 1: 
+            dictionary_index += 1
         else:
-            idx = 0
+            dictionary_index = 0
     return return_list
 
 flatten = lambda l: [item for sublist in l for item in sublist]
 
 @timer
 def create_log_from_filtered_events(filtered_events, verbose, remove_unlisted, event_filter, patients):
-    # iterate over MRN
-    # iterate over encounter
-    # create trace per encounter
-    # translate events to proper types
-    # add events of encounter to trace
     log = XFactory.create_log()
-
-    ### START MULTIPROCESSING ###
 
     processes = []
     cores = cpu_count()
@@ -238,10 +229,18 @@ def create_log_from_filtered_events(filtered_events, verbose, remove_unlisted, e
     manager = Manager()
     return_dict = manager.dict()
 
-    partitioned_filtered_events = split_dict_equally(filtered_events, cores)
+    partitioned_filtered_events = partition_dictionary(filtered_events, cores)
 
     for process_index in range(0, cores):
-        process = Process(target=create_log_part, args=(return_lock, return_dict, process_index, partitioned_filtered_events[process_index], verbose, remove_unlisted, event_filter, patients,))
+        process = Process(target=process_partition_events_to_traces, args=(
+            return_lock, 
+            return_dict, 
+            process_index, 
+            partitioned_filtered_events[process_index], 
+            verbose, 
+            remove_unlisted, 
+            event_filter, 
+            patients,))
         processes.append(process)
         process.start()
 
@@ -252,7 +251,6 @@ def create_log_from_filtered_events(filtered_events, verbose, remove_unlisted, e
         log.append(entry)
 
     return log
-    ### END MULTIPROCESSING ###
 
 @timer
 def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, event_filter=None, trace_filter=None):
