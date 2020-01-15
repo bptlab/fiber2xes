@@ -58,7 +58,7 @@ class EventType(Enum):
 
 
 def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key):
-    if math.isnan(age_in_days):
+    if math.isnan(age_in_days) or age_in_days == 0:
         return None
     else:
         timestamp_without_hours_and_minutes = date + \
