@@ -59,7 +59,7 @@ class EventType(Enum):
 
 def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key):
     if math.isnan(age_in_days):
-        return date
+        return None
     else:
         timestamp_without_hours_and_minutes = date + \
             datetime.timedelta(days=age_in_days)
@@ -165,7 +165,7 @@ def get_patient_events(patients, events):
     for index, event in patient_events.iterrows():
         tup = (event["medical_record_number"], event["timestamp"],
                event["context_diagnosis_code"], event["context_procedure_code"])
-        if tup not in unique_events:
+        if tup not in unique_events and event["timestamp"] is not None:
             unique_events.add(tup)
         else:
             indexes_to_drop.append(index)
