@@ -137,7 +137,7 @@ class Translation(object):
         event_context = "UNKNOWN"
         translation = None
 
-        if context_name.str.contains("(EPIC )*CPT-4", regex=True).any():
+        if context_name.str.contains("(?:EPIC )*CPT-4", regex=True).any():
             event_context = "CPT-4"
             translation = Translation.translate_cpt4(context_procedure_code)
         elif context_name.str.contains("ICD-10", regex=False).any():
