@@ -1,4 +1,6 @@
 import multiprocessing
+import uuid
+
 from opyenxes.factory.XFactory import XFactory
 from ..translation import Translation
 from ..abstraction import Abstraction
@@ -48,7 +50,7 @@ def process_partition_events_to_traces(lock, return_dict, process_index, event_r
             trace = XFactory.create_trace()
 
             id_attribute = XFactory.create_attribute_id(
-                "id", str(mrn) + "_" + str(trace_id))
+                "id", str(uuid.uuid4()))
             trace.get_attributes()["id"] = id_attribute
 
             if patient_data is not None:
