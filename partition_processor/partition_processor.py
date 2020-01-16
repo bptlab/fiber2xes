@@ -38,7 +38,8 @@ def process_partition_events_to_traces(lock, return_dict, process_index, event_r
     # create trace per encounter
     # translate events to proper types
     # add events of encounter to trace
-    print("[Subprocess " + str(process_index) + "] - Start processing log partition")
+    if verbose:
+        print("[Subprocess " + str(process_index) + "] - Start processing log partition")
 
     event_counter = 0
 
@@ -119,10 +120,12 @@ def process_partition_events_to_traces(lock, return_dict, process_index, event_r
             if len(trace) > 0:
                 traces.append(trace)
 
-    print("[Subprocess " + str(process_index) + "] - Done processing log partition")
-    print("[Subprocess " + str(process_index) + "] - Processed " + str(len(event_range.items())) + " patients, " + str(len(traces)) + " traces, " + str(event_counter) + " events")
-    print("[Subprocess " + str(process_index) + "] - Write result")
+    if verbose:
+        print("[Subprocess " + str(process_index) + "] - Done processing log partition")
+        print("[Subprocess " + str(process_index) + "] - Processed " + str(len(event_range.items())) + " patients, " + str(len(traces)) + " traces, " + str(event_counter) + " events")
+        print("[Subprocess " + str(process_index) + "] - Write result")
     lock.acquire()
     return_dict[process_index] = traces
     lock.release()
-    print("[Subprocess " + str(process_index) + "] - Done writing result")
+    if verbose:
+        print("[Subprocess " + str(process_index) + "] - Done writing result")
