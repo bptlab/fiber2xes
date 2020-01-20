@@ -42,15 +42,19 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     patient_events = get_patient_events(patients, events)
 
     if trace_type == "encounter":
-        traces_per_patient = EncounterBasedTraces.get_traces_per_patient(patients, encounters, patient_events)
+        traces_per_patient = EncounterBasedTraces.get_traces_per_patient(
+            patients, encounters, patient_events)
     elif trace_type == "visit":
-        traces_per_patient = VisitBasedTraces.get_traces_per_patient(patients, encounters, patient_events)
+        traces_per_patient = VisitBasedTraces.get_traces_per_patient(
+            patients, encounters, patient_events)
     elif trace_type == "mrn":
-        traces_per_patient = MRNBasedTraces.get_traces_per_patient(patients, patient_events)
+        traces_per_patient = MRNBasedTraces.get_traces_per_patient(
+            patients, patient_events)
     else:
         sys.exit("No matching trace type given. Try using encounter, visit, or mrn")
 
-    filtered_traces_per_patient = filter_traces(traces_per_patient, trace_filter=trace_filter)
+    filtered_traces_per_patient = filter_traces(
+        traces_per_patient, trace_filter=trace_filter)
 
     log = XESFactory.create_xes_log_from_traces(
         filtered_traces_per_patient,
@@ -66,21 +70,20 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
 @timer
 def get_patient_events(patients, events):
     # join patients and events
-    patient_events = pd.merge(patients, events, on='medical_record_number', how='inner')
+
+    events.drop_duplicates(inplace=True)
+
+    patient_events = pd.merge(
+        patients, events, on='medical_record_number', how='inner')
 
     patient_events['timestamp'] = patient_events.apply(lambda row: timestamp_from_birthdate_and_age_and_time(
         row.date_of_birth, row.age_in_days, row.time_of_day_key), axis=1)
 
-    indexes_to_drop = []
-    unique_events = set()
-    for index, event in patient_events.iterrows():
-        tup = (event["medical_record_number"], event["timestamp"], event["context_material_code"],
-               event["context_diagnosis_code"], event["context_procedure_code"])
-        if tup not in unique_events and event["timestamp"] is not None:
-            unique_events.add(tup)
-        else:
-            indexes_to_drop.append(index)
-    patient_events.drop(patient_events.index[indexes_to_drop], inplace=True)
+    patient_events.drop(
+        patient_events[patient_events.timestamp is None].index, inplace=True)
+
+    patient_events.drop_duplicates(inplace=True)
+
     return patient_events
 
 
