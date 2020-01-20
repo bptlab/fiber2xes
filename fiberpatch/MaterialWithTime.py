@@ -18,6 +18,8 @@ class MaterialWithTime(_FactCondition):
     _default_columns = [
         d_pers.MEDICAL_RECORD_NUMBER,
         fact.AGE_IN_DAYS,
+        fact.CAREGIVER_GROUP_KEY,
+        fact.FACILITY_KEY,
         d_table.CONTEXT_NAME,
         fact.ENCOUNTER_KEY,
         description_column,

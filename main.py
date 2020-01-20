@@ -74,9 +74,9 @@ def get_patient_events(patients, events):
     indexes_to_drop = []
     unique_events = set()
     for index, event in patient_events.iterrows():
-        tup = (event["medical_record_number"], event["timestamp"],
+        tup = (event["medical_record_number"], event["timestamp"], event["context_material_code"],
                event["context_diagnosis_code"], event["context_procedure_code"])
-        if tup not in unique_events:
+        if tup not in unique_events and event["timestamp"] is not None:
             unique_events.add(tup)
         else:
             indexes_to_drop.append(index)
@@ -85,8 +85,8 @@ def get_patient_events(patients, events):
 
 
 def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key):
-    if math.isnan(age_in_days):
-        return date
+    if math.isnan(age_in_days) or date == "MSDW_UNKOWN" or age_in_days == "MSDW_UNKNOWN":
+        return None
     else:
         timestamp_without_hours_and_minutes = date + \
             datetime.timedelta(days=age_in_days)
@@ -115,5 +115,4 @@ def filter_traces(traces_to_filter, trace_filter=None):
                 if trace_key not in filtered_traces_per_patient[mrn]:
                     filtered_traces_per_patient[mrn][trace_key] = {}
                 filtered_traces_per_patient[mrn][trace_key] = traces_to_filter[mrn][trace_key]
-
     return filtered_traces_per_patient
