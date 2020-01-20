@@ -80,7 +80,7 @@ def get_patient_events(patients, events):
         row.date_of_birth, row.age_in_days, row.time_of_day_key), axis=1)
 
     patient_events.drop(
-        patient_events[patient_events.timestamp is None].index, inplace=True)
+        patient_events[patient_events.timestamp == None].index, inplace=True)
 
     patient_events.drop_duplicates(inplace=True)
 
