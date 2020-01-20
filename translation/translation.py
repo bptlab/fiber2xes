@@ -21,7 +21,8 @@ class Translation(object):
         return event.context_material_code != "MSDW_NOT APPLICABLE" and event.context_material_code != "MSDW_UNKNOWN"
 
     def is_known_event(event):
-        return Translation.is_event_procedure(event) or Translation.is_event_diagnosis(event) or Translation.is_event_material(event)
+        return Translation.is_event_procedure(event) or Translation.is_event_diagnosis(event) or \
+               Translation.is_event_material(event)
 
     def translate_to_event(event, verbose):
         """
@@ -105,7 +106,7 @@ class Translation(object):
         reader = Translation.csv_reader[vocabulary_path]
         for row in reader:
             if len(row) > search_column and len(row) > target_column:
-                if re.search("^" + search_term + "$", row[search_column], re.IGNORECASE) != None:
+                if re.search("^" + search_term + "$", row[search_column], re.IGNORECASE) is not None:
                     return row[target_column]
         return None
 
@@ -192,6 +193,6 @@ class Translation(object):
     def identify_consultation(procedure_description):
         result = re.search(
             "^CONSULT TO ", procedure_description, re.IGNORECASE)
-        if result != None:
+        if result is not None:
             return procedure_description[result.end():]
         return None

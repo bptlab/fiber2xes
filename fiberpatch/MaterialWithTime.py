@@ -5,6 +5,7 @@ from fiber.database.table import (
     fd_mat,
 )
 
+
 class MaterialWithTime(_FactCondition):
     """
     This is an extension of the Material Class, to also contain time of day-keys.
