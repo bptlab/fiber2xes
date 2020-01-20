@@ -30,7 +30,9 @@ def translate_procedure_diagnosis_material_to_event(event, verbose, remove_unlis
 
     return result, event_name, event_context, event_code
 
-def process_partition_events_to_traces(lock, return_dict, process_index, event_range, verbose, remove_unlisted, event_filter, patients):
+
+def process_partition_events_to_traces(lock, return_dict, process_index, event_range,
+                                       verbose, remove_unlisted, event_filter, patients):
     # iterate over MRN
     # iterate over encounter
     # create trace per encounter
@@ -85,11 +87,12 @@ def process_partition_events_to_traces(lock, return_dict, process_index, event_r
                 if not is_relevant:
                     continue
 
-                event_descriptor, event_name, event_context, event_code = translate_procedure_diagnosis_material_to_event(
-                    event=event,
-                    verbose=verbose,
-                    remove_unlisted=remove_unlisted
-                )
+                event_descriptor, event_name, event_context, event_code = \
+                    translate_procedure_diagnosis_material_to_event(
+                        event=event,
+                        verbose=verbose,
+                        remove_unlisted=remove_unlisted
+                    )
                 if event_descriptor is not None:
                     log_event = XFactory.create_event()
 
@@ -130,7 +133,8 @@ def process_partition_events_to_traces(lock, return_dict, process_index, event_r
 
     if verbose:
         print("[Subprocess " + str(process_index) + "] - Done processing log partition")
-        print("[Subprocess " + str(process_index) + "] - Processed " + str(len(event_range.items())) + " patients, " + str(len(traces)) + " traces, " + str(event_counter) + " events")
+        print("[Subprocess " + str(process_index) + "] - Processed " + str(len(event_range.items())) + " patients, "
+              + str(len(traces)) + " traces, " + str(event_counter) + " events")
         print("[Subprocess " + str(process_index) + "] - Write result")
     lock.acquire()
     return_dict[process_index] = traces

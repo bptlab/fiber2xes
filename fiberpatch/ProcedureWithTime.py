@@ -5,6 +5,7 @@ from fiber.database.table import (
     fd_proc,
 )
 
+
 class ProcedureWithTime(_FactCondition):
     """
     This is an extension of the Procedure Class, to also contain time of day-keys.

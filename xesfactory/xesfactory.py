@@ -24,7 +24,6 @@ class XESFactory(object):
                 dictionary_index = 0
         return return_list
 
-
     def create_xes_log_from_traces(traces_of_patients, verbose, remove_unlisted, event_filter, patients):
         log = XFactory.create_log()
 

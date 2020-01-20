@@ -5,6 +5,7 @@ from fiber.database.table import (
     fd_diag,
 )
 
+
 class DiagnosisWithTime(_FactCondition):
     """
     This is an extension of the Diagnosis Class, to also contain time of day-keys.
