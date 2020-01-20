@@ -1,3 +1,4 @@
+import os
 import sys
 import functools
 import pandas as pd
@@ -13,6 +14,7 @@ from .fiberpatch import (
     ProcedureWithTime
 )
 
+import abstraction
 from .xesfactory import XESFactory
 from .tracetypes import EncounterBasedTraces, VisitBasedTraces, MRNBasedTraces
 
@@ -31,9 +33,12 @@ def timer(func):
 
 
 @timer
-def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, event_filter=None, trace_filter=None):
-    # get necessary data from cohort
+def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, event_filter=None, trace_filter=None,
+                        process_number=-1,
+                        abstraction_csv_path=os.path.join("fiber2xes", "abstraction", "abstraction.csv"),
+                        abstraction_csv_delimiter=";", abstraction_excat_match=False):
 
+    # get necessary data from cohort
     patients = cohort.get(PatientWithAttributes())
     encounters = cohort.get(EncounterWithVisit())
     events = cohort.get(DiagnosisWithTime(),
@@ -50,14 +55,15 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     else:
         sys.exit("No matching trace type given. Try using encounter, visit, or mrn")
 
+    abstraction.prepare(abstraction_csv_path, abstraction_csv_delimiter, remove_unlisted, abstraction_excat_match)
     filtered_traces_per_patient = filter_traces(traces_per_patient, trace_filter=trace_filter)
 
     log = XESFactory.create_xes_log_from_traces(
         filtered_traces_per_patient,
         verbose,
-        remove_unlisted,
-        event_filter=event_filter,
-        patients=patients
+        event_filter,
+        patients,
+        process_number
     )
 
     return log

@@ -1,5 +1,6 @@
-from .abstraction import Abstraction
+from .abstraction import prepare, get_abstract_event_name
 
 __all__ = [
-    'Abstraction'
+    'prepare',
+    'get_abstract_event_name'
 ]

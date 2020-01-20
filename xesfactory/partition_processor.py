@@ -1,10 +1,10 @@
 import uuid
 from opyenxes.factory.XFactory import XFactory
 from ..translation import Translation
-from ..abstraction import Abstraction
+from ..abstraction import get_abstract_event_name
 
 
-def translate_procedure_diagnosis_material_to_event(event, verbose, remove_unlisted):
+def translate_procedure_diagnosis_material_to_event(event, verbose):
 
     if not Translation.is_known_event(event):
         return None, None, None, None
@@ -12,8 +12,7 @@ def translate_procedure_diagnosis_material_to_event(event, verbose, remove_unlis
     event_name, event_type, event_context, event_code = Translation.translate_to_event(
         event, verbose)
 
-    abstract_event_name = Abstraction.get_abstract_event_name(
-        event_name, remove_unlisted)
+    abstract_event_name = get_abstract_event_name(event_name)
 
     if abstract_event_name is None:
         return None, event_name, event_context, event_code
@@ -32,7 +31,7 @@ def translate_procedure_diagnosis_material_to_event(event, verbose, remove_unlis
 
 
 def process_partition_events_to_traces(lock, return_dict, process_index, event_range,
-                                       verbose, remove_unlisted, event_filter, patients):
+                                       verbose, event_filter, patients):
     # iterate over MRN
     # iterate over encounter
     # create trace per encounter
@@ -88,11 +87,7 @@ def process_partition_events_to_traces(lock, return_dict, process_index, event_r
                     continue
 
                 event_descriptor, event_name, event_context, event_code = \
-                    translate_procedure_diagnosis_material_to_event(
-                        event=event,
-                        verbose=verbose,
-                        remove_unlisted=remove_unlisted
-                    )
+                    translate_procedure_diagnosis_material_to_event(event=event, verbose=verbose)
                 if event_descriptor is not None:
                     log_event = XFactory.create_event()
 
