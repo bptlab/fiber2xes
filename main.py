@@ -85,7 +85,7 @@ def get_patient_events(patients, events):
 
 
 def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key):
-    if math.isnan(age_in_days) or date == "MSDW_UNKOWN" or age_in_days == "MSDW_UNKNOWN":
+    if math.isnan(age_in_days) or date == "MSDW_UNKNOWN" or age_in_days == "MSDW_UNKNOWN":
         return None
     else:
         timestamp_without_hours_and_minutes = date + \
