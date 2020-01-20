@@ -7,8 +7,8 @@ from multiprocessing import (
     Manager,
 )
 from .partition_processor import process_partition_events_to_traces
-from .translation import Translation
-from .abstraction import Abstraction
+from ..translation import Translation
+from ..abstraction import Abstraction
 
 
 class XESFactory(object):
