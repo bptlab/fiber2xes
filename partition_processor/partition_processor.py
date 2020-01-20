@@ -116,6 +116,16 @@ def process_partition_events_to_traces(lock, return_dict, process_index, event_r
                         "event:code", event_code)
                     log_event.get_attributes()["event:code"] = code_attribute
 
+                    caregiver_attribute = XFactory.create_attribute_literal(
+                        "event:caregiver_group", event["caregiver_group_key"]
+                    )
+                    log_event.get_attributes()["event:caregiver_group"] = caregiver_attribute
+
+                    facility_attribute = XFactory.create_attribute_literal(
+                        "event:facility", event["facility_key"]
+                    )
+                    log_event.get_attributes()["event:facility"] = facility_attribute
+
                     trace.append(log_event)
             if len(trace) > 0:
                 traces.append(trace)
