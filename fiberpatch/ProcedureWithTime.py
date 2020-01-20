@@ -20,6 +20,8 @@ class ProcedureWithTime(_FactCondition):
         fact.AGE_IN_DAYS,
         d_table.CONTEXT_NAME,
         fact.TIME_OF_DAY_KEY,
+        fact.CAREGIVER_GROUP_KEY,
+        fact.FACILITY_KEY,
         description_column,
         code_column,
         fact.ENCOUNTER_KEY,
