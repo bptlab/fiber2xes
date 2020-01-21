@@ -80,8 +80,7 @@ def get_patient_events(patients, events):
     patient_events.drop(
         patient_events[patient_events.timestamp == None].index, inplace=True)
 
-    patient_events.drop_duplicates(['medical_record_number', 'timestamp', 'context_material_code',
-                                    'context_diagnosis_code', 'context_procedure_code'], inplace=True)
+    patient_events.drop_duplicates(inplace=True)
 
     return patient_events
 
