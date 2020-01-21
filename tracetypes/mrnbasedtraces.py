@@ -5,7 +5,7 @@ class MRNBasedTraces(object):
         for mrn in patient_mrns:
             traces_per_patient[mrn] = {}
             traces_per_patient[mrn][mrn] = []
-            events = events[(events.medical_record_number == mrn)]
-            for index, event in events.iterrows():
+            patient_events = events[(events.medical_record_number == mrn)]
+            for index, event in patient_events.iterrows():
                 traces_per_patient[mrn][mrn] = traces_per_patient[mrn][mrn] + [event]
         return traces_per_patient

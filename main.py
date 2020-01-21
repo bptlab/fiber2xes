@@ -72,21 +72,18 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
 @timer
 def get_patient_events(patients, events):
     # join patients and events
-    patient_events = pd.merge(patients, events, on='medical_record_number', how='inner')
+
+    patient_events = pd.merge(
+        patients, events, on='medical_record_number', how='inner')
 
     patient_events['timestamp'] = patient_events.apply(lambda row: timestamp_from_birthdate_and_age_and_time(
         row.date_of_birth, row.age_in_days, row.time_of_day_key), axis=1)
 
-    indexes_to_drop = []
-    unique_events = set()
-    for index, event in patient_events.iterrows():
-        tup = (event["medical_record_number"], event["timestamp"], event["context_material_code"],
-               event["context_diagnosis_code"], event["context_procedure_code"])
-        if tup not in unique_events and event["timestamp"] is not None:
-            unique_events.add(tup)
-        else:
-            indexes_to_drop.append(index)
-    patient_events.drop(patient_events.index[indexes_to_drop], inplace=True)
+    patient_events.drop(
+        patient_events[patient_events.timestamp == None].index, inplace=True)
+
+    patient_events.drop_duplicates(inplace=True)
+
     return patient_events
 
 
