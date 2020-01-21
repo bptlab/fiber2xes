@@ -10,8 +10,9 @@ exact_match = False
 def prepare(abstraction_csv_path, delimiter, _remove_unlisted, _exact_match):
     global table, abstraction_names, remove_unlisted, exact_match
     if table is None or abstraction_names is None:
-        table = csv.reader(open(abstraction_csv_path), delimiter=delimiter)
-        abstraction_names = next(table)
+        table_reader = csv.reader(open(abstraction_csv_path), delimiter=delimiter)
+        abstraction_names = next(table_reader)
+        table = list(table_reader)
     remove_unlisted = _remove_unlisted
     exact_match = _exact_match
 
@@ -30,5 +31,5 @@ def get_abstract_event_name(event_name):
 
     if remove_unlisted:
         return None
-
+    
     return event_name
