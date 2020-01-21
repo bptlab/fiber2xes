@@ -14,7 +14,7 @@ from .fiberpatch import (
     ProcedureWithTime
 )
 
-import abstraction
+from .abstraction import prepare
 from .xesfactory import XESFactory
 from .tracetypes import EncounterBasedTraces, VisitBasedTraces, MRNBasedTraces
 
@@ -55,7 +55,7 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     else:
         sys.exit("No matching trace type given. Try using encounter, visit, or mrn")
 
-    abstraction.prepare(abstraction_csv_path, abstraction_csv_delimiter, remove_unlisted, abstraction_excat_match)
+    prepare(abstraction_csv_path, abstraction_csv_delimiter, remove_unlisted, abstraction_excat_match)
     filtered_traces_per_patient = filter_traces(traces_per_patient, trace_filter=trace_filter)
 
     log = XESFactory.create_xes_log_from_traces(
