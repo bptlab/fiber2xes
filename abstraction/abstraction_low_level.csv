@@ -1,0 +1,48 @@
+Group;NSAID;SKELETAL MUSCLE RELAXANT;ANTIDEPRESSANT;BENZODIAZEPINE;OPIOID;COSTERIOID;NONPHARMACOLOGICAL TREATMENT;LOW BACK PAIN;Blacklist
+ALBUTEROL SULFATE;acetylsalicylic acid;Dysport;citalopram;clobazam;Tapentadol;Prednisolone;yoga;low back pain;Diastolic Blood Pressure
+OXYCODONE-ACETAMINOPHEN;Diflunisal;Gablofen;fluoxetine;clorazepate;Oxymorphone;bethamethasone;cognitive behavioral therapy;lumbago;Systolic Blood Pressure
+TRAMADOL;Dolobid;Soma;fluvoxamine;chlordiazepoxide;Butorphanol;Celestone;cognitive-behavioral therapy;;PULSE
+CYCLOBENZAPRINE;Salicylic acid;Lorzone;paroxetine;estazolam;Dextromoramide;Orapred;progressive relaxation;;Temperature, Tympanic
+THERAPEUTIC EXERCISE;Salsalate;Amrix;vilazodone;lorazepam;Dezocine;Prelone;transcutaneous electrical nerve stimulation;;Respirations
+NAPROXEN;Disalcid;Dantrium;Celexa;oxazepam;Meperidine;Intensol;;;O2 SATURATION
+ASPIRIN;Fenoprofen;Botox;Lexapro;temazepam;Meptazinol;Aristospan;;;HEIGHT
+TRIAMCINOLONE ACETONIDE;Ketoprofen;Norflex;Prozac;triazolam;Nalbuphine;Kenalog;;;WEIGHT
+OXYCODONE;Dexketoprofen;Skelaxin;Luvox;Xanax;Opium;Intralesional;;;R APACHE TEMPERATURE
+TRIAMCINOLONE;Flurbiprofen;Robaxin;Brisdelle;Onfi;Papaveretum;Aristospan;;;TEMPERATURE
+IBUPROFEN;Oxaprozin;Mybloc;Zoloft;Klonopin;Pentazocine;Medrol;;;NOT AVAILABLE
+ACETAMINOPHEN;Loxoprofen;Zanaflex;Viibrid;Tranxene;Phenazocine;Depo-Medrol;;;
+DIAZEPAM;Indomethacin;abobotulinumtoxinA;desvenlafaxine;Librium;Pirinitramide;Solu-Medrol;;;
+KETOROLAC TROMETHAMINE;Tolmetin;carisoprodol;levomilnacipran;Valium;Propoxyphene;DexPak;;;
+DICLOFENAC;Sulindac;chlorzoxazone;venlafaxine;Diastat;Tilidine;;;;
+CLONAZEPAM;Etodolac;cyclobenzaprine;Khedezla;Prosom;;;;;
+PREDNISONE;Aceclofenac;orphenadrine;Cymbalta;Ativan;;;;;
+SERTRALINE;Nabumetone;metaxalone;Fetzima;Serax;;;;;
+ESCITALOPRAM;Piroxicam;rimabotulinumtoxinB;Savella;Restoril;;;;;
+MELOXICAM;Tenoxicam;tizanidine;Effexor;Halcion;;;;;
+ALPRAZOLAM;Droxicam;Vanadom;Pristiq;;;;;;
+DEXAMETHASONE;Lornoxicam;Lioresal;Irenka;;;;;;
+FENTANYL;Isoxicam;Fexmid;Sarafem;;;;;;
+DULOXETINE;Phenylbutazone;Flexeril;Pexeva;;;;;;
+METHYLPREDNISOLONE;Bute;;Paxil;;;;;;
+CHLAMYDIA;Mefenamic acid;;;;;;;;
+BUPRENORPHINE;Meclofenamic acid;;;;;;;;
+HYDROMORPHONE;Flufenamic acid;;;;;;;;
+KETOROLAC;Tolfenamic acid;;;;;;;;
+ACUPUNCTURE;Celecoxib;;;;;;;;
+TIOTROPIUM BROMIDE;Rofecoxib;;;;;;;;
+BACLOFEN;Valdecoxib;;;;;;;;
+METHOCARBAMOL;Parecoxib;;;;;;;;
+ONABOTULINUMTOXINA;Lumiracoxib;;;;;;;;
+MORPHINE;Etoricoxib;;;;;;;;
+MASSAGE THERAPY;Firocoxib;;;;;;;;
+CHRONIC LOW BACK PAIN;Nimesulide;;;;;;;;
+BACK PAIN;Clonixin;;;;;;;;
+PREDNISOLONE ACETATE;Licofelone;;;;;;;;
+CODEINE;Tiaprofenic acid;;;;;;;;
+ULTRASOUND;;;;;;;;;
+IMAGING;;;;;;;;;
+SPINAL MANIPULATION;;;;;;;;;
+REHABILITATION;;;;;;;;;
+CARDIOVASCULAR STRESS TEST;;;;;;;;;
+DANTROLENE;;;;;;;;;
+TRAZODONE;;;;;;;;;

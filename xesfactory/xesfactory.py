@@ -57,33 +57,6 @@ class XESFactory(object):
 
         return log
 
-    def translate_and_abstract_event(event, verbose, remove_unlisted):
-
-        if not Translation.is_known_event(event):
-            return None, None, None, None
-
-        event_name, event_type, event_context, event_code = Translation.translate_to_event(
-            event, verbose)
-
-        abstract_event_name = Abstraction.get_abstract_event_name(
-            event_name, remove_unlisted)
-
-        if abstract_event_name is None:
-            return None, event_name, event_context, event_code
-        elif not verbose:
-            return abstract_event_name, event_name, event_context, event_code
-
-        result = event_type
-
-        if event_context is not None and verbose:
-            result += (" (" + event_context + " " + event_code + ")")
-
-        if event_name is not None:
-            result += (": " + abstract_event_name)
-
-        return result, event_name, event_context, event_code
-
-
 def save_event_log_to_file(log, file_path):
     with open(file_path, "w") as file:
         XesXmlSerializer().serialize(log, file)
