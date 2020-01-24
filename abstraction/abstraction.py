@@ -23,7 +23,9 @@ def get_abstract_event_name(event_name):
         for i, entry in enumerate(row):
             if entry and ((not exact_match and re.search(str(entry), str(event_name), re.IGNORECASE) is not None)
                or (exact_match and str(entry).lower() == str(event_name).lower())):
-                if abstraction_names[i].lower() == "blacklist":
+                if abstraction_names[i].lower() == "group":
+                    return entry
+                elif abstraction_names[i].lower() == "blacklist":
                     return None
                 elif abstraction_names[i].lower() == "whitelist":
                     return event_name
@@ -31,5 +33,4 @@ def get_abstract_event_name(event_name):
 
     if remove_unlisted:
         return None
-    
     return event_name

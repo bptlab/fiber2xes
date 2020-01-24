@@ -35,7 +35,7 @@ def timer(func):
 @timer
 def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, event_filter=None, trace_filter=None,
                         process_number=-1,
-                        abstraction_csv_path=os.path.join("fiber2xes", "abstraction", "abstraction.csv"),
+                        abstraction_csv_path=os.path.join("fiber2xes", "abstraction", "abstraction_low_level.csv"),
                         abstraction_csv_delimiter=";", abstraction_excat_match=False):
 
     # get necessary data from cohort
