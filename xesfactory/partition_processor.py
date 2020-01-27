@@ -55,6 +55,8 @@ def process_partition_events_to_traces(lock, return_dict, process_index, event_r
             trace.get_attributes()["id"] = id_attribute
 
             if patient_data is not None:
+                trace.get_attributes()["patient:mrn"] = XFactory.create_attribute_literal(
+                    "patient:mrn", patient_data["medical_record_number"].values[0])
                 trace.get_attributes()["patient:date_of_birth"] = XFactory.create_attribute_literal(
                     "patient:date_of_birth", patient_data["date_of_birth"].values[0])
                 trace.get_attributes()["patient:address_zip"] = XFactory.create_attribute_literal(
