@@ -3,47 +3,34 @@ import pandas as pd
 
 class VisitBasedTraces(object):
     def get_traces_per_patient(patients, encounters, events):
+        patient_mrns = patients.medical_record_number.unique()
+        
         patient_encounters = VisitBasedTraces.get_patient_encounters(patients, encounters)
         # mrn -> encounter_visit_ids -> encounter_key
-        patient_visits_and_encounters = VisitBasedTraces.get_visits_and_encounters_per_patient(
-            patients, patient_encounters)
+        encounter_key_to_visit_id = VisitBasedTraces.get_visits_and_encounters_per_patient(
+            patient_mrns, patient_encounters)
         # mrn -> encounter_visit_ids -> events
-        return VisitBasedTraces.get_patient_events_per_visit(patients, patient_visits_and_encounters, events)
+        return VisitBasedTraces.get_patient_events_per_visit(patient_mrns, encounter_key_to_visit_id, events)
 
     def get_patient_encounters(patients, encounters):
         patient_encounters = pd.merge(
             patients, encounters, on='medical_record_number', how='inner')
         return patient_encounters
 
-    def get_visits_and_encounters_per_patient(patients, encounters):
-        patient_mrns = patients.medical_record_number.unique()
-        visits_and_encounters_per_patient = {}
-        for mrn in patient_mrns:
-            visits_for_patient = {}
-            all_visits_for_patient = encounters[(
-                encounters.medical_record_number == mrn)].encounter_visit_id.unique()
-            for encounter_visit_id in all_visits_for_patient:
-                visits_for_patient[encounter_visit_id] = []
-                all_encounter_keys = encounters[(
-                    encounters.encounter_visit_id == encounter_visit_id)].encounter_key.unique()
-                for encounter_key in all_encounter_keys:
-                    visits_for_patient[encounter_visit_id] = visits_for_patient[encounter_visit_id] + [
-                        encounter_key]
-            visits_and_encounters_per_patient[mrn] = visits_for_patient
-        return visits_and_encounters_per_patient
+    def get_visits_and_encounters_per_patient(patient_mrns, encounters):
+        encounter_key_to_visit_id = {}
+        for index, encounter in encounters.iterrows():
+            encounter_key_to_visit_id[encounter.encounter_key] = encounter.encounter_visit_id
+        return encounter_key_to_visit_id
 
-    def get_patient_events_per_visit(patients, patient_visits_and_encounters, patient_events):
-        patient_mrns = patients.medical_record_number.unique()
+    def get_patient_events_per_visit(patient_mrns, encounter_key_to_visit_id, patient_events):
         events_per_patient = {}
         for mrn in patient_mrns:
             events_per_patient[mrn] = {}
-            patient_visits = patient_visits_and_encounters[mrn]
-            for visit in patient_visits:
-                events_per_patient[mrn][visit] = []
-                encounters = patient_visits[visit]
-                for encounter in encounters:
-                    events = patient_events[(
-                        patient_events.encounter_key == encounter)]
-                    for index, event in events.iterrows():
-                        events_per_patient[mrn][visit] = events_per_patient[mrn][visit] + [event]
+        for index, event in patient_events.iterrows():
+            if event.encounter_key in encounter_key_to_visit_id:
+                visit_id = encounter_key_to_visit_id[event.encounter_key]
+                if visit_id not in events_per_patient[event.medical_record_number]:
+                    events_per_patient[event.medical_record_number][visit_id] = []
+                events_per_patient[event.medical_record_number][visit_id].append(event)
         return events_per_patient
