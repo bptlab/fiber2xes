@@ -1,15 +1,12 @@
 from collections import OrderedDict
 import pandas as pd
 
-def get_traces_per_patient_by_visit(patient_events, encounters):
-    patient_event_encounters = patient_events\
-        .join(encounters.select("encounter_key", "encounter_visit_id"), on=["encounter_key"], how='inner')
-    column_indices_patient_event_encounters = OrderedDict(zip(list(patient_event_encounters.schema.names), range(0, len(patient_event_encounters.schema.names))))
+
+def get_traces_per_patient_by_visit(patient_events, column_indices):
     return patient_event_encounters\
         .rdd\
-        .map(lambda row: row + (row[column_indices_patient_event_encounters["encounter_visit_id"]], ))\
-        .toDF(list(column_indices_patient_event_encounters.keys()) + ["trace_id"])
-
+        .map(lambda row: row + (row[column_indices["encounter_visit_id"]], ))\
+        .toDF(list(patient_events.schema.names) + ["trace_id"])
 
     """
     class VisitBasedTraces(object):

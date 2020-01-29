@@ -59,7 +59,11 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
         .config(conf=conf)\
         .getOrCreate()
 
-    patient_events = merge_dataframes(patients, events, 'medical_record_number')
+    patient_events = merge_dataframes(
+        patients, events, 'medical_record_number')
+
+    if trace_type == "visit":
+        patient_events = merge_dataframes(patient_events, encounters, "encounter_key")
 
     patient_events = define_column_types_for_patient_events(patient_events)
 
@@ -69,23 +73,17 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
 
     patient_events = calculate_timestamp(patient_events, column_indices)
 
-    # if trace_type == "encounter":
-    #    traces_per_patient = EncounterBasedTraces.get_traces_per_patient(
-    #        patients, encounters, patient_events)
-
     column_indices = OrderedDict(zip(list(column_indices.keys()) + ["trace_id"], list(column_indices.values()) + [len(column_indices)]))
 
     if trace_type == "visit":
-        encounters = spark.createDataFrame(encounters)
-
         traces_per_patient = get_traces_per_patient_by_visit(
-            patient_events, encounters)
+            patient_events, column_indices)
     elif trace_type == "mrn":
         traces_per_patient = get_traces_per_patient_by_mrn(
             patient_events, column_indices)
     else:
         sys.exit("No matching trace type given. Try using encounter, visit, or mrn")
-
+    # todo: add encounter?
     column_indices["trace_type"] = len(column_indices)
 
     traces_per_patient.collect()
