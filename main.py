@@ -42,6 +42,7 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     # get necessary data from cohort
     patients = cohort.get(PatientWithAttributes())
     encounters = cohort.get(EncounterWithVisit())
+    encounters = encounters.drop(columns=["encounter_type", "encounter_class"])
     events = cohort.get(DiagnosisWithTime(),
                         ProcedureWithTime(), DrugWithTime())
 
@@ -63,8 +64,13 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     patient_events = merge_dataframes(
         patients, events, 'medical_record_number')
 
+    del(patients)
+    del(events)
+
     if trace_type == "visit":
-        patient_events = merge_dataframes(patient_events, encounters, "encounter_key")
+        patient_events = pd.merge(patient_events, encounters, on="encounter_key", how='inner')
+
+    del(encounters)
 
     patient_events = define_column_types_for_patient_events(patient_events)
 
@@ -131,7 +137,10 @@ def define_column_types_for_patient_events(patient_events) -> pd.DataFrame:
 def merge_dataframes(left, right, on) -> pd.DataFrame:
     left = handle_duplicate_column_names(left)
     right = handle_duplicate_column_names(right)
-    return pd.merge(left, right, on=on, how='inner')
+    result = pd.merge(left, right, on=on, how='inner')
+    del(left)
+    del(right)
+    return result
 
 @timer
 def calculate_timestamp(patient_events, column_indices):
