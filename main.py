@@ -48,8 +48,9 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     # Initialize spark session
     conf = SparkConf()\
         .setAppName("fiber2xes")\
-        .set("spark.driver.memory", "32g")\
-        .set("spark.executor.memory", "32g")\
+        .set("spark.driver.memory", "8g")\
+        .set("spark.executor.memory", "6g")\
+        .set("spark.executor.instances", "8")\
         .set("spark.driver.maxResultSize", "48g")\
         .set("spark.cores.max", multiprocessing.cpu_count())\
         .set("spark.sql.execution.arrow.enabled", "true")\
