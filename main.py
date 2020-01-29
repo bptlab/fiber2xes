@@ -42,16 +42,15 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     # get necessary data from cohort
     patients = cohort.get(PatientWithAttributes())
     encounters = cohort.get(EncounterWithVisit())
-    encounters = encounters.drop(columns=["encounter_type", "encounter_class"])
+    encounters = encounters.drop(columns=["encounter_type", "encounter_class", "age_in_days"])
     events = cohort.get(DiagnosisWithTime(),
                         ProcedureWithTime(), DrugWithTime())
 
     # Initialize spark session
     conf = SparkConf()\
         .setAppName("fiber2xes")\
-        .set("spark.driver.memory", "8g")\
-        .set("spark.executor.memory", "6g")\
-        .set("spark.executor.instances", "8")\
+        .set("spark.driver.memory", "20g")\
+        .set("spark.executor.memory", "30g")\
         .set("spark.driver.maxResultSize", "48g")\
         .set("spark.cores.max", multiprocessing.cpu_count())\
         .set("spark.sql.execution.arrow.enabled", "true")\
@@ -68,7 +67,7 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     del(events)
 
     if trace_type == "visit":
-        patient_events = pd.merge(patient_events, encounters, on="encounter_key", how='inner')
+        patient_events = pd.merge(patient_events, encounters, on=["encounter_key", "medical_record_number"], how='inner')
 
     del(encounters)
 
