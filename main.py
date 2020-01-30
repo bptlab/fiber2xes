@@ -41,8 +41,6 @@ def timer(func):
 def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, event_filter=None, trace_filter=None):
     # get necessary data from cohort
     patients = cohort.get(PatientWithAttributes())
-    encounters = cohort.get(EncounterWithVisit())
-    encounters = encounters.drop(columns=["encounter_type", "encounter_class", "age_in_days"])
     events = cohort.get(DiagnosisWithTime(),
                         ProcedureWithTime(), DrugWithTime())
 
@@ -66,10 +64,11 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     del(patients)
     del(events)
 
-    if trace_type == "visit":
-        patient_events = pd.merge(patient_events, encounters, on=["encounter_key", "medical_record_number"], how='inner')
-
-    del(encounters)
+    if trace_type == "visit" or trace_type == "encounter":
+        encounters = cohort.get(EncounterWithVisit())
+        encounters = encounters.drop(columns=["encounter_type", "encounter_class", "age_in_days"])
+        patient_events = merge_dataframes(patient_events, encounters, on=["encounter_key", "medical_record_number"]) # pd.merge(patient_events, encounters, on=["encounter_key", "medical_record_number"], how='inner')
+        del(encounters)
 
     patient_events = define_column_types_for_patient_events(patient_events)
 
@@ -90,14 +89,11 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     else:
         sys.exit("No matching trace type given. Try using encounter, visit, or mrn")
     # todo: add encounter?
-    column_indices["trace_type"] = len(column_indices)
-
-    traces_per_patient.collect()
-
-    return
 
     filtered_traces_per_patient = filter_traces(
         traces_per_patient, trace_filter=trace_filter)
+
+    return
 
     log = XESFactory.create_xes_log_from_traces(
         filtered_traces_per_patient,
@@ -159,8 +155,24 @@ def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key
         datetime.timedelta(minutes=time_of_day_key)
     return (timestamp, ) # .strftime("%Y-%m-%d %H:%M"), ) <-- for string representation
 
+def createList(a): return [a]
+def mergeLists(a, b): return a + b
+def addTupleToList(a, b): return a + [b]
+    
+
 @timer
 def filter_traces(traces_to_filter, trace_filter=None):
+    if trace_filter is None:
+        return traces_to_filter
+    
+    return traces_to_filter\
+        .rdd\
+        .map(lambda row: (row.trace_id, row))\
+        .combineByKey(createList, addTupleToList, mergeLists)\
+        .filter(lambda trace: trace_filter.is_relevant_trace(trace[1]))
+
+@timer
+def filter_traces_deprecated(traces_to_filter, trace_filter=None):
     filtered_traces_per_patient = {}
     for mrn in traces_to_filter:
         for trace_key in traces_to_filter[mrn]:
