@@ -157,7 +157,7 @@ def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key
     timestamp = date + \
         datetime.timedelta(days=age_in_days) + \
         datetime.timedelta(minutes=time_of_day_key)
-    return (timestamp, ) # .strftime("%Y-%m-%d %H:%M"), ) <-- for string representation
+    return (timestamp, )
 
 def createList(a): return [a]
 def mergeLists(a, b): return a + b
