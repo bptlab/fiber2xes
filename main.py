@@ -4,6 +4,7 @@ import pandas as pd
 import datetime
 import time
 import math
+import multiprocessing
 from collections import OrderedDict
 
 from .fiberpatch import (
@@ -14,7 +15,7 @@ from .fiberpatch import (
     ProcedureWithTime
 )
 
-from .xesfactory import XESFactory
+from .xesfactory import create_xes_log_from_traces
 from .tracetypes import get_traces_per_patient_by_mrn, get_traces_per_patient_by_visit
 
 from pyspark.sql import Row, SparkSession
@@ -22,7 +23,6 @@ from collections import OrderedDict
 from pyspark import SparkContext, SparkConf
 from pyspark.sql.types import *
 from pyspark.sql.functions import lit, isnan
-import multiprocessing
 
 def timer(func):
     # Decorator to benchmark functions
@@ -36,6 +36,10 @@ def timer(func):
         return value
     return wrapper_timer
 
+@timer
+def create_spark_df(spark, pandas_df):
+    pandas_df = define_column_types_for_patient_events(pandas_df)
+    return spark.createDataFrame(pandas_df)
 
 @timer
 def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, event_filter=None, trace_filter=None):
@@ -47,9 +51,13 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     # Initialize spark session
     conf = SparkConf()\
         .setAppName("fiber2xes")\
-        .set("spark.driver.memory", "20g")\
-        .set("spark.executor.memory", "30g")\
-        .set("spark.driver.maxResultSize", "48g")\
+        .set("spark.driver.memory", "60g")\
+        .set("spark.memory.fraction", "0.95")\
+        .set("spark.memory.storageFraction", "0.95")\
+        .set("spark.memory.offHeap.enabled", "true")\
+        .set("spark.memory.offHeap.size", "4g")\
+        .set("spark.executor.memory", "60g")\
+        .set("spark.driver.maxResultSize", "60g")\
         .set("spark.cores.max", multiprocessing.cpu_count())\
         .set("spark.sql.execution.arrow.enabled", "true")\
         .setMaster("local[{cores}]".format(cores=multiprocessing.cpu_count()))
@@ -67,12 +75,10 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     if trace_type == "visit" or trace_type == "encounter":
         encounters = cohort.get(EncounterWithVisit())
         encounters = encounters.drop(columns=["encounter_type", "encounter_class", "age_in_days"])
-        patient_events = merge_dataframes(patient_events, encounters, on=["encounter_key", "medical_record_number"]) # pd.merge(patient_events, encounters, on=["encounter_key", "medical_record_number"], how='inner')
+        patient_events = merge_dataframes(patient_events, encounters, on=["encounter_key", "medical_record_number"])
         del(encounters)
 
-    patient_events = define_column_types_for_patient_events(patient_events)
-
-    patient_events = spark.createDataFrame(patient_events)
+    patient_events = create_spark_df(spark, patient_events)
 
     column_indices = OrderedDict(zip(list(patient_events.schema.names) + ["timestamp"], range(0, len(patient_events.schema.names) + 1)))
 
@@ -86,21 +92,19 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     elif trace_type == "mrn":
         traces_per_patient = get_traces_per_patient_by_mrn(
             patient_events, column_indices)
+    # todo: add encounter?
     else:
         sys.exit("No matching trace type given. Try using encounter, visit, or mrn")
-    # todo: add encounter?
 
     filtered_traces_per_patient = filter_traces(
         traces_per_patient, trace_filter=trace_filter)
 
-    return
 
-    log = XESFactory.create_xes_log_from_traces(
+    log = create_xes_log_from_traces(
         filtered_traces_per_patient,
         verbose,
         remove_unlisted,
         event_filter=event_filter,
-        patients=patients
     )
 
     return log
@@ -170,23 +174,3 @@ def filter_traces(traces_to_filter, trace_filter=None):
         .map(lambda row: (row.trace_id, row))\
         .combineByKey(createList, addTupleToList, mergeLists)\
         .filter(lambda trace: trace_filter.is_relevant_trace(trace[1]))
-
-@timer
-def filter_traces_deprecated(traces_to_filter, trace_filter=None):
-    filtered_traces_per_patient = {}
-    for mrn in traces_to_filter:
-        for trace_key in traces_to_filter[mrn]:
-            is_relevant = False
-            if trace_filter is None:
-                is_relevant = True
-            else:
-                is_relevant = trace_filter.is_relevant_trace(
-                    traces_to_filter[mrn][trace_key])
-
-            if is_relevant:
-                if mrn not in filtered_traces_per_patient:
-                    filtered_traces_per_patient[mrn] = {}
-                if trace_key not in filtered_traces_per_patient[mrn]:
-                    filtered_traces_per_patient[mrn][trace_key] = {}
-                filtered_traces_per_patient[mrn][trace_key] = traces_to_filter[mrn][trace_key]
-    return filtered_traces_per_patient

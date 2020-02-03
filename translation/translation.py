@@ -138,20 +138,20 @@ class Translation(object):
         event_context = "UNKNOWN"
         translation = None
 
-        if context_name.str.contains("(?:EPIC )*CPT-4", regex=True).any():
-            event_context = "CPT-4"
-            translation = Translation.translate_cpt4(context_procedure_code)
-        elif context_name.str.contains("ICD-10", regex=False).any():
+        #if context_name.str.contains("(?:EPIC )*CPT-4", regex=True).any():
+        #    event_context = "CPT-4"
+        #    translation = Translation.translate_cpt4(context_procedure_code)
+        if context_name == "ICD-10":
             event_context = "ICD-10"
             translation = Translation.translate_icd10(context_procedure_code)
-        elif context_name.str.contains("ICD-9", regex=False).any():
+        elif context_name == "ICD-9":
             event_context = "ICD-9"
             translation = Translation.translate_icd9(context_procedure_code)
-        elif context_name.str.contains("SYSTEM", regex=False).any():
+        elif context_name == "SYSTEM":
             event_context = "SYSTEM"
-        elif context_name.str.contains("IMO", regex=False).any():
+        elif context_name == "IMO":
             event_context = "IMO"
-        elif context_name.str.contains("EPIC", regex=False).any():
+        elif context_name == "EPIC":
             event_context = "EPIC"
         elif verbose:
             print("Unknown Procedure Context: " + context_name)
@@ -162,17 +162,17 @@ class Translation(object):
         event_context = "UNKNOWN"
         translation = None
 
-        if context_name.str.contains("ICD-10", regex=False).any():
+        if context_name == "ICD-10":
             event_context = "ICD-10"
             translation = Translation.translate_icd10(context_diagnosis_code)
-        elif context_name.str.contains("ICD-9", regex=False).any():
+        elif context_name == "ICD-9":
             event_context = "ICD-9"
             translation = Translation.translate_icd9(context_diagnosis_code)
-        elif context_name.str.contains("SYSTEM", regex=False).any():
+        elif context_name == "SYSTEM":
             event_context = "SYSTEM"
-        elif context_name.str.contains("IMO", regex=False).any():
+        elif context_name == "IMO":
             event_context = "IMO"
-        elif context_name.str.contains("EPIC", regex=False).any():
+        elif context_name == "EPIC":
             event_context = "EPIC"
         elif verbose:
             print("Unknown Diagnosis Context: " + context_name)
@@ -183,7 +183,7 @@ class Translation(object):
         event_context = "UNKNOWN"
         translation = None
 
-        if context_name.str.contains("EPIC MEDICATION", regex=False).any():
+        if context_name == "EPIC MEDICATION":
             event_context = "EPIC MEDICATION"
         elif verbose:
             print("Unknown Material Context: " + context_name)
