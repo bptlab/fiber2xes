@@ -33,7 +33,7 @@ def translate_procedure_diagnosis_material_to_event(event, verbose, remove_unlis
     return result, event_name, event_context, event_code
 
 
-def create_xes_trace(trace_events, event_filter, verbose, remove_unlisted):
+def create_xes_trace(trace_events, event_filter, verbose, remove_unlisted, remove_duplicates):
     trace = XFactory.create_trace()
 
     if len(trace_events) == 0:
@@ -64,6 +64,8 @@ def create_xes_trace(trace_events, event_filter, verbose, remove_unlisted):
     trace.get_attributes()["patient:marital_status_code"] = XFactory.create_attribute_literal(
         "patient:marital_status_code", trace_events[0].marital_status_code)
 
+    relevant_events = list()
+
     for event in trace_events:
         is_relevant = False
         if event_filter is None:
@@ -81,47 +83,71 @@ def create_xes_trace(trace_events, event_filter, verbose, remove_unlisted):
                 remove_unlisted=remove_unlisted
             )
         if event_descriptor is not None:
-            log_event = XFactory.create_event()
+            event = {
+                "timestamp": event.timestamp,
+                "name": event_descriptor,
+                "description": event_name,
+                "context": event_context,
+                "code": event_code,
+                "caregiver_group_key": event.caregiver_group_key,
+                "facility_key": event.facility_key
+            }
+            relevant_events.append(event)
 
-            timestamp_int = event.timestamp
-            timestamp_attribute = XFactory.create_attribute_timestamp(
-                "time:timestamp", timestamp_int)
-            log_event.get_attributes()["timestamp"] = timestamp_attribute
+    if len(relevant_events) == 0:
+        return trace
 
-            activity_attribute = XFactory.create_attribute_literal(
-                "concept:name", event_descriptor)
-            log_event.get_attributes()["Activity"] = activity_attribute
+    if remove_duplicates:
+        unique_values = list()
+        deduplicated_events = list()
+        for event in relevant_events:
+            if not (event["timestamp"], event["name"],) in unique_values:
+                unique_values.append((event["timestamp"], event["name"],))
+                deduplicated_events.append(event)
+        relevant_events = deduplicated_events
 
-            description_attribute = XFactory.create_attribute_literal(
-                "event:description", event_name)
-            log_event.get_attributes()["event:description"] = description_attribute
+    for event in relevant_events:
+        log_event = XFactory.create_event()
 
-            context_attribute = XFactory.create_attribute_literal(
-                "event:context", event_context)
-            log_event.get_attributes()["event:context"] = context_attribute
+        timestamp_int = event["timestamp"]
+        timestamp_attribute = XFactory.create_attribute_timestamp(
+            "time:timestamp", timestamp_int)
+        log_event.get_attributes()["timestamp"] = timestamp_attribute
 
-            code_attribute = XFactory.create_attribute_literal(
-                "event:code", event_code)
-            log_event.get_attributes()["event:code"] = code_attribute
+        activity_attribute = XFactory.create_attribute_literal(
+            "concept:name", event["name"])
+        log_event.get_attributes()["Activity"] = activity_attribute
 
-            caregiver_attribute = XFactory.create_attribute_literal(
-                "event:caregiver_group", event["caregiver_group_key"]
-            )
-            log_event.get_attributes()["event:caregiver_group"] = caregiver_attribute
+        description_attribute = XFactory.create_attribute_literal(
+            "event:description", event["description"])
+        log_event.get_attributes()["event:description"] = description_attribute
 
-            facility_attribute = XFactory.create_attribute_literal(
-                "event:facility", event["facility_key"]
-            )
-            log_event.get_attributes()["event:facility"] = facility_attribute
+        context_attribute = XFactory.create_attribute_literal(
+            "event:context", event["context"])
+        log_event.get_attributes()["event:context"] = context_attribute
 
-            trace.append(log_event)
+        code_attribute = XFactory.create_attribute_literal(
+            "event:code", event["code"])
+        log_event.get_attributes()["event:code"] = code_attribute
+
+        caregiver_attribute = XFactory.create_attribute_literal(
+            "event:caregiver_group", event["caregiver_group_key"]
+        )
+        log_event.get_attributes()["event:caregiver_group"] = caregiver_attribute
+
+        facility_attribute = XFactory.create_attribute_literal(
+            "event:facility", event["facility_key"]
+        )
+        log_event.get_attributes()["event:facility"] = facility_attribute
+
+        trace.append(log_event)
     return trace
 
-def create_xes_log_from_traces(traces, verbose, remove_unlisted, event_filter): 
+def create_xes_log_from_traces(traces, verbose, remove_unlisted, event_filter, remove_duplicates): 
     log = XFactory.create_log()
 
     result = traces\
-        .map(lambda trace: create_xes_trace(trace[1], event_filter, verbose, remove_unlisted))
+        .map(lambda trace: create_xes_trace(trace[1], event_filter, verbose, remove_unlisted, remove_duplicates))
     xes_traces = result.collect()
     for trace in xes_traces:
         log.append(trace)

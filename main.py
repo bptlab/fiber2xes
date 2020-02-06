@@ -42,7 +42,7 @@ def create_spark_df(spark, pandas_df):
     return spark.createDataFrame(pandas_df)
 
 @timer
-def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, event_filter=None, trace_filter=None):
+def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, remove_duplicates=True, event_filter=None, trace_filter=None):
     # get necessary data from cohort
     patients = cohort.get(PatientWithAttributes())
     print("Fetched patients")
@@ -110,8 +110,9 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
 
     log = create_xes_log_from_traces(
         filtered_traces_per_patient,
-        verbose,
-        remove_unlisted,
+        verbose=verbose,
+        remove_unlisted=remove_unlisted,
+        remove_duplicates=remove_duplicates,
         event_filter=event_filter,
     )
 
