@@ -42,7 +42,7 @@ def create_spark_df(spark, pandas_df):
     return spark.createDataFrame(pandas_df)
 
 @timer
-def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, remove_duplicates=True, event_filter=None, trace_filter=None):
+def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, remove_duplicates=True, event_filter=None, trace_filter=None, cores=multiprocessing.cpu_count()):
     # get necessary data from cohort
     patients = cohort.get(PatientWithAttributes())
     print("Fetched patients")
@@ -76,7 +76,7 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
         .set("spark.driver.maxResultSize", "60g")\
         .set("spark.cores.max", multiprocessing.cpu_count())\
         .set("spark.sql.execution.arrow.enabled", "true")\
-        .setMaster("local[{cores}]".format(cores=multiprocessing.cpu_count()))
+        .setMaster("local[{cores}]".format(cores=cores))
     spark = SparkSession\
         .builder\
         .config(conf=conf)\
