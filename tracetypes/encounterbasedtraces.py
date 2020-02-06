@@ -1,6 +1,6 @@
 import pandas as pd
 
-
+# Deprecated
 class EncounterBasedTraces(object):
     def get_traces_per_patient(patients, encounters, events):
         # mrn -> encounter_keys

@@ -45,8 +45,24 @@ def create_spark_df(spark, pandas_df):
 def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, event_filter=None, trace_filter=None):
     # get necessary data from cohort
     patients = cohort.get(PatientWithAttributes())
+    print("Fetched patients")
     events = cohort.get(DiagnosisWithTime(),
                         ProcedureWithTime(), DrugWithTime())
+    print("Fetched events")
+    patient_events_pd = merge_dataframes(
+        patients, events, 'medical_record_number')
+
+    del(patients)
+    del(events)
+
+    if trace_type == "visit" or trace_type == "encounter":
+        encounters = cohort.get(EncounterWithVisit())
+        print("Fetched encouters")
+        encounters = encounters.drop(columns=["encounter_type", "encounter_class", "age_in_days"])
+        patient_events_pd = merge_dataframes(patient_events_pd, encounters, on=["encounter_key", "medical_record_number"])
+        del(encounters)
+    
+    print("Fetched and merged everything")
 
     # Initialize spark session
     conf = SparkConf()\
@@ -66,19 +82,9 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
         .config(conf=conf)\
         .getOrCreate()
 
-    patient_events = merge_dataframes(
-        patients, events, 'medical_record_number')
+    print("Initialized spark")
 
-    del(patients)
-    del(events)
-
-    if trace_type == "visit" or trace_type == "encounter":
-        encounters = cohort.get(EncounterWithVisit())
-        encounters = encounters.drop(columns=["encounter_type", "encounter_class", "age_in_days"])
-        patient_events = merge_dataframes(patient_events, encounters, on=["encounter_key", "medical_record_number"])
-        del(encounters)
-
-    patient_events = create_spark_df(spark, patient_events)
+    patient_events = create_spark_df(spark, patient_events_pd)
 
     column_indices = OrderedDict(zip(list(patient_events.schema.names) + ["timestamp"], range(0, len(patient_events.schema.names) + 1)))
 
@@ -96,6 +102,8 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     else:
         sys.exit("No matching trace type given. Try using encounter, visit, or mrn")
 
+    patient_events.unpersist()
+
     filtered_traces_per_patient = filter_traces(
         traces_per_patient, trace_filter=trace_filter)
 
@@ -106,6 +114,10 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
         remove_unlisted,
         event_filter=event_filter,
     )
+
+    filtered_traces_per_patient.unpersist()
+
+    spark.stop()
 
     return log
 
