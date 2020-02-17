@@ -4,6 +4,8 @@ import pandas as pd
 import datetime
 import time
 import math
+import multiprocessing
+from collections import OrderedDict
 
 from .fiberpatch import (
     DiagnosisWithTime,
@@ -13,9 +15,13 @@ from .fiberpatch import (
     ProcedureWithTime
 )
 
-from .xesfactory import XESFactory
-from .tracetypes import EncounterBasedTraces, VisitBasedTraces, MRNBasedTraces
+from .xesfactory import create_xes_log_from_traces
 
+from pyspark.sql import Row, SparkSession
+from collections import OrderedDict
+from pyspark import SparkContext, SparkConf
+from pyspark.sql.types import *
+from pyspark.sql.functions import lit, isnan
 
 def timer(func):
     # Decorator to benchmark functions
@@ -29,91 +35,166 @@ def timer(func):
         return value
     return wrapper_timer
 
+@timer
+def create_spark_df(spark, pandas_df):
+    pandas_df = define_column_types_for_patient_events(pandas_df)
+    return spark.createDataFrame(pandas_df)
 
 @timer
-def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, event_filter=None, trace_filter=None):
+def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, remove_duplicates=True, event_filter=None, trace_filter=None, cores=multiprocessing.cpu_count()):
     # get necessary data from cohort
-
     patients = cohort.get(PatientWithAttributes())
-    encounters = cohort.get(EncounterWithVisit())
+    print("Fetched patients")
     events = cohort.get(DiagnosisWithTime(),
                         ProcedureWithTime(), DrugWithTime())
+    print("Fetched events")
+    patient_events_pd = merge_dataframes(
+        patients, events, 'medical_record_number')
 
-    patient_events = get_patient_events(patients, events)
+    del(patients)
+    del(events)
 
-    if trace_type == "encounter":
-        traces_per_patient = EncounterBasedTraces.get_traces_per_patient(
-            patients, encounters, patient_events)
-    elif trace_type == "visit":
-        traces_per_patient = VisitBasedTraces.get_traces_per_patient(
-            patients, encounters, patient_events)
+    if trace_type == "visit" or trace_type == "encounter":
+        encounters = cohort.get(EncounterWithVisit())
+        print("Fetched encouters")
+        encounters = encounters.drop(columns=["encounter_type", "encounter_class", "age_in_days"])
+        patient_events_pd = merge_dataframes(patient_events_pd, encounters, on=["encounter_key", "medical_record_number"])
+        del(encounters)
+    
+    print("Fetched and merged everything")
+
+    # Initialize spark session
+    conf = SparkConf()\
+        .setAppName("fiber2xes")\
+        .set("spark.driver.memory", "60g")\
+        .set("spark.memory.fraction", "0.95")\
+        .set("spark.memory.storageFraction", "0.95")\
+        .set("spark.memory.offHeap.enabled", "true")\
+        .set("spark.memory.offHeap.size", "4g")\
+        .set("spark.executor.memory", "60g")\
+        .set("spark.driver.maxResultSize", "60g")\
+        .set("spark.cores.max", multiprocessing.cpu_count())\
+        .set("spark.sql.execution.arrow.enabled", "true")\
+        .setMaster("local[{cores}]".format(cores=cores))
+    spark = SparkSession\
+        .builder\
+        .config(conf=conf)\
+        .getOrCreate()
+
+    print("Initialized spark")
+
+    patient_events = create_spark_df(spark, patient_events_pd)
+
+    column_indices = OrderedDict(zip(list(patient_events.schema.names) + ["timestamp"], range(0, len(patient_events.schema.names) + 1)))
+
+    patient_events = calculate_timestamp(patient_events, column_indices)
+
+    column_indices = OrderedDict(zip(list(column_indices.keys()) + ["trace_id"], list(column_indices.values()) + [len(column_indices)]))
+
+    if trace_type == "visit":
+        traces_per_patient = get_traces_per_patient_by_visit(
+            patient_events, column_indices)
     elif trace_type == "mrn":
-        traces_per_patient = MRNBasedTraces.get_traces_per_patient(
-            patients, patient_events)
+        traces_per_patient = get_traces_per_patient_by_mrn(
+            patient_events, column_indices)
+    # todo: add encounter?
     else:
         sys.exit("No matching trace type given. Try using encounter, visit, or mrn")
+
+    patient_events.unpersist()
 
     filtered_traces_per_patient = filter_traces(
         traces_per_patient, trace_filter=trace_filter)
 
-    log = XESFactory.create_xes_log_from_traces(
+
+    log = create_xes_log_from_traces(
         filtered_traces_per_patient,
-        verbose,
-        remove_unlisted,
+        verbose=verbose,
+        remove_unlisted=remove_unlisted,
+        remove_duplicates=remove_duplicates,
         event_filter=event_filter,
-        patients=patients
     )
+
+    filtered_traces_per_patient.unpersist()
+
+    spark.stop()
 
     return log
 
+def handle_duplicate_column_names(df) -> pd.DataFrame:
+    columns = []
+    counter = 0
+    for column in df.columns:
+        if column in columns:
+            while True:
+                counter += 1
+                new_name = "{column_name}_{counter}".format(column_name=column, counter=counter)
+                if not new_name in columns:
+                    break
+            columns.append(new_name)
+        else:
+            columns.append(column)
+    df.columns = columns
+    return df
 
-@timer
-def get_patient_events(patients, events):
-    # join patients and events
-
-    patient_events = pd.merge(
-        patients, events, on='medical_record_number', how='inner')
-
-    patient_events['timestamp'] = patient_events.apply(lambda row: timestamp_from_birthdate_and_age_and_time(
-        row.date_of_birth, row.age_in_days, row.time_of_day_key), axis=1)
-
-    patient_events.drop(
-        patient_events[patient_events.timestamp == None].index, inplace=True)
-
-    patient_events.drop_duplicates(inplace=True)
-
+def define_column_types_for_patient_events(patient_events) -> pd.DataFrame:
+    patient_events.date_of_birth = patient_events.date_of_birth.astype('str')
+    patient_events.religion = patient_events.religion.astype('str')
+    patient_events.patient_ethnic_group = patient_events.patient_ethnic_group.astype('str')
+    patient_events.language = patient_events.language.astype('str')
     return patient_events
 
+@timer            
+def merge_dataframes(left, right, on) -> pd.DataFrame:
+    left = handle_duplicate_column_names(left)
+    right = handle_duplicate_column_names(right)
+    result = pd.merge(left, right, on=on, how='inner')
+    del(left)
+    del(right)
+    return result
 
-def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key):
-    if math.isnan(age_in_days) or date == "MSDW_UNKNOWN" or age_in_days == "MSDW_UNKNOWN":
-        return None
-    else:
-        timestamp_without_hours_and_minutes = date + \
-            datetime.timedelta(days=age_in_days)
-        date_without_time = pd.to_datetime(
-            timestamp_without_hours_and_minutes, errors='coerce')
-        date_with_time = date_without_time + \
-            datetime.timedelta(minutes=time_of_day_key)
-        return date_with_time
+@timer
+def calculate_timestamp(patient_events, column_indices):
+    return patient_events\
+        .filter('not isnan(age_in_days) and date_of_birth <> "MSDW_UNKNOWN"')\
+        .rdd\
+        .map(lambda row: row + timestamp_from_birthdate_and_age_and_time(
+            row[column_indices["date_of_birth"]], row[column_indices["age_in_days"]], row[column_indices["time_of_day_key"]]))\
+        .distinct()\
+        .toDF(list(column_indices.keys()))
 
+def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key) -> (datetime.datetime, ):
+    time_info = date.split("-")
+    date = datetime.datetime(int(time_info[0]), int(time_info[1]), int(time_info[2]))
+    timestamp = date + \
+        datetime.timedelta(days=age_in_days) + \
+        datetime.timedelta(minutes=time_of_day_key)
+    return (timestamp, )
+
+def createList(a): return [a]
+def mergeLists(a, b): return a + b
+def addTupleToList(a, b): return a + [b]
+    
 
 @timer
 def filter_traces(traces_to_filter, trace_filter=None):
-    filtered_traces_per_patient = {}
-    for mrn in traces_to_filter:
-        for trace_key in traces_to_filter[mrn]:
-            is_relevant = False
-            if trace_filter is None:
-                is_relevant = True
-            else:
-                is_relevant = trace_filter.is_relevant_trace(
-                    traces_to_filter[mrn][trace_key])
+    if trace_filter is None:
+        return traces_to_filter
+    
+    return traces_to_filter\
+        .rdd\
+        .map(lambda row: (row.trace_id, row))\
+        .combineByKey(createList, addTupleToList, mergeLists)\
+        .filter(lambda trace: trace_filter.is_relevant_trace(trace[1]))
 
-            if is_relevant:
-                if mrn not in filtered_traces_per_patient:
-                    filtered_traces_per_patient[mrn] = {}
-                if trace_key not in filtered_traces_per_patient[mrn]:
-                    filtered_traces_per_patient[mrn][trace_key] = {}
-                filtered_traces_per_patient[mrn][trace_key] = traces_to_filter[mrn][trace_key]
-    return filtered_traces_per_patient
+def get_traces_per_patient_by_mrn(patient_events, column_indices):
+    return patient_events\
+        .rdd\
+        .map(lambda row: row + (row[column_indices["medical_record_number"]], ))\
+        .toDF(list(patient_events.schema.names) + ["trace_id"])
+
+def get_traces_per_patient_by_visit(patient_event_encounters, column_indices):
+    return patient_event_encounters\
+        .rdd\
+        .map(lambda row: row + (row[column_indices["encounter_visit_id"]], ))\
+        .toDF(list(patient_event_encounters.schema.names) + ["trace_id"])

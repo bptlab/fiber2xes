@@ -2,7 +2,7 @@ import csv
 import os
 import re
 
-ABSTRACTION_VOCAB_PATH = os.path.join("fiber2xes", "abstraction", "abstraction_low_level.csv")
+ABSTRACTION_VOCAB_PATH = os.path.join("fiber2xes", "abstraction", "abstraction_high_level.csv")
 
 
 class Abstraction(object):
