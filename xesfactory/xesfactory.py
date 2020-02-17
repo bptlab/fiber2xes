@@ -98,11 +98,11 @@ def create_xes_trace(trace_events, event_filter, verbose, remove_unlisted, remov
         return trace
 
     if remove_duplicates:
-        unique_values = list()
+        unique_values = set()
         deduplicated_events = list()
         for event in relevant_events:
-            if not (event["timestamp"], event["name"],) in unique_values:
-                unique_values.append((event["timestamp"], event["name"],))
+            if not (event["timestamp"], event["name"]) in unique_values:
+                unique_values.add((event["timestamp"], event["name"]))
                 deduplicated_events.append(event)
         relevant_events = deduplicated_events
 

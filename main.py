@@ -16,7 +16,6 @@ from .fiberpatch import (
 )
 
 from .xesfactory import create_xes_log_from_traces
-from .tracetypes import get_traces_per_patient_by_mrn, get_traces_per_patient_by_visit
 
 from pyspark.sql import Row, SparkSession
 from collections import OrderedDict
@@ -187,3 +186,15 @@ def filter_traces(traces_to_filter, trace_filter=None):
         .map(lambda row: (row.trace_id, row))\
         .combineByKey(createList, addTupleToList, mergeLists)\
         .filter(lambda trace: trace_filter.is_relevant_trace(trace[1]))
+
+def get_traces_per_patient_by_mrn(patient_events, column_indices):
+    return patient_events\
+        .rdd\
+        .map(lambda row: row + (row[column_indices["medical_record_number"]], ))\
+        .toDF(list(patient_events.schema.names) + ["trace_id"])
+
+def get_traces_per_patient_by_visit(patient_event_encounters, column_indices):
+    return patient_event_encounters\
+        .rdd\
+        .map(lambda row: row + (row[column_indices["encounter_visit_id"]], ))\
+        .toDF(list(patient_event_encounters.schema.names) + ["trace_id"])
