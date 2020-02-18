@@ -144,15 +144,9 @@ def create_xes_trace(trace_events, event_filter, verbose, remove_unlisted, remov
     return trace
 
 def create_xes_log_from_traces(traces, verbose, remove_unlisted, event_filter, remove_duplicates): 
-    log = XFactory.create_log()
-
     result = traces\
         .map(lambda trace: create_xes_trace(trace[1], event_filter, verbose, remove_unlisted, remove_duplicates))
-    xes_traces = result.collect()
-    for trace in xes_traces:
-        log.append(trace)
-    
-    return log
+    return result.collect()
 
 def save_event_log_to_file(log, file_path):
     with open(file_path, "w") as file:
