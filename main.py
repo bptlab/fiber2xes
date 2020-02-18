@@ -5,6 +5,7 @@ import datetime
 import time
 import math
 import multiprocessing
+from multiprocessing import Process
 from collections import OrderedDict
 
 from .fiberpatch import (
@@ -14,6 +15,8 @@ from .fiberpatch import (
     PatientWithAttributes,
     ProcedureWithTime
 )
+from fiber import Cohort
+from fiber import condition
 
 from .xesfactory import create_xes_log_from_traces
 
@@ -22,6 +25,7 @@ from collections import OrderedDict
 from pyspark import SparkContext, SparkConf
 from pyspark.sql.types import *
 from pyspark.sql.functions import lit, isnan
+from opyenxes.factory.XFactory import XFactory
 
 def timer(func):
     # Decorator to benchmark functions
@@ -41,7 +45,27 @@ def create_spark_df(spark, pandas_df):
     return spark.createDataFrame(pandas_df)
 
 @timer
-def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, remove_duplicates=True, event_filter=None, trace_filter=None, cores=multiprocessing.cpu_count()):
+def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, remove_duplicates=True, event_filter=None, trace_filter=None, cores=multiprocessing.cpu_count(), window_size=500):
+    manager = multiprocessing.Manager()
+    traces = manager.list()
+    
+    mrns = list(cohort.mrns())
+    window_amount = math.ceil(len(mrns)/window_size)
+    
+    for i in range(0, window_amount):
+        mrns_in_window = mrns[i*window_size : (i+1)*window_size]
+        cohort_for_window = Cohort(condition.MRNs(mrns_in_window))
+
+        p = Process(target=cohort_to_event_log_for_window, args=(cohort_for_window, trace_type, verbose, remove_unlisted, remove_duplicates, event_filter, trace_filter, cores, traces))
+        p.start()
+        p.join()
+    
+    log = XFactory.create_log()
+    for trace in traces:
+        log.append(trace)
+    return log
+
+def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted, remove_duplicates, event_filter, trace_filter, cores, traces):
     # get necessary data from cohort
     patients = cohort.get(PatientWithAttributes())
     print("Fetched patients")
@@ -107,7 +131,7 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
         traces_per_patient, trace_filter=trace_filter)
 
 
-    log = create_xes_log_from_traces(
+    traces_in_window = create_xes_log_from_traces(
         filtered_traces_per_patient,
         verbose=verbose,
         remove_unlisted=remove_unlisted,
@@ -118,8 +142,9 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     filtered_traces_per_patient.unpersist()
 
     spark.stop()
-
-    return log
+    
+    for trace in traces_in_window:
+        traces.append(trace)
 
 def handle_duplicate_column_names(df) -> pd.DataFrame:
     columns = []
