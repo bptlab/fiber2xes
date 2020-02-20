@@ -1,6 +1,8 @@
 from typing import Optional
-from .MaterialWithTime import MaterialWithTime
+
 from fiber.database.table import fd_mat
+
+from .MaterialWithTime import MaterialWithTime
 
 
 class DrugWithTime(MaterialWithTime):

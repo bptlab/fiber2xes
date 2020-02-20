@@ -6,16 +6,14 @@ from opyenxes.factory.XFactory import XFactory
 from ..translation import Translation
 from ..abstraction import Abstraction
 
-def translate_procedure_diagnosis_material_to_event(event, verbose, remove_unlisted):
 
+def translate_procedure_diagnosis_material_to_event(event, verbose, remove_unlisted):
     if not Translation.is_known_event(event):
         return None, None, None, None
 
-    event_name, event_type, event_context, event_code = Translation.translate_to_event(
-        event, verbose)
+    event_name, event_type, event_context, event_code = Translation.translate_to_event(event, verbose)
 
-    abstract_event_name = Abstraction.get_abstract_event_name(
-        event_name, remove_unlisted)
+    abstract_event_name = Abstraction.get_abstract_event_name(event_name, remove_unlisted)
 
     if abstract_event_name is None:
         return None, event_name, event_context, event_code
@@ -38,7 +36,7 @@ def create_xes_trace(trace_events, event_filter, verbose, remove_unlisted, remov
 
     if len(trace_events) == 0:
         return trace
-    
+
     id_attribute = XFactory.create_attribute_id(
         "id", str(uuid.uuid4()))
     trace.get_attributes()["id"] = id_attribute
@@ -72,7 +70,6 @@ def create_xes_trace(trace_events, event_filter, verbose, remove_unlisted, remov
             is_relevant = True
         else:
             is_relevant = event_filter.is_relevant_event(event)
-
         if not is_relevant:
             continue
 
@@ -143,10 +140,12 @@ def create_xes_trace(trace_events, event_filter, verbose, remove_unlisted, remov
         trace.append(log_event)
     return trace
 
-def create_xes_log_from_traces(traces, verbose, remove_unlisted, event_filter, remove_duplicates): 
+
+def create_xes_traces_from_traces(traces, verbose, remove_unlisted, event_filter, remove_duplicates):
     result = traces\
         .map(lambda trace: create_xes_trace(trace[1], event_filter, verbose, remove_unlisted, remove_duplicates))
     return result.collect()
+
 
 def save_event_log_to_file(log, file_path):
     with open(file_path, "w") as file:

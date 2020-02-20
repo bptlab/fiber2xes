@@ -1,4 +1,4 @@
-from .main import cohort_to_event_log
+from .fiber2xes import cohort_to_event_log
 from .xesfactory import save_event_log_to_file
 
 __all__ = [
