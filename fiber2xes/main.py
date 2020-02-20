@@ -45,27 +45,27 @@ def create_spark_df(spark, pandas_df):
     return spark.createDataFrame(pandas_df)
 
 @timer
-def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, remove_duplicates=True, event_filter=None, trace_filter=None, cores=multiprocessing.cpu_count(), window_size=500):
+def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, remove_duplicates=True, event_filter=None, trace_filter=None, cores=multiprocessing.cpu_count(), window_size=500, abstraction_path=None, abstraction_exact_match=False, abstraction_delimiter=";"):
     manager = multiprocessing.Manager()
     traces = manager.list()
-    
+
     mrns = list(cohort.mrns())
     window_amount = math.ceil(len(mrns)/window_size)
-    
+
     for i in range(0, window_amount):
         mrns_in_window = mrns[i*window_size : (i+1)*window_size]
         cohort_for_window = Cohort(condition.MRNs(mrns_in_window))
 
-        p = Process(target=cohort_to_event_log_for_window, args=(cohort_for_window, trace_type, verbose, remove_unlisted, remove_duplicates, event_filter, trace_filter, cores, traces))
+        p = Process(target=cohort_to_event_log_for_window, args=(cohort_for_window, trace_type, verbose, remove_unlisted, remove_duplicates, event_filter, trace_filter, cores, abstraction_path, abstraction_exact_match, abstraction_delimiter, traces))
         p.start()
         p.join()
-    
+
     log = XFactory.create_log()
     for trace in traces:
         log.append(trace)
     return log
 
-def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted, remove_duplicates, event_filter, trace_filter, cores, traces):
+def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted, remove_duplicates, event_filter, trace_filter, cores, abstraction_path, abstraction_exact_match, abstraction_delimiter, traces):
     # get necessary data from cohort
     patients = cohort.get(PatientWithAttributes())
     print("Fetched patients")
@@ -84,7 +84,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
         encounters = encounters.drop(columns=["encounter_type", "encounter_class", "age_in_days"])
         patient_events_pd = merge_dataframes(patient_events_pd, encounters, on=["encounter_key", "medical_record_number"])
         del(encounters)
-    
+
     print("Fetched and merged everything")
 
     # Initialize spark session
@@ -133,6 +133,9 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
 
     traces_in_window = create_xes_log_from_traces(
         filtered_traces_per_patient,
+        abstraction_path=abstraction_path,
+        abstraction_exact_match=abstraction_exact_match,
+        abstraction_delimiter=abstraction_delimiter,
         verbose=verbose,
         remove_unlisted=remove_unlisted,
         remove_duplicates=remove_duplicates,
@@ -142,7 +145,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
     filtered_traces_per_patient.unpersist()
 
     spark.stop()
-    
+
     for trace in traces_in_window:
         traces.append(trace)
 
@@ -169,7 +172,7 @@ def define_column_types_for_patient_events(patient_events) -> pd.DataFrame:
     patient_events.language = patient_events.language.astype('str')
     return patient_events
 
-@timer            
+@timer
 def merge_dataframes(left, right, on) -> pd.DataFrame:
     left = handle_duplicate_column_names(left)
     right = handle_duplicate_column_names(right)
@@ -199,13 +202,13 @@ def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key
 def createList(a): return [a]
 def mergeLists(a, b): return a + b
 def addTupleToList(a, b): return a + [b]
-    
+
 
 @timer
 def filter_traces(traces_to_filter, trace_filter=None):
     if trace_filter is None:
         return traces_to_filter
-    
+
     return traces_to_filter\
         .rdd\
         .map(lambda row: (row.trace_id, row))\

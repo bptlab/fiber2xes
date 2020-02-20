@@ -1,22 +1,21 @@
 import csv
-import os
 import re
-
-dirname = os.path.dirname(__file__)
-ABSTRACTION_VOCAB_PATH = os.path.join(dirname, "abstraction_high_level.csv")
 
 
 class Abstraction(object):
 
-    def get_abstract_event_name(event_name, remove_unlisted=False, exact_match=False, delimiter=";"):
+    def get_abstract_event_name(abstraction_path, abstraction_exact_match, abstraction_delimiter, event_name, remove_unlisted=False):
+        if abstraction_path is None:
+            return event_name
+
         # Returns abstract name if possible and remove unlisted entries
-        table = csv.reader(open(ABSTRACTION_VOCAB_PATH), delimiter=delimiter)
+        table = csv.reader(open(abstraction_path), delimiter=abstraction_delimiter)
 
         abstraction_names = next(table)
         for row in table:
             for i, entry in enumerate(row):
-                if entry and ((not exact_match and re.search(str(entry), str(event_name), re.IGNORECASE) is not None)
-                   or (exact_match and str(entry).lower() == str(event_name).lower())):
+                if entry and ((not abstraction_exact_match and re.search(str(entry), str(event_name), re.IGNORECASE) is not None)
+                   or (abstraction_exact_match and str(entry).lower() == str(event_name).lower())):
                     if abstraction_names[i].lower() == "group":
                         return entry
                     elif abstraction_names[i].lower() == "blacklist":
