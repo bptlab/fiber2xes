@@ -31,6 +31,7 @@ event_log = cohort_to_event_log(
   remove_unlisted=True,
   verbose=False,
   remove_duplicates=True,
+  abstraction_path="./abstraction-tables/abstraction_high_level.csv",
 )
 
 # Write event log to file
