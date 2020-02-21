@@ -1,4 +1,5 @@
 from typing import Optional
+
 from fiber.condition.fact.fact import _FactCondition
 from fiber.database.table import (
     d_pers,
