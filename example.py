@@ -13,10 +13,10 @@ from fiber2xes import (
 from fiber2xes.filter.condition import Diagnosis as DiagnosisFilter
 
 # CONFIG START
-cohort_filter = Diagnosis("M54.5", "ICD-10") # Fiber filter (See fiber documentation)
-cohort_size = 5 # Number of patients in the cohort
-trace_type = "mrn" # Trace type should be either "mrn" or "visit"
-trace_filter = DiagnosisFilter("M54.5") # Filter for traces in XES log
+cohort_filter = Diagnosis("M54.5", "ICD-10")  # Fiber filter (See fiber documentation)
+cohort_size = 5  # Number of patients in the cohort
+trace_type = "mrn"  # Trace type should be either "mrn" or "visit"
+trace_filter = DiagnosisFilter("M54.5")  # Filter for traces in XES log
 # CONFIG END
 
 # Query cohort of patients from database
@@ -31,9 +31,10 @@ event_log = cohort_to_event_log(
   remove_unlisted=True,
   verbose=False,
   remove_duplicates=True,
+  abstraction_path="./abstraction-tables/abstraction_high_level.csv",
 )
 
 # Write event log to file
 dateTimeObj = datetime.now()
-timestampStr = dateTimeObj.strftime("%Y%m%d-%H%M%S")
-save_event_log_to_file(event_log, file_path="./xes-logs/log_" + timestampStr + "_" + trace_type + "_" + str(cohort_size) + ".xes")
+timeStr = dateTimeObj.strftime("%Y%m%d-%H%M%S")
+save_event_log_to_file(event_log, file_path="./log_" + timeStr + "_" + trace_type + "_" + str(cohort_size) + ".xes")

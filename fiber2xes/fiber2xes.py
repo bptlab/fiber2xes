@@ -47,7 +47,8 @@ def create_spark_df(spark, pandas_df):
 
 @timer
 def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, remove_duplicates=True,
-                        event_filter=None, trace_filter=None, cores=multiprocessing.cpu_count(), window_size=500):
+                        event_filter=None, trace_filter=None, cores=multiprocessing.cpu_count(), window_size=500,
+                        abstraction_path=None, abstraction_exact_match=False, abstraction_delimiter=";"):
     manager = multiprocessing.Manager()
     traces = manager.list()
 
@@ -60,12 +61,16 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
 
         p = multiprocessing.Process(target=cohort_to_event_log_for_window, args=(
             cohort_for_window,
-            trace_type, verbose,
+            trace_type,
+            verbose,
             remove_unlisted,
             remove_duplicates,
             event_filter,
             trace_filter,
             cores,
+            abstraction_path,
+            abstraction_exact_match,
+            abstraction_delimiter,
             traces
         ))
         p.start()
@@ -76,9 +81,9 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
         log.append(trace)
     return log
 
-
-def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted, remove_duplicates,
-                                   event_filter, trace_filter, cores, traces):
+def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted, remove_duplicates, event_filter,
+                                   trace_filter, cores, abstraction_path, abstraction_exact_match,
+                                   abstraction_delimiter, traces):
     # get necessary data from cohort
     patients = cohort.get(PatientWithAttributes())
     print("Fetched patients")
@@ -154,6 +159,9 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
         traces_per_patient, trace_filter=trace_filter)
     traces_in_window = create_xes_traces_from_traces(
         filtered_traces_per_patient,
+        abstraction_path=abstraction_path,
+        abstraction_exact_match=abstraction_exact_match,
+        abstraction_delimiter=abstraction_delimiter,
         verbose=verbose,
         remove_unlisted=remove_unlisted,
         remove_duplicates=remove_duplicates,
