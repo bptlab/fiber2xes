@@ -41,6 +41,12 @@ def timer(func):
 
 @timer
 def create_spark_df(spark, pandas_df):
+    """Creates a spark datafrom from a pandas dataframe
+
+    Keyword arguments:
+    spark -- the spark instance
+    pandas_df -- the pandas dataframe
+    """
     pandas_df = define_column_types_for_patient_events(pandas_df)
     return spark.createDataFrame(pandas_df)
 
@@ -49,6 +55,24 @@ def create_spark_df(spark, pandas_df):
 def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, remove_duplicates=True,
                         event_filter=None, trace_filter=None, cores=multiprocessing.cpu_count(), window_size=500,
                         abstraction_path=None, abstraction_exact_match=False, abstraction_delimiter=";"):
+    """Converts a fiber cohort to an xes event log.
+    Therefore it slices the cohort to smaller windows (because of memory restrictions) and calls the method
+    `cohort_to_event_log_for_window` with the slices.
+
+    Keyword arguments:
+    cohort -- the fiber cohort
+    trace_type -- the type of a trace (`mrn` or `visit`)
+    verbose -- flag if the events should contain original non abstracted values (default False)
+    remove_unlisted -- flag if a trace should only contain listed events (default True)
+    remove_duplicates -- flag if duplicate events should be removed (default True)
+    event_filter -- a custom filter to filter events (default None)
+    trace_filter -- a custom filter to filter traces (default None)
+    cores -- the number of cores which should be used to process the cohort (default amount of CPUs)
+    window_size -- the number of patients per window (default 500)
+    abstraction_path -- the path to the abstraction file (default None)
+    abstraction_exact_match -- flag if the abstraction algorithm should only abstract exacted matches (default False)
+    abstraction_delimiter -- the delimiter of the abstraction file (default ;)
+    """
     manager = multiprocessing.Manager()
     traces = manager.list()
 
@@ -81,9 +105,26 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
         log.append(trace)
     return log
 
+
 def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted, remove_duplicates, event_filter,
                                    trace_filter, cores, abstraction_path, abstraction_exact_match,
                                    abstraction_delimiter, traces):
+    """Converts a window of the patient to XES traces and store them in the given `traces` parameter.
+
+    Keyword arguments:
+    cohort -- the fiber cohort
+    trace_type -- the type of a trace (`mrn` or `visit`)
+    verbose -- flag if the events should contain original non abstracted values
+    remove_unlisted -- flag if a trace should only contain listed events
+    remove_duplicates -- flag if duplicate events should be removed
+    event_filter -- a custom filter to filter events
+    trace_filter -- a custom filter to filter traces
+    cores -- the number of cores which should be used to process the cohort
+    abstraction_path -- the path to the abstraction file
+    abstraction_exact_match -- flag if the abstraction algorithm should only abstract exacted matches
+    abstraction_delimiter -- the delimiter of the abstraction file
+    traces -- a container to collect all traces
+    """
     # get necessary data from cohort
     patients = cohort.get(PatientWithAttributes())
     print("Fetched patients")
@@ -96,7 +137,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
     del(patients)
     del(events)
 
-    if trace_type == "visit" or trace_type == "encounter":
+    if trace_type == "visit":
         encounters = cohort.get(EncounterWithVisit())
         print("Fetched encouters")
         encounters = encounters.drop(columns=["encounter_type", "encounter_class", "age_in_days"])

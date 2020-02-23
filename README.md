@@ -46,17 +46,17 @@ cohort_to_event_log(
 Parameters:
 
 - **cohort**: The fiber cohort with the patient
-- **trace_type**:
-- **verbose=False**:
-- **remove_unlisted=True**:
-- **remove_duplicates=True**:
-- **event_filter=None**:
-- **trace_filter=None**:
-- **cores=multiprocessing.cpu_count()**:
-- **window_size=500**:
-- **abstraction_path=None**:
-- **abstraction_exact_match=False**:
-- **abstraction_delimiter=";"**: The delimiter of the abstraction table
+- **trace_type**: The type of a trace (`mrn` or `visit`)
+- **verbose=False**: Flag if the events should contain original non abstracted values (default False)
+- **remove_unlisted=True**: Flag if a trace should only contain listed events (default True)
+- **remove_duplicates=True**: Flag if duplicate events should be removed (default True)
+- **event_filter=None**: A custom filter to filter events (default None)
+- **trace_filter=None**: A custom filter to filter traces (default None)
+- **cores=multiprocessing.cpu_count()**: The number of cores which should be used to process the cohort (default amount of CPUs)
+- **window_size=500**: The number of patients per window (default 500)
+- **abstraction_path=None**: The path to the abstraction file (default None)
+- **abstraction_exact_match=False**: Flag if the abstraction algorithm should only abstract exacted matches (default False)
+- **abstraction_delimiter=";"**: The delimiter of the abstraction file (default ;)
 
 ### Log serialization
 
