@@ -19,7 +19,6 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path, abstractio
     verbose -- flag to enable detailed console output
     remove_unlisted -- remove all events that are not included in the abstraction table
     """
-                                        
     if not Translation.is_known_event(event):
         return None, None, None, None
 

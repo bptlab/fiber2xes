@@ -81,8 +81,7 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
 
     # Spawn a new process for each window to free memory after each window completion
     for i in range(0, window_amount):
-        print("Start window {current_window} / {max_window}"\
-            .format(current_window=(i + 1), max_window=window_amount))
+        print("Start window {current_window} / {max_window}".format(current_window=(i + 1), max_window=window_amount))
         window_start_time = time.perf_counter()
         mrns_in_window = mrns[i * window_size: (i + 1) * window_size]
         cohort_for_window = Cohort(condition.MRNs(mrns_in_window))
@@ -103,8 +102,11 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
         ))
         p.start()
         p.join()
-        print("Finished window {current_window} / {max_window} in {window_time} s"\
-            .format(current_window=(i + 1), max_window=window_amount, window_time=(time.perf_counter() - window_start_time)))
+        print("Finished window {current_window} / {max_window} in {window_time} s".format(
+                current_window=(i + 1),
+                max_window=window_amount,
+                window_time=(time.perf_counter() - window_start_time)
+            ))
 
     log = XFactory.create_log()
     for trace in traces:
