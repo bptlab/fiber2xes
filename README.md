@@ -8,7 +8,7 @@ To use this tool you need access to the Mount Sinai Data Warehouse.
 Follow these steps to install `fiber2xes`:
 
 1. Install fiber according to their [installation guide](https://gitlab.hpi.de/fiber/fiber).
-2. Install Spark according to their [installation guide](TODO: LINK).
+2. Download and install Spark according to their [installation guide](https://spark.apache.org/downloads.html). [This](https://www.tutorialspoint.com/pyspark/pyspark_environment_setup.htm) website provides a concise overview of how the Spark environment can be set up.
 3. Run the pip installation to install `fiber2xes`:
 
 ```
