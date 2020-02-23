@@ -234,7 +234,11 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
 
 
 def handle_duplicate_column_names(df) -> pd.DataFrame:
-    """Takes a Pandas DataFrame and renames duplicate columns for later use with Spark."""
+    """Takes a Pandas DataFrame and renames duplicate columns for later use with Spark.
+
+    Keyword arguments:
+    df -- the dataframe
+    """
     columns = []
     counter = 0
     for column in df.columns:
@@ -314,7 +318,12 @@ def addTupleToList(a, b): return a + [b]
 
 @timer
 def filter_traces(traces_to_filter, trace_filter=None):
-    """Filters out traces that do not match the specified trace filter"""
+    """Filters out traces that do not match the specified trace filter
+
+    Keyword arguments:
+    traces_to_filter -- the trace list
+    trace_filter -- the trace filter (default None)
+    """
     if trace_filter is None:
         return traces_to_filter
 
