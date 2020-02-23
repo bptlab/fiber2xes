@@ -13,17 +13,37 @@ class Translation(object):
     csv_reader = {}
 
     def is_event_procedure(event):
+        """Checks if the given event is a procedure.
+
+        Keyword arguments:
+        event -- the event
+        """
         return event.context_procedure_code != "MSDW_NOT APPLICABLE" and event.context_procedure_code != "MSDW_UNKNOWN"
 
     def is_event_diagnosis(event):
+        """Checks if the given event is a diagnosis.
+
+        Keyword arguments:
+        event -- the event
+        """
         return event.context_diagnosis_code != "MSDW_NOT APPLICABLE" and event.context_diagnosis_code != "MSDW_UNKNOWN"
 
     def is_event_material(event):
+        """Checks if the given event is a material.
+
+        Keyword arguments:
+        event -- the event
+        """
         return event.context_material_code != "MSDW_NOT APPLICABLE" and event.context_material_code != "MSDW_UNKNOWN"
 
     def is_known_event(event):
+        """Checks if the given event is a procedure, diagnosis or material.
+
+        Keyword arguments:
+        event -- the event
+        """
         return Translation.is_event_procedure(event) or Translation.is_event_diagnosis(event) or \
-               Translation.is_event_material(event)
+            Translation.is_event_material(event)
 
     def translate_to_event(event, verbose):
         """
@@ -101,6 +121,15 @@ class Translation(object):
         return event_name, event_type, event_context, event_code
 
     def vocabulary_lookup(vocabulary_path, search_term, search_column=0, target_column=1, delimiter=","):
+        """Looks for a search term in the vocab tables.
+
+        Keyword arguments:
+        vocabulary_path -- the path to the vocab-file
+        search_term -- the search term
+        search_column -- the search column index, to define, in which column the algorithm should search in (default 0)
+        target_column -- the target column index, where the result is taken from (default 1)
+        delimiter -- the row delimiter (default ,)
+        """
         if vocabulary_path not in Translation.csv_reader:
             Translation.csv_reader[vocabulary_path] = csv.reader(
                 open(vocabulary_path), delimiter=delimiter)
@@ -112,6 +141,11 @@ class Translation(object):
         return None
 
     def translate_icd10(code):
+        """Translate an ICD-10 code to his textual representation
+
+        Keyword arguments:
+        code -- the ICD-10 code
+        """
         return Translation.vocabulary_lookup(
             vocabulary_path=DIAGNOSIS_ICD_10_VOCAB_PATH,
             search_term=str(code),
@@ -120,6 +154,11 @@ class Translation(object):
         )
 
     def translate_icd9(code):
+        """Translate an ICD-9 code to his textual representation
+
+        Keyword arguments:
+        code -- the ICD-9 code
+        """
         return Translation.vocabulary_lookup(
             vocabulary_path=DIAGNOSIS_ICD_9_VOCAB_PATH,
             search_term=str(code),
@@ -128,6 +167,11 @@ class Translation(object):
         )
 
     def translate_cpt4(code):
+        """Translate an CPT-4 code to his textual representation
+
+        Keyword arguments:
+        code -- the CPT-4 code
+        """
         return Translation.vocabulary_lookup(
             vocabulary_path=PROCEDURE_CPT_4_VOCAB_PATH,
             search_term=str(code),
@@ -136,6 +180,13 @@ class Translation(object):
         )
 
     def translate_procedure(context_name, context_procedure_code, verbose):
+        """Translate an procedure by the context name and procedure code to the textual representation
+
+        Keyword arguments:
+        context_name -- the context name
+        context_procedure_code -- the context code
+        verbose -- the flag to print additional information to debug
+        """
         event_context = "UNKNOWN"
         translation = None
 
@@ -160,6 +211,13 @@ class Translation(object):
         return event_context, translation
 
     def translate_diagnosis(context_name, context_diagnosis_code, verbose):
+        """Translate an diagnosis by the context name and diagnosis code to the textual representation
+
+        Keyword arguments:
+        context_name -- the context name
+        context_diagnosis_code -- the context code
+        verbose -- the flag to print additional information to debug
+        """
         event_context = "UNKNOWN"
         translation = None
 
@@ -181,6 +239,13 @@ class Translation(object):
         return event_context, translation
 
     def translate_material(context_name, context_material_code, verbose):
+        """Translate an material by the context name and material code to the textual representation
+
+        Keyword arguments:
+        context_name -- the context name
+        context_material_code -- the context code
+        verbose -- the flag to print additional information to debug
+        """
         event_context = "UNKNOWN"
         translation = None
 
@@ -192,6 +257,11 @@ class Translation(object):
         return event_context, translation
 
     def identify_consultation(procedure_description):
+        """Identify a consultation event
+
+        Keyword arguments:
+        procedure_description -- the procedure description
+        """
         result = re.search(
             "^CONSULT TO ", procedure_description, re.IGNORECASE)
         if result is not None:

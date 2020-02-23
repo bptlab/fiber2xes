@@ -5,6 +5,15 @@ import re
 class Abstraction(object):
 
     def get_abstract_event_name(abstraction_path, abstraction_exact_match, abstraction_delimiter, event_name, remove_unlisted=False):
+        """Abstracts an event name to an abstract activity identifier according to a given abstraction table.
+
+        Keyword arguments:
+        abstraction_path -- path to the abstraction table stored as a .csv-file
+        abstraction_delimiter -- column delimiter used in abstraction table
+        abstraction_exact_match -- flag to match only keywords that are identical to the given event name
+        event_name -- name of the event that should be abstracted
+        remove_unlisted -- flag to remove all events that are not included in the abstraction table
+        """
         if abstraction_path is None:
             return event_name
 
