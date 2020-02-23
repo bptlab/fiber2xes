@@ -81,8 +81,7 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
 
     # Spawn a new process for each window to free memory after each window completion
     for i in range(0, window_amount):
-        print("Start window {current_window} / {max_window}"\
-            .format(current_window=(i + 1), max_window=window_amount))
+        print("Start window {current_window} / {max_window}".format(current_window=(i + 1), max_window=window_amount))
         window_start_time = time.perf_counter()
         mrns_in_window = mrns[i * window_size: (i + 1) * window_size]
         cohort_for_window = Cohort(condition.MRNs(mrns_in_window))
@@ -103,8 +102,11 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
         ))
         p.start()
         p.join()
-        print("Finished window {current_window} / {max_window} in {window_time} s"\
-            .format(current_window=(i + 1), max_window=window_amount, window_time=(time.perf_counter() - window_start_time)))
+        print("Finished window {current_window} / {max_window} in {window_time} s".format(
+                current_window=(i + 1),
+                max_window=window_amount,
+                window_time=(time.perf_counter() - window_start_time)
+            ))
 
     log = XFactory.create_log()
     for trace in traces:
@@ -233,7 +235,11 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
 
 
 def handle_duplicate_column_names(df) -> pd.DataFrame:
-    """Takes a Pandas DataFrame and renames duplicate columns for later use with Spark."""
+    """Takes a Pandas DataFrame and renames duplicate columns for later use with Spark.
+
+    Keyword arguments:
+    df -- the dataframe
+    """
     columns = []
     counter = 0
     for column in df.columns:
@@ -313,7 +319,12 @@ def addTupleToList(a, b): return a + [b]
 
 @timer
 def filter_traces(traces_to_filter, trace_filter=None):
-    """Filters out traces that do not match the specified trace filter"""
+    """Filters out traces that do not match the specified trace filter
+
+    Keyword arguments:
+    traces_to_filter -- the trace list
+    trace_filter -- the trace filter (default None)
+    """
     if trace_filter is None:
         return traces_to_filter
 
