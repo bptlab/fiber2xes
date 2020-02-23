@@ -132,10 +132,6 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
     traces -- a container to collect all traces
     """
 
-    partitions = 200
-    if len(cohort.mrns()) > partitions:
-        partitions = len(cohort.mrns())
-
     # Get necessary data from cohort
     patients = cohort.get(PatientWithAttributes())
     print("Fetched Patients")
@@ -175,7 +171,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
         .set("spark.driver.maxResultSize", "60g")\
         .set("spark.cores.max", multiprocessing.cpu_count())\
         .set("spark.sql.execution.arrow.enabled", "true")\
-        .set("spark.sql.shuffle.partitions", str(partitions))\
+        .set("spark.sql.shuffle.partitions", "200")\
         .setMaster("local[{cores}]".format(cores=cores))
     spark = SparkSession\
         .builder\
