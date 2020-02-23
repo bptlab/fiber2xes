@@ -85,6 +85,17 @@ Parameters:
 
 ### Trace and event filtering
 
+With the trace or event filter its possible to filter the traces or events during the creation process.
+Therefore there are the following conditions:
+
+- [Diagnosis](https://gitlab.hpi.de/pm1920/fiber2xes/tree/guide#diagnosis)
+- [Material](https://gitlab.hpi.de/pm1920/fiber2xes/tree/guide#material)
+- [Procedure](https://gitlab.hpi.de/pm1920/fiber2xes/tree/guide#procedure)
+- [Time](https://gitlab.hpi.de/pm1920/fiber2xes/tree/guide#time)
+- [Generic](https://gitlab.hpi.de/pm1920/fiber2xes/tree/guide#generic)
+
+These can be combined by [And](https://gitlab.hpi.de/pm1920/fiber2xes/tree/guide#and), [Or](https://gitlab.hpi.de/pm1920/fiber2xes/tree/guide#or) and [Not](https://gitlab.hpi.de/pm1920/fiber2xes/tree/guide#not) operations.
+
 #### Diagnosis
 
 A filter for a specific diagnosis given by the code.
