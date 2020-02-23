@@ -255,13 +255,14 @@ def merge_dataframes(left, right, on) -> pd.DataFrame:
 
 @timer
 def calculate_timestamp(patient_events, column_indices):
-    """Calculates the timestamp for all patient_events based on a patient's `date_of_birth`, `age_in_days` and the specific `time_of_day`
-    
+    """Calculates the timestamp for all patient_events based on a patient's `date_of_birth`, `age_in_days`
+    and the specific `time_of_day`
+
     Keyword arguments:
     patient_events -- A Pandas DataFrame containing all patient's events
-    column_indices -- A dictionary containing a mapping from column names to their indices for the patient_events DataFrame
+    column_indices -- A dictionary containing a mapping from column names to their indices for the DataFrame
     """
-    
+
     return patient_events\
         .filter('not isnan(age_in_days) and date_of_birth <> "MSDW_UNKNOWN"')\
         .rdd\
