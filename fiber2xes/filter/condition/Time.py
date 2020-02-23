@@ -8,7 +8,7 @@ class Time(object):
 
     Keyword arguments:
     one_event_after -- The trace is relevant if one event of the trace was after the given date (default datetime.min)
-    one_event_before -- The trace is relevant if one event of the trace was bevore the given date (default datetime.max)
+    one_event_before -- The trace is relevant if one event of the trace was before the given date (default datetime.max)
     all_events_after -- The trace is relevant if all events of the are were after the given date (default datetime.min)
     all_events_before -- The trace is relevant if all events of the are were after the given date (default datetime.max)
     """
