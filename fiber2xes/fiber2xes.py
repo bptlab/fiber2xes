@@ -53,7 +53,7 @@ def create_spark_df(spark, pandas_df):
 
 @timer
 def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, remove_duplicates=True,
-                        event_filter=None, trace_filter=None, cores=multiprocessing.cpu_count(), window_size=400,
+                        event_filter=None, trace_filter=None, cores=multiprocessing.cpu_count(), window_size=200,
                         abstraction_path=None, abstraction_exact_match=False, abstraction_delimiter=";"):
     """Converts a fiber cohort to an xes event log.
     Therefore it slices the cohort to smaller windows (because of memory restrictions) and calls the method
@@ -173,6 +173,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
         .set("spark.driver.maxResultSize", "60g")\
         .set("spark.cores.max", multiprocessing.cpu_count())\
         .set("spark.sql.execution.arrow.enabled", "true")\
+        .set("spark.sql.shuffle.partitions", "200")\
         .setMaster("local[{cores}]".format(cores=cores))
     spark = SparkSession\
         .builder\

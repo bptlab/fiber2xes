@@ -46,8 +46,7 @@ class Translation(object):
             Translation.is_event_material(event)
 
     def translate_to_event(event, verbose):
-        """
-        When is diagnosis the event? When is procedure the event?
+        """Determines event type and applies translations and abstractions to it
 
         encounter_type set
         context_diagnosis_code = MSDW_NOT_APPLICABLE | context_diagnosis_code = MSDW_UNKNOWN
@@ -62,7 +61,8 @@ class Translation(object):
         context_diagnosis_code = event.context_diagnosis_code
         context_material_code = event.context_material_code
         context_procedure_code = event.context_procedure_code
-        context_name = event.context_name
+        context_names = list(filter(lambda c: c != "SYSTEM", 
+            [event.context_name, event.context_name_1, event.context_name_2]))
 
         event_name = None
         event_type = ""
@@ -78,7 +78,7 @@ class Translation(object):
             event_code = context_procedure_code
 
             event_context, translation = Translation.translate_procedure(
-                context_name, context_procedure_code, verbose)
+                context_names, context_procedure_code, verbose)
 
             if translation is not None:
                 event_name = translation
@@ -97,7 +97,7 @@ class Translation(object):
             event_code = context_diagnosis_code
 
             event_context, translation = Translation.translate_diagnosis(
-                context_name, context_diagnosis_code, verbose)
+                context_names, context_diagnosis_code, verbose)
 
             if translation is not None:
                 event_name = translation
@@ -111,7 +111,7 @@ class Translation(object):
             event_name = event.material_name
 
             event_context, translation = Translation.translate_material(
-                context_name, context_material_code, verbose)
+                context_names, context_material_code, verbose)
 
             if translation is not None:
                 event_name = translation
@@ -179,11 +179,11 @@ class Translation(object):
             target_column=2
         )
 
-    def translate_procedure(context_name, context_procedure_code, verbose):
+    def translate_procedure(context_names, context_procedure_code, verbose):
         """Translate an procedure by the context name and procedure code to the textual representation
 
         Keyword arguments:
-        context_name -- the context name
+        context_names -- the context names
         context_procedure_code -- the context code
         verbose -- the flag to print additional information to debug
         """
@@ -193,66 +193,72 @@ class Translation(object):
         # if context_name.str.contains("(?:EPIC )*CPT-4", regex=True).any():
         #    event_context = "CPT-4"
         #    translation = Translation.translate_cpt4(context_procedure_code)
-        if context_name == "ICD-10":
+        if "ICD-10" in context_names:
             event_context = "ICD-10"
             translation = Translation.translate_icd10(context_procedure_code)
-        elif context_name == "ICD-9":
+        elif "ICD-9" in context_names:
             event_context = "ICD-9"
             translation = Translation.translate_icd9(context_procedure_code)
-        elif context_name == "SYSTEM":
+        elif "SYSTEM" in context_names:
             event_context = "SYSTEM"
-        elif context_name == "IMO":
+        elif "IMO" in context_names:
             event_context = "IMO"
-        elif context_name == "EPIC":
+        elif "EPIC" in context_names:
             event_context = "EPIC"
         elif verbose:
-            print("Unknown Procedure Context: " + context_name)
+            print("Unknown Procedure Context")
+            for context in context_names:
+                print(context)
 
         return event_context, translation
 
-    def translate_diagnosis(context_name, context_diagnosis_code, verbose):
+    def translate_diagnosis(context_names, context_diagnosis_code, verbose):
         """Translate an diagnosis by the context name and diagnosis code to the textual representation
 
         Keyword arguments:
-        context_name -- the context name
+        context_names -- the context names
         context_diagnosis_code -- the context code
         verbose -- the flag to print additional information to debug
         """
         event_context = "UNKNOWN"
         translation = None
 
-        if context_name == "ICD-10":
+        if "ICD-10" in context_names:
             event_context = "ICD-10"
             translation = Translation.translate_icd10(context_diagnosis_code)
-        elif context_name == "ICD-9":
+        elif "ICD-9" in context_names:
             event_context = "ICD-9"
             translation = Translation.translate_icd9(context_diagnosis_code)
-        elif context_name == "SYSTEM":
+        elif "SYSTEM" in context_names:
             event_context = "SYSTEM"
-        elif context_name == "IMO":
+        elif "IMO" in context_names:
             event_context = "IMO"
-        elif context_name == "EPIC":
+        elif "EPIC" in context_names:
             event_context = "EPIC"
         elif verbose:
-            print("Unknown Diagnosis Context: " + context_name)
+            print("Unknown Diagnosis Context")
+            for context in context_names:
+                print(context)
 
         return event_context, translation
 
-    def translate_material(context_name, context_material_code, verbose):
+    def translate_material(context_names, context_material_code, verbose):
         """Translate an material by the context name and material code to the textual representation
 
         Keyword arguments:
-        context_name -- the context name
+        context_names -- the context names
         context_material_code -- the context code
         verbose -- the flag to print additional information to debug
         """
         event_context = "UNKNOWN"
         translation = None
 
-        if context_name == "EPIC MEDICATION":
+        if "EPIC MEDICATION" in context_names:
             event_context = "EPIC MEDICATION"
         elif verbose:
-            print("Unknown Material Context: " + context_name)
+            print("Unknown Material Context")
+            for context in context_names:
+                print(context)
 
         return event_context, translation
 
