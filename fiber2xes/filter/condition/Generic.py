@@ -23,4 +23,5 @@ class Generic(object):
 
         Keyword arguments:
         event -- the event
-        """return self.lambda_expression(event)
+        """
+        return self.lambda_expression(event)

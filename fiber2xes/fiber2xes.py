@@ -44,7 +44,7 @@ def create_spark_df(spark, pandas_df):
     """Creates a spark datafrom from a pandas dataframe
 
     Keyword arguments:
-    spark -- the spark instance
+    spark -- the spark session
     pandas_df -- the pandas dataframe
     """
     pandas_df = define_column_types_for_patient_events(pandas_df)
@@ -53,7 +53,7 @@ def create_spark_df(spark, pandas_df):
 
 @timer
 def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True, remove_duplicates=True,
-                        event_filter=None, trace_filter=None, cores=multiprocessing.cpu_count(), window_size=500,
+                        event_filter=None, trace_filter=None, cores=multiprocessing.cpu_count(), window_size=400,
                         abstraction_path=None, abstraction_exact_match=False, abstraction_delimiter=";"):
     """Converts a fiber cohort to an xes event log.
     Therefore it slices the cohort to smaller windows (because of memory restrictions) and calls the method
@@ -79,7 +79,11 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     mrns = list(cohort.mrns())
     window_amount = math.ceil(len(mrns)/window_size)
 
+    # Spawn a new process for each window to free memory after each window completion
     for i in range(0, window_amount):
+        print("Start window {current_window} / {max_window}"\
+            .format(current_window=(i + 1), max_window=window_amount))
+        window_start_time = time.perf_counter()
         mrns_in_window = mrns[i * window_size: (i + 1) * window_size]
         cohort_for_window = Cohort(condition.MRNs(mrns_in_window))
 
@@ -99,6 +103,8 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
         ))
         p.start()
         p.join()
+        print("Finished window {current_window} / {max_window} in {window_time} s"\
+            .format(current_window=(i + 1), max_window=window_amount, window_time=(time.perf_counter() - window_start_time)))
 
     log = XFactory.create_log()
     for trace in traces:
@@ -125,12 +131,15 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
     abstraction_delimiter -- the delimiter of the abstraction file
     traces -- a container to collect all traces
     """
-    # get necessary data from cohort
+
+    # Get necessary data from cohort
     patients = cohort.get(PatientWithAttributes())
-    print("Fetched patients")
+    print("Fetched Patients")
+
     events = cohort.get(DiagnosisWithTime(),
                         ProcedureWithTime(), DrugWithTime())
-    print("Fetched events")
+    print("Fetched Events")
+
     patient_events_pd = merge_dataframes(
         patients, events, 'medical_record_number')
 
@@ -139,7 +148,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
 
     if trace_type == "visit":
         encounters = cohort.get(EncounterWithVisit())
-        print("Fetched encouters")
+        print("Fetched Encouters")
         encounters = encounters.drop(columns=["encounter_type", "encounter_class", "age_in_days"])
         patient_events_pd = merge_dataframes(
             patient_events_pd,
@@ -148,7 +157,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
         )
         del(encounters)
 
-    print("Fetched and merged everything")
+    print("Finished dataset preparation")
 
     # Initialize spark session
     conf = SparkConf()\
@@ -171,6 +180,8 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
     print("Initialized spark")
 
     patient_events = create_spark_df(spark, patient_events_pd)
+
+    # Create column mapping to be able to convert rdds back to data frames
     column_indices = OrderedDict(
         zip(
             list(patient_events.schema.names) + ["timestamp"],
@@ -186,6 +197,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
         )
     )
 
+    # Generate trace ids for every event according to trace type
     if trace_type == "visit":
         traces_per_patient = get_traces_per_patient_by_visit(
             patient_events, column_indices)
@@ -196,8 +208,12 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
         sys.exit("No matching trace type given. Try using encounter, visit, or mrn")
 
     patient_events.unpersist()
+
+    traces_per_patient = traces_per_patient.repartition("trace_id")
+
     filtered_traces_per_patient = filter_traces(
         traces_per_patient, trace_filter=trace_filter)
+
     traces_in_window = create_xes_traces_from_traces(
         filtered_traces_per_patient,
         abstraction_path=abstraction_path,
@@ -258,7 +274,7 @@ def calculate_timestamp(patient_events, column_indices):
     """Calculates the timestamp for all patient_events based on a patient's `date_of_birth`, `age_in_days` and the specific `time_of_day`
     
     Keyword arguments:
-    patient_events -- A Pandas DataFrame containing all patient's events
+    patient_events -- A Spark DataFrame containing all patient's events
     column_indices -- A dictionary containing a mapping from column names to their indices for the patient_events DataFrame
     """
     
@@ -295,6 +311,7 @@ def addTupleToList(a, b): return a + [b]
 
 @timer
 def filter_traces(traces_to_filter, trace_filter=None):
+    """Filters out traces that do not match the specified trace filter"""
     if trace_filter is None:
         return traces_to_filter
 
@@ -306,6 +323,7 @@ def filter_traces(traces_to_filter, trace_filter=None):
 
 
 def get_traces_per_patient_by_mrn(patient_events, column_indices):
+    """Generate trace id according to medical record number"""
     return patient_events\
         .rdd\
         .map(lambda row: row + (row[column_indices["medical_record_number"]], ))\
@@ -313,6 +331,7 @@ def get_traces_per_patient_by_mrn(patient_events, column_indices):
 
 
 def get_traces_per_patient_by_visit(patient_event_encounters, column_indices):
+    """Generate trace id according to encounter visit id"""
     return patient_event_encounters\
         .rdd\
         .map(lambda row: row + (row[column_indices["encounter_visit_id"]], ))\

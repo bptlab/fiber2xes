@@ -35,6 +35,18 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path, abstractio
 
 def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_exact_match, abstraction_delimiter,
                      verbose, remove_unlisted, remove_duplicates):
+    """Collect events that belong to a trace in an opyenxes trace.
+
+    Keyword arguments:
+    trace_events -- list of events belonging to a trace
+    abstraction_path -- path to the abstraction table stored as a .csv-file
+    abstraction_delimiter -- column delimiter used in abstraction table
+    abstraction_exact_match -- match only keywords that are identical to the given event name
+    verbose -- flag to enable detailed console output
+    remove_unlisted -- remove all events that are not included in the abstraction table
+    event_filter -- a custom filter to filter events
+    remove_duplicates -- flag for remove duplicate events in a trace
+    """
     trace = XFactory.create_trace()
 
     if len(trace_events) == 0:
@@ -67,6 +79,7 @@ def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_e
 
     relevant_events = list()
 
+    # Filter out events that do not match the specified events filter
     for event in trace_events:
         is_relevant = False
         if event_filter is None:
@@ -101,6 +114,7 @@ def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_e
         return trace
 
     if remove_duplicates:
+        # Remove events with the same name and timestamp
         unique_values = set()
         deduplicated_events = list()
         for event in relevant_events:
@@ -110,6 +124,7 @@ def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_e
         relevant_events = deduplicated_events
 
     for event in relevant_events:
+        # Create opyenxes event and append it to the trace
         log_event = XFactory.create_event()
 
         timestamp_int = event["timestamp"]
@@ -149,6 +164,18 @@ def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_e
 
 def create_xes_traces_from_traces(traces, abstraction_path, abstraction_exact_match, abstraction_delimiter, verbose,
                                   remove_unlisted, event_filter, remove_duplicates):
+    """Create opyenxes traces for every trace.
+
+    Keyword arguments:
+    traces -- spark data frame containing all relevant traces
+    abstraction_path -- path to the abstraction table stored as a .csv-file
+    abstraction_delimiter -- column delimiter used in abstraction table
+    abstraction_exact_match -- match only keywords that are identical to the given event name
+    verbose -- flag to enable detailed console output
+    remove_unlisted -- remove all events that are not included in the abstraction table
+    event_filter -- a custom filter to filter events
+    remove_duplicates -- flag for remove duplicate events in a trace
+    """
     result = traces\
         .map(lambda trace: create_xes_trace(
             trace[1],
@@ -164,5 +191,11 @@ def create_xes_traces_from_traces(traces, abstraction_path, abstraction_exact_ma
 
 
 def save_event_log_to_file(log, file_path):
+    """Serializes and saves a given opyenxes log as an .xes-file in the file system.
+
+    Keyword arguments:
+    log -- opyenxes log
+    file_path -- target path for serialized log file 
+    """
     with open(file_path, "w") as file:
         XesXmlSerializer().serialize(log, file)
