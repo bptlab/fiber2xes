@@ -9,6 +9,17 @@ from ..abstraction import Abstraction
 
 def translate_procedure_diagnosis_material_to_event(abstraction_path, abstraction_exact_match, abstraction_delimiter,
                                                     event, verbose, remove_unlisted):
+    """Derives an activity identifier for an event.
+
+    Keyword arguments:
+    abstraction_path -- path to the abstraction table stored as a .csv-file
+    abstraction_delimiter -- column delimiter used in abstraction table
+    abstraction_exact_match -- match only keywords that are identical to the given event name
+    event -- event to be translated
+    verbose -- flag to enable detailed console output
+    remove_unlisted -- remove all events that are not included in the abstraction table
+    """
+                                        
     if not Translation.is_known_event(event):
         return None, None, None, None
 
