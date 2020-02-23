@@ -257,6 +257,11 @@ class Translation(object):
         return event_context, translation
 
     def identify_consultation(procedure_description):
+        """Identify a consultation event
+
+        Keyword arguments:
+        procedure_description -- the procedure description
+        """
         result = re.search(
             "^CONSULT TO ", procedure_description, re.IGNORECASE)
         if result is not None:
