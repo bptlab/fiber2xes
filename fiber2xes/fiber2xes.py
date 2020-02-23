@@ -216,6 +216,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
 
 
 def handle_duplicate_column_names(df) -> pd.DataFrame:
+    """Takes a Pandas DataFrame and renames duplicate columns for later use with Spark."""
     columns = []
     counter = 0
     for column in df.columns:
@@ -233,6 +234,7 @@ def handle_duplicate_column_names(df) -> pd.DataFrame:
 
 
 def define_column_types_for_patient_events(patient_events) -> pd.DataFrame:
+    """Redefines the type of columns belonging to the patient_events Pandas DataFrame to strings."""
     patient_events.date_of_birth = patient_events.date_of_birth.astype('str')
     patient_events.religion = patient_events.religion.astype('str')
     patient_events.patient_ethnic_group = patient_events.patient_ethnic_group.astype('str')
@@ -242,6 +244,7 @@ def define_column_types_for_patient_events(patient_events) -> pd.DataFrame:
 
 @timer
 def merge_dataframes(left, right, on) -> pd.DataFrame:
+    """Merges two Pandas DataFrames with an inner join on a given column and frees the original frames from memory."""
     left = handle_duplicate_column_names(left)
     right = handle_duplicate_column_names(right)
     result = pd.merge(left, right, on=on, how='inner')
@@ -252,6 +255,13 @@ def merge_dataframes(left, right, on) -> pd.DataFrame:
 
 @timer
 def calculate_timestamp(patient_events, column_indices):
+    """Calculates the timestamp for all patient_events based on a patient's `date_of_birth`, `age_in_days` and the specific `time_of_day`
+    
+    Keyword arguments:
+    patient_events -- A Pandas DataFrame containing all patient's events
+    column_indices -- A dictionary containing a mapping from column names to their indices for the patient_events DataFrame
+    """
+    
     return patient_events\
         .filter('not isnan(age_in_days) and date_of_birth <> "MSDW_UNKNOWN"')\
         .rdd\
@@ -265,6 +275,7 @@ def calculate_timestamp(patient_events, column_indices):
 
 
 def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key) -> (datetime.datetime, ):
+    """Calculates a single timestamp based from a `date`, the patient's `age_in_days`, and the `time_of_day_key`"""
     time_info = date.split("-")
     date = datetime.datetime(int(time_info[0]), int(time_info[1]), int(time_info[2]))
     timestamp = date + \
