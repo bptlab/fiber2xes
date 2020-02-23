@@ -17,7 +17,13 @@ pip install git+https://gitlab.hpi.de/pm1920/fiber2xes.git
 
 ## Example
 
-TODO: Explain how to run the example and what will be returned.
+After following all installation steps, `example.py`, a demo file containing a short overview of how fiber2xes can be executed, can be run by calling
+
+```bash
+python3 ./example.py
+```
+
+This example creates a sample cohort for a MRN-based event log, which will be extracted and saved to the repository's root directory as a file called `./log_<timestamp>_mrn_5.xes` This file can then be used for process mining.
 
 ## Interface
 
