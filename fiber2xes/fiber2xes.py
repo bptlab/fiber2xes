@@ -41,7 +41,7 @@ def timer(func):
 
 @timer
 def create_spark_df(spark, pandas_df):
-    """Creates a spark datafrom from a pandas dataframe
+    """Creates a spark dataframe from a pandas dataframe
 
     Keyword arguments:
     spark -- the spark session
