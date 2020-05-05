@@ -14,7 +14,7 @@ setup(
        'sqlalchemy-hana>=0.3.0',
        'opyenxes>=0.3.0',
        'pandas>=0.25.3',
-       'pyspark>=2.4.4'
+       'pyspark>=2.4.5'
     ],
     include_package_data=True,
 )
