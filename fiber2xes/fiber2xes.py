@@ -21,6 +21,7 @@ from .fiberpatch import (
     DiagnosisWithTime,
     DrugWithTime,
     EncounterWithVisit,
+    MetaDataWithOnlyLevels,
     PatientWithAttributes,
     ProcedureWithTime
 )
@@ -73,6 +74,10 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     abstraction_exact_match -- flag if the abstraction algorithm should only abstract exacted matches (default False)
     abstraction_delimiter -- the delimiter of the abstraction file (default ;)
     """
+    
+    if trace_type != "visit" and trace_type != "mrn":
+        sys.exit("No matching trace type given. Try using encounter, visit, or mrn")
+    
     manager = multiprocessing.Manager()
     traces = manager.list()
 
@@ -145,19 +150,27 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
     patient_events_pd = merge_dataframes(
         patients, events, 'medical_record_number')
 
-    del(patients)
-    del(events)
+    del patients
+    del events
 
-    if trace_type == "visit":
-        encounters = cohort.get(EncounterWithVisit())
-        print("Fetched Encouters")
-        encounters = encounters.drop(columns=["encounter_type", "encounter_class", "age_in_days"])
-        patient_events_pd = merge_dataframes(
-            patient_events_pd,
-            encounters,
-            on=["encounter_key", "medical_record_number"]
-        )
-        del(encounters)
+    encounters = cohort.get(EncounterWithVisit())
+    print("Fetched Encouters")
+    encounters = encounters.drop(columns=["encounter_type", "encounter_class", "age_in_days"])
+    patient_events_pd = merge_dataframes(
+        patient_events_pd,
+        encounters,
+        on=["encounter_key", "medical_record_number"]
+    )
+    del encounters
+
+    metadata = cohort.get(MetaDataWithOnlyLevels())
+    print("Fetched MetaData")
+    patient_events_pd = merge_dataframes(
+        patient_events_pd,
+        metadata,
+        on=["meta_data_key"]
+    )
+    del(metadata)
 
     print("Finished dataset preparation")
 
@@ -204,11 +217,9 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
     if trace_type == "visit":
         traces_per_patient = get_traces_per_patient_by_visit(
             patient_events, column_indices)
-    elif trace_type == "mrn":
+    else:
         traces_per_patient = get_traces_per_patient_by_mrn(
             patient_events, column_indices)
-    else:
-        sys.exit("No matching trace type given. Try using encounter, visit, or mrn")
 
     patient_events.unpersist()
 
@@ -226,6 +237,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
         remove_unlisted=remove_unlisted,
         remove_duplicates=remove_duplicates,
         event_filter=event_filter,
+        trace_type=trace_type,
     )
 
     filtered_traces_per_patient.unpersist()

@@ -23,6 +23,7 @@ class DiagnosisWithTime(_FactCondition):
         fact.TIME_OF_DAY_KEY,
         fact.CAREGIVER_GROUP_KEY,
         fact.FACILITY_KEY,
+        fact.META_DATA_KEY,
         description_column,
         code_column,
         fact.ENCOUNTER_KEY,

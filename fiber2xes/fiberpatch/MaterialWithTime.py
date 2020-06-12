@@ -23,6 +23,7 @@ class MaterialWithTime(_FactCondition):
         fact.FACILITY_KEY,
         d_table.CONTEXT_NAME,
         fact.ENCOUNTER_KEY,
+        fact.META_DATA_KEY,
         description_column,
         code_column,
     ]

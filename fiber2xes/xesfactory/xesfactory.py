@@ -44,7 +44,7 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path, abstractio
 
 
 def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_exact_match, abstraction_delimiter,
-                     verbose, remove_unlisted, remove_duplicates):
+                     verbose, remove_unlisted, remove_duplicates, trace_type):
     """Collect events that belong to a trace in an opyenxes trace.
 
     Keyword arguments:
@@ -66,6 +66,14 @@ def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_e
         "id", str(uuid.uuid4()))
     trace.get_attributes()["id"] = id_attribute
 
+    if trace_type == "mrn":
+        trace_id = XFactory.create_attribute_literal("concept:name", trace_events[0].medical_record_number)
+    elif trace_type == "visit":
+        trace_id = XFactory.create_attribute_literal("concept:name", trace_events[0].encounter_visit_id)
+    else:
+        trace_id = "unknown"
+
+    trace.get_attributes()["concept:name"] = trace_id
     trace.get_attributes()["patient:mrn"] = XFactory.create_attribute_literal(
         "patient:mrn", trace_events[0].medical_record_number)
     trace.get_attributes()["patient:date_of_birth"] = XFactory.create_attribute_literal(
@@ -91,7 +99,6 @@ def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_e
 
     # Filter out events that do not match the specified events filter
     for event in trace_events:
-        is_relevant = False
         if event_filter is None:
             is_relevant = True
         else:
@@ -110,13 +117,19 @@ def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_e
             )
         if event_descriptor is not None:
             event = {
+                "encounter_id": event.encounter_key,
                 "timestamp": event.timestamp,
+                "visit_id": event.encounter_visit_id,
                 "name": event_descriptor,
                 "description": event_name,
                 "context": event_context,
                 "code": event_code,
                 "caregiver_group_key": event.caregiver_group_key,
-                "facility_key": event.facility_key
+                "facility_key": event.facility_key,
+                "level1": event.level1_context_name,
+                "level2": event.level2_event_name,
+                "level3": event.level3_action_name,
+                "level4": event.level4_field_name
             }
             relevant_events.append(event)
 
@@ -133,6 +146,8 @@ def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_e
                 deduplicated_events.append(event)
         relevant_events = deduplicated_events
 
+    relevant_events = sorted(relevant_events, key=lambda e: e['timestamp'])
+
     for event in relevant_events:
         # Create opyenxes event and append it to the trace
         log_event = XFactory.create_event()
@@ -145,6 +160,14 @@ def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_e
         activity_attribute = XFactory.create_attribute_literal(
             "concept:name", event["name"])
         log_event.get_attributes()["Activity"] = activity_attribute
+
+        visit_id_attribute = XFactory.create_attribute_literal(
+            "event:visit_id", event["visit_id"])
+        log_event.get_attributes()["event:visit_id"] = visit_id_attribute
+
+        encounter_attribute = XFactory.create_attribute_literal(
+            "event:encounter_id", event["encounter_id"])
+        log_event.get_attributes()["event:encounter_id"] = encounter_attribute
 
         description_attribute = XFactory.create_attribute_literal(
             "event:description", event["description"])
@@ -168,12 +191,32 @@ def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_e
         )
         log_event.get_attributes()["event:facility"] = facility_attribute
 
+        level1_attribute = XFactory.create_attribute_literal(
+            "event:level1", event["level1"]
+        )
+        log_event.get_attributes()["event:level1"] = level1_attribute
+
+        level2_attribute = XFactory.create_attribute_literal(
+            "event:level2", event["level2"]
+        )
+        log_event.get_attributes()["event:level2"] = level2_attribute
+
+        level3_attribute = XFactory.create_attribute_literal(
+            "event:level3", event["level3"]
+        )
+        log_event.get_attributes()["event:level3"] = level3_attribute
+
+        level4_attribute = XFactory.create_attribute_literal(
+            "event:level4", event["level4"]
+        )
+        log_event.get_attributes()["event:level4"] = level4_attribute
+
         trace.append(log_event)
     return trace
 
 
 def create_xes_traces_from_traces(traces, abstraction_path, abstraction_exact_match, abstraction_delimiter, verbose,
-                                  remove_unlisted, event_filter, remove_duplicates):
+                                  remove_unlisted, event_filter, remove_duplicates, trace_type):
     """Create opyenxes traces for every trace.
 
     Keyword arguments:
@@ -195,7 +238,8 @@ def create_xes_traces_from_traces(traces, abstraction_path, abstraction_exact_ma
             abstraction_delimiter,
             verbose,
             remove_unlisted,
-            remove_duplicates
+            remove_duplicates,
+            trace_type,
         ))
     return result.collect()
 

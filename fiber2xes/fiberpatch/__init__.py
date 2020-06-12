@@ -4,6 +4,7 @@ from .DrugWithTime import DrugWithTime
 from .MaterialWithTime import MaterialWithTime
 from .PatientWithAttributes import PatientWithAttributes
 from .ProcedureWithTime import ProcedureWithTime
+from .MetaDataWithOnlyLevels import MetaDataWithOnlyLevels
 
 __all__ = [
     'DiagnosisWithTime',
@@ -11,5 +12,6 @@ __all__ = [
     'EncounterWithVisit',
     'MaterialWithTime',
     'PatientWithAttributes',
-    'ProcedureWithTime'
+    'ProcedureWithTime',
+    'MetaDataWithOnlyLevels'
 ]
