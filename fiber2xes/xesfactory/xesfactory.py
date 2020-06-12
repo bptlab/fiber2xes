@@ -3,8 +3,8 @@ import uuid
 from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
 from opyenxes.factory.XFactory import XFactory
 
-from ..translation import Translation
 from ..abstraction import Abstraction
+from ..translation import Translation
 
 
 def translate_procedure_diagnosis_material_to_event(abstraction_path, abstraction_exact_match, abstraction_delimiter,
