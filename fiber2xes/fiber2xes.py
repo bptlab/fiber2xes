@@ -7,10 +7,9 @@ import multiprocessing
 from collections import OrderedDict
 
 import pandas as pd
-from pyspark.sql import Row, SparkSession
-from pyspark import SparkContext, SparkConf
+from pyspark.sql import SparkSession
+from pyspark import SparkConf
 from pyspark.sql.types import *
-from pyspark.sql.functions import lit, isnan
 from opyenxes.factory.XFactory import XFactory
 
 from fiber import Cohort
@@ -217,7 +216,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
     if trace_type == "visit":
         traces_per_patient = get_traces_per_patient_by_visit(
             patient_events, column_indices)
-    else:
+    elif trace_type == "mrn":
         traces_per_patient = get_traces_per_patient_by_mrn(
             patient_events, column_indices)
 
