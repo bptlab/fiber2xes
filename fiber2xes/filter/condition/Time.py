@@ -43,7 +43,7 @@ class Time(object):
         one_before = False
         one_after = False
         for event in trace:
-            timestamp_as_datetime = event.timestamp.to_pydatetime()
+            timestamp_as_datetime = event.timestamp # .to_pydatetime() it seems like the timestamp of the event is already a datetime.datetime object and therefore the function to_pydatetime() fails
             if timestamp_as_datetime > self.one_event_after:
                 one_after = True
             if timestamp_as_datetime < self.one_event_before:

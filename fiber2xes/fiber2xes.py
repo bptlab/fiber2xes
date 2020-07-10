@@ -176,13 +176,13 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
     # Initialize spark session
     conf = SparkConf()\
         .setAppName("fiber2xes")\
-        .set("spark.driver.memory", "60g")\
+        .set("spark.driver.memory", "90g")\
         .set("spark.memory.fraction", "0.95")\
         .set("spark.memory.storageFraction", "0.95")\
         .set("spark.memory.offHeap.enabled", "true")\
         .set("spark.memory.offHeap.size", "4g")\
-        .set("spark.executor.memory", "60g")\
-        .set("spark.driver.maxResultSize", "60g")\
+        .set("spark.executor.memory", "90g")\
+        .set("spark.driver.maxResultSize", "90g")\
         .set("spark.cores.max", multiprocessing.cpu_count())\
         .set("spark.sql.execution.arrow.enabled", "true")\
         .set("spark.sql.shuffle.partitions", "200")\

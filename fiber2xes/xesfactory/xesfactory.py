@@ -29,7 +29,7 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path, abstractio
 
     if abstract_event_name is None:
         return None, event_name, event_context, event_code
-    elif not verbose:
+    if not verbose:
         return abstract_event_name, event_name, event_context, event_code
 
     result = event_type
