@@ -1,4 +1,8 @@
-class Procedure(object):
+"""
+Defines functions to check events for procedure condition
+"""
+
+class Procedure():
     """Filter for a specific procedure given by the code. Event and Trace filtering are possible.
 
     Keyword arguments:

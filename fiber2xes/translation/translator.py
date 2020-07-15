@@ -1,3 +1,8 @@
+"""
+    The module contains the class Translation which is used to translate
+    events into text representations of diagnosis, amterial or procedure
+"""
+
 import os
 import re
 import csv
@@ -8,8 +13,8 @@ DIAGNOSIS_ICD_9_VOCAB_PATH = os.path.join(dirname, "vocab-icd9.csv")
 PROCEDURE_CPT_4_VOCAB_PATH = os.path.join(dirname, "vocab-cpt4.csv")
 
 
-class Translation(object):
-
+class Translator():
+    """ Class to translate events into diagnosis, material or procedure events"""
     csv_reader = {}
 
     def __init__(self):
@@ -21,7 +26,8 @@ class Translation(object):
         Keyword arguments:
         event -- the event
         """
-        return event.context_procedure_code != "MSDW_NOT APPLICABLE" and event.context_procedure_code != "MSDW_UNKNOWN"
+        return event.context_procedure_code != "MSDW_NOT APPLICABLE" and \
+               event.context_procedure_code != "MSDW_UNKNOWN"
 
     def is_event_diagnosis(self, event):
         """Checks if the given event is a diagnosis.
@@ -29,7 +35,8 @@ class Translation(object):
         Keyword arguments:
         event -- the event
         """
-        return event.context_diagnosis_code != "MSDW_NOT APPLICABLE" and event.context_diagnosis_code != "MSDW_UNKNOWN"
+        return event.context_diagnosis_code != "MSDW_NOT APPLICABLE" and \
+               event.context_diagnosis_code != "MSDW_UNKNOWN"
 
     def is_event_material(self, event):
         """Checks if the given event is a material.
@@ -37,7 +44,8 @@ class Translation(object):
         Keyword arguments:
         event -- the event
         """
-        return event.context_material_code != "MSDW_NOT APPLICABLE" and event.context_material_code != "MSDW_UNKNOWN"
+        return event.context_material_code != "MSDW_NOT APPLICABLE" and \
+               event.context_material_code != "MSDW_UNKNOWN"
 
     def is_known_event(self, event):
         """Checks if the given event is a procedure, diagnosis or material.
@@ -65,7 +73,9 @@ class Translation(object):
         context_material_code = event.context_material_code
         context_procedure_code = event.context_procedure_code
         context_names = list(filter(lambda c: c != "SYSTEM",
-            [event.context_name, event.context_name_1, event.context_name_2]))
+                                    [event.context_name,
+                                     event.context_name_1,
+                                     event.context_name_2]))
 
         event_name = None
         event_type = ""
@@ -130,13 +140,14 @@ class Translation(object):
 
         return event_name, event_type, event_context, event_code
 
-    def vocabulary_lookup(self, vocabulary_path, search_term, search_column=0, target_column=1, delimiter=","):
+    def vocabulary_lookup(self, vocabulary_path, search_term, search_column=0, target_column=1,
+                          delimiter=","):
         """Looks for a search term in the vocab tables.
 
         Keyword arguments:
         vocabulary_path -- the path to the vocab-file
         search_term -- the search term
-        search_column -- the search column index, to define, in which column the algorithm should search in (default 0)
+        search_column -- the search column in which the algorithm should search in (default 0)
         target_column -- the target column index, where the result is taken from (default 1)
         delimiter -- the row delimiter (default ,)
         """
@@ -146,7 +157,9 @@ class Translation(object):
         reader = self.csv_reader[vocabulary_path]
         for row in reader:
             if len(row) > search_column and len(row) > target_column:
-                if re.search("^" + search_term + "$", row[search_column], re.IGNORECASE) is not None:
+                if re.search("^" + search_term + "$", row[search_column], re.IGNORECASE) \
+                    is not None:
+
                     return row[target_column]
         return None
 
@@ -190,7 +203,7 @@ class Translation(object):
         )
 
     def translate_procedure(self, context_names, context_procedure_code, verbose):
-        """Translate an procedure by the context name and procedure code to the textual representation
+        """Translate an procedure by the context name and procedure code to a textual representation
 
         Keyword arguments:
         context_names -- the context names
@@ -223,7 +236,7 @@ class Translation(object):
         return event_context, translation
 
     def translate_diagnosis(self, context_names, context_diagnosis_code, verbose):
-        """Translate an diagnosis by the context name and diagnosis code to the textual representation
+        """Translate an diagnosis by the context name and diagnosis code to a textual representation
 
         Keyword arguments:
         context_names -- the context names

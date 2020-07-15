@@ -1,12 +1,16 @@
-class Not(object):
+"""
+Defines Not operator
+"""
+
+class Not():
     """It takes on filter and inverts its result for the given event or trace
 
     Keyword arguments:
     filter -- the filter
     """
 
-    def __init__(self, filter):
-        self.filter = filter
+    def __init__(self, filter1):
+        self.filter = filter1
 
     def is_relevant_trace(self, trace):
         """Applies the filter on the trace and returns the inverted result

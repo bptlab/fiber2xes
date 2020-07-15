@@ -1,4 +1,8 @@
-class And(object):
+"""
+Defines And operator
+"""
+
+class And():
     """It uses two filters and check for both if the trace or event is relevant.
     Only if both are true, the trace or event is relevant.
 

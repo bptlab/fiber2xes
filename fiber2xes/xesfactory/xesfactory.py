@@ -1,15 +1,24 @@
+"""
+    A module which holds a necessary functions to create a xes log for
+    an array of events.
+"""
+
 import uuid
 import datetime
 
 from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
 from opyenxes.factory.XFactory import XFactory
 
-from ..abstraction import Abstraction
-from ..translation import Translation
+from ..abstraction.abstraction import get_abstract_event_name
+from ..translation import Translator
 
 
-def translate_procedure_diagnosis_material_to_event(abstraction_path, abstraction_exact_match, abstraction_delimiter,
-                                                    event, verbose, remove_unlisted):
+def translate_procedure_diagnosis_material_to_event(abstraction_path,
+                                                    abstraction_exact_match,
+                                                    abstraction_delimiter,
+                                                    event,
+                                                    verbose,
+                                                    remove_unlisted):
     """Derives an activity identifier for an event.
 
     Keyword arguments:
@@ -21,15 +30,19 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path, abstractio
     remove_unlisted -- remove all events that are not included in the abstraction table
     """
 
-    translator = Translation()
+    translator = Translator()
 
     if not translator.is_known_event(event):
         return None, None, None, None
 
-    event_name, event_type, event_context, event_code = translator.translate_to_event(event, verbose)
+    event_name, event_type, event_context, event_code = translator.translate_to_event(event,
+                                                                                      verbose)
 
-    abstract_event_name = Abstraction.get_abstract_event_name(abstraction_path, abstraction_exact_match,
-                                                              abstraction_delimiter, event_name, remove_unlisted)
+    abstract_event_name = get_abstract_event_name(abstraction_path,
+                                                  abstraction_exact_match,
+                                                  abstraction_delimiter,
+                                                  event_name,
+                                                  remove_unlisted)
 
     if abstract_event_name is None:
         return None, event_name, event_context, event_code
@@ -48,6 +61,11 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path, abstractio
 
 
 def create_trace_information(event):
+    """Creates an object with the information of the trace of the event
+
+    Keyword arguments:
+    event - the event which is used to determine the trace information
+    """
 
     trace_information = {
         "mrn": event.medical_record_number,
@@ -65,9 +83,14 @@ def create_trace_information(event):
     return trace_information
 
 def start_xes_trace_creation(trace_events,
-                             event_filter, abstraction_path,
-                             abstraction_exact_match, abstraction_delimiter,
-                             verbose, remove_unlisted, remove_duplicates, trace_type):
+                             event_filter,
+                             abstraction_path,
+                             abstraction_exact_match,
+                             abstraction_delimiter,
+                             verbose,
+                             remove_unlisted,
+                             remove_duplicates,
+                             trace_type):
 
     """Collect events that belong to a trace in an opyenxes trace.
 
@@ -88,15 +111,9 @@ def start_xes_trace_creation(trace_events,
 
     encounter_ids = set()
 
-    f = open("event_info_visitMRN.txt", "w")
-    f.write(str(type(trace_events[0])))
-    f.write(str(trace_events[0]))
-    f.close()
-
+    trace_information = create_trace_information(trace_events[0])
 
     trace_events = sorted(trace_events, key=lambda e: e.timestamp)
-
-    trace_information = create_trace_information(trace_events[0])
 
     for event in trace_events:
         # Filter out events that do not match the specified events filter
@@ -131,8 +148,9 @@ def start_xes_trace_creation(trace_events,
                     medication_dict[event_descriptor]['day'] = timestamp
                     lifecycle_state = "start"
                 else:
-                    # if there is already an event for this drug at the same day it has to be a duplicate:
-                    # the medication started on this date or there were sig, refill, etc events
+                    # if there is already an event for this drug at the same day,
+                    # it has to be a duplicate. The medication started on this date
+                    # or there were sig, refill, etc events
                     if timestamp.date() == medication_dict[event_descriptor]['day'].date():
                         event_name = 'DUPLICATE: ' + event_name
                     elif 'End Date' in level4:
@@ -175,7 +193,8 @@ def start_xes_trace_creation(trace_events,
         unique_values = set()
         deduplicated_events = list()
         for event in relevant_events:
-            if not (event["timestamp"], event["name"]) in unique_values and 'DUPLICATE' not in event['name']:
+            if not (event["timestamp"], event["name"]) in unique_values and \
+                'DUPLICATE' not in event['name']:
                 unique_values.add((event["timestamp"], event["name"]))
                 deduplicated_events.append(event)
         relevant_events = deduplicated_events
@@ -192,7 +211,9 @@ def start_xes_trace_creation(trace_events,
         xes_traces = []
 
         for trace_id in encounter_traces.keys():
-            xes_traces.append(create_xes_trace(trace_information, encounter_traces[trace_id], trace_type))
+            xes_traces.append(create_xes_trace(trace_information,
+                                               encounter_traces[trace_id],
+                                               trace_type))
     else:
         xes_traces = []
         xes_traces.append(create_xes_trace(trace_information, relevant_events, trace_type))
@@ -314,8 +335,15 @@ def create_xes_trace(trace_information, trace_events, trace_type):
     return trace
 
 
-def create_xes_traces_from_traces(traces, abstraction_path, abstraction_exact_match, abstraction_delimiter, verbose,
-                                  remove_unlisted, event_filter, remove_duplicates, trace_type):
+def create_xes_traces_from_traces(traces,
+                                  abstraction_path,
+                                  abstraction_exact_match,
+                                  abstraction_delimiter,
+                                  verbose,
+                                  remove_unlisted,
+                                  event_filter,
+                                  remove_duplicates,
+                                  trace_type):
     """Create opyenxes traces for every trace.
 
     Keyword arguments:
