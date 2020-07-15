@@ -9,7 +9,7 @@ from collections import OrderedDict
 import pandas as pd
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
-from pyspark.sql.types import *
+from pyspark.sql.types import Row
 from opyenxes.factory.XFactory import XFactory
 
 from fiber import Cohort
@@ -74,8 +74,8 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     abstraction_delimiter -- the delimiter of the abstraction file (default ;)
     """
     
-    if trace_type != "visit" and trace_type != "mrn":
-        sys.exit("No matching trace type given. Try using encounter, visit, or mrn")
+    if trace_type != "visit" and trace_type != "mrn" and trace_type != 'visitMRN':
+        sys.exit("No matching trace type given. Try using visit, mrn or visitMRN")
     
     manager = multiprocessing.Manager()
     traces = manager.list()
@@ -113,6 +113,7 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
             ))
 
     log = XFactory.create_log()
+
     for trace in traces:
         log.append(trace)
     return log
@@ -213,10 +214,10 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
     )
 
     # Generate trace ids for every event according to trace type
-    if trace_type == "visit":
+    if trace_type == "visit" or trace_type == "visitMRN":
         traces_per_patient = get_traces_per_patient_by_visit(
             patient_events, column_indices)
-    elif trace_type == "mrn":
+    else:
         traces_per_patient = get_traces_per_patient_by_mrn(
             patient_events, column_indices)
 
@@ -226,6 +227,9 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
 
     filtered_traces_per_patient = filter_traces(
         traces_per_patient, trace_filter=trace_filter)
+
+    if trace_type == "visitMRN":
+        filtered_traces_per_patient = visit_to_mrn(filtered_traces_per_patient)
 
     traces_in_window = create_xes_traces_from_traces(
         filtered_traces_per_patient,
@@ -241,8 +245,8 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
 
     filtered_traces_per_patient.unpersist()
     spark.stop()
-    for trace in traces_in_window:
-        traces.append(trace)
+    for trace_array in traces_in_window:
+        traces += trace_array
 
 
 def handle_duplicate_column_names(df) -> pd.DataFrame:
@@ -319,15 +323,6 @@ def timestamp_from_birthdate_and_age_and_time(date, age_in_days, time_of_day_key
     return (timestamp, )
 
 
-def createList(a): return [a]
-
-
-def mergeLists(a, b): return a + b
-
-
-def addTupleToList(a, b): return a + [b]
-
-
 @timer
 def filter_traces(traces_to_filter, trace_filter=None):
     """Filters out traces that do not match the specified trace filter
@@ -336,13 +331,14 @@ def filter_traces(traces_to_filter, trace_filter=None):
     traces_to_filter -- the trace list
     trace_filter -- the trace filter (default None)
     """
+
     if trace_filter is None:
         return traces_to_filter
 
     return traces_to_filter\
         .rdd\
         .map(lambda row: (row.trace_id, row))\
-        .combineByKey(createList, addTupleToList, mergeLists)\
+        .combineByKey(create_list, add_tuple_to_list, merge_lists)\
         .filter(lambda trace: trace_filter.is_relevant_trace(trace[1]))
 
 
@@ -360,3 +356,23 @@ def get_traces_per_patient_by_visit(patient_event_encounters, column_indices):
         .rdd\
         .map(lambda row: row + (row[column_indices["encounter_visit_id"]], ))\
         .toDF(list(patient_event_encounters.schema.names) + ["trace_id"])
+
+def visit_to_mrn(visit_traces):
+    """transform visit based traces to mrn based traces"""
+
+    return visit_traces\
+        .map(lambda trace: (trace[0], trace[1]))\
+        .combineByKey(return_object, merge_lists, merge_lists)\
+
+def create_list(a):
+    return [a]
+
+def return_object(a):
+    return a
+
+def merge_lists(a, b):
+    return a + b
+
+def add_tuple_to_list(a, b):
+    return a + [b]
+

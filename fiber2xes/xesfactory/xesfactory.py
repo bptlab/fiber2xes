@@ -1,4 +1,5 @@
 import uuid
+import datetime
 
 from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
 from opyenxes.factory.XFactory import XFactory
@@ -19,10 +20,13 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path, abstractio
     verbose -- flag to enable detailed console output
     remove_unlisted -- remove all events that are not included in the abstraction table
     """
-    if not Translation.is_known_event(event):
+
+    translator = Translation()
+
+    if not translator.is_known_event(event):
         return None, None, None, None
 
-    event_name, event_type, event_context, event_code = Translation.translate_to_event(event, verbose)
+    event_name, event_type, event_context, event_code = translator.translate_to_event(event, verbose)
 
     abstract_event_name = Abstraction.get_abstract_event_name(abstraction_path, abstraction_exact_match,
                                                               abstraction_delimiter, event_name, remove_unlisted)
@@ -43,8 +47,28 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path, abstractio
     return result, event_name, event_context, event_code
 
 
-def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_exact_match, abstraction_delimiter,
-                     verbose, remove_unlisted, remove_duplicates, trace_type):
+def create_trace_information(event):
+
+    trace_information = {
+        "mrn": event.medical_record_number,
+        "birth": event.date_of_birth,
+        "zip": event.address_zip,
+        "gender": event.gender,
+        "language": event.language,
+        "ethnic": event.patient_ethnic_group,
+        "race": event.race,
+        "religion": event.religion,
+        "citizenship": event.citizenship,
+        "martial": event.marital_status_code,
+    }
+
+    return trace_information
+
+def start_xes_trace_creation(trace_events,
+                             event_filter, abstraction_path,
+                             abstraction_exact_match, abstraction_delimiter,
+                             verbose, remove_unlisted, remove_duplicates, trace_type):
+
     """Collect events that belong to a trace in an opyenxes trace.
 
     Keyword arguments:
@@ -57,46 +81,25 @@ def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_e
     event_filter -- a custom filter to filter events
     remove_duplicates -- flag for remove duplicate events in a trace
     """
-    trace = XFactory.create_trace()
-
-    if len(trace_events) == 0:
-        return trace
-
-    id_attribute = XFactory.create_attribute_id(
-        "id", str(uuid.uuid4()))
-    trace.get_attributes()["id"] = id_attribute
-
-    if trace_type == "mrn":
-        trace_id = XFactory.create_attribute_literal("concept:name", trace_events[0].medical_record_number)
-    else:
-        trace_id = XFactory.create_attribute_literal("concept:name", trace_events[0].encounter_visit_id)
-
-    trace.get_attributes()["concept:name"] = trace_id
-    trace.get_attributes()["patient:mrn"] = XFactory.create_attribute_literal(
-        "patient:mrn", trace_events[0].medical_record_number)
-    trace.get_attributes()["patient:date_of_birth"] = XFactory.create_attribute_literal(
-        "patient:date_of_birth", trace_events[0].date_of_birth)
-    trace.get_attributes()["patient:address_zip"] = XFactory.create_attribute_literal(
-        "patient:address_zip", trace_events[0].address_zip)
-    trace.get_attributes()["patient:gender"] = XFactory.create_attribute_literal(
-        "patient:gender", trace_events[0].gender)
-    trace.get_attributes()["patient:language"] = XFactory.create_attribute_literal(
-        "patient:language", trace_events[0].language)
-    trace.get_attributes()["patient:patient_ethnic_group"] = XFactory.create_attribute_literal(
-        "patient:patient_ethnic_group", trace_events[0].patient_ethnic_group)
-    trace.get_attributes()["patient:race"] = XFactory.create_attribute_literal(
-        "patient:race", trace_events[0].race)
-    trace.get_attributes()["patient:religion"] = XFactory.create_attribute_literal(
-        "patient:religion", trace_events[0].religion)
-    trace.get_attributes()["patient:citizenship"] = XFactory.create_attribute_literal(
-        "patient:citizenship", trace_events[0].citizenship)
-    trace.get_attributes()["patient:marital_status_code"] = XFactory.create_attribute_literal(
-        "patient:marital_status_code", trace_events[0].marital_status_code)
 
     relevant_events = list()
 
-    # Filter out events that do not match the specified events filter
+    medication_dict = {}
+
+    encounter_ids = set()
+
+    f = open("event_info_visitMRN.txt", "w")
+    f.write(str(type(trace_events[0])))
+    f.write(str(trace_events[0]))
+    f.close()
+
+
+    trace_events = sorted(trace_events, key=lambda e: e.timestamp)
+
+    trace_information = create_trace_information(trace_events[0])
+
     for event in trace_events:
+        # Filter out events that do not match the specified events filter
         if event_filter is None:
             is_relevant = True
         else:
@@ -114,24 +117,43 @@ def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_e
                 remove_unlisted=remove_unlisted
             )
         if event_name is not None:
-            enriched_event_name = event_name
-            if 'Prescription' in event.level2_event_name or 'Medication' in event.level2_event_name:
-                enriched_event_name = event.level4_field_name + ': ' + event_name
-            if 'History' in event.level2_event_name or 'Reported' in event.level2_event_name:
-                enriched_event_name = 'Anamnesis: ' + event_name
+            level2 = event.level2_event_name
+            level4 = event.level4_field_name
+            timestamp = event.timestamp
+            lifecycle_state = "complete"
 
-            enriched_event_descriptor = event_descriptor
-            if 'Prescription' in event.level2_event_name or 'Medication' in event.level2_event_name:
-                enriched_event_descriptor = event.level4_field_name + ': ' + event_descriptor
-            if 'History' in event.level2_event_name or 'Reported' in event.level2_event_name:
-                enriched_event_descriptor = 'Anamnesis: ' + event_descriptor
+            # if medication related, change concept:name
+            if 'Prescription' in level2 or 'Medication' in level2:
+
+                # if it is the first time we see this drug:
+                if event_descriptor not in medication_dict.keys():
+                    medication_dict[event_descriptor] = {}
+                    medication_dict[event_descriptor]['day'] = timestamp
+                    lifecycle_state = "start"
+                else:
+                    # if there is already an event for this drug at the same day it has to be a duplicate:
+                    # the medication started on this date or there were sig, refill, etc events
+                    if timestamp.date() == medication_dict[event_descriptor]['day'].date():
+                        event_name = 'DUPLICATE: ' + event_name
+                    elif 'End Date' in level4:
+                        medication_dict.pop(event_descriptor, None)
+                        lifecycle_state = "complete"
+                    else:
+                        medication_dict[event_descriptor]['cycle'] = 'resume'
+                        medication_dict[event_descriptor]['day'] = timestamp
+                        lifecycle_state = "resume"
+
+            new_timestamp = event.timestamp
+            if 'Start Date' in level4:
+                new_timestamp += datetime.timedelta(seconds=1)
 
             event = {
+                "mrn": event.medical_record_number,
                 "encounter_id": event.encounter_key,
-                "timestamp": event.timestamp,
+                "timestamp": new_timestamp,
                 "visit_id": event.encounter_visit_id,
-                "name": enriched_event_name,
-                "description": enriched_event_descriptor,
+                "name": event_name,
+                "description": event_descriptor,
                 "context": event_context,
                 "code": event_code,
                 "caregiver_group_key": event.caregiver_group_key,
@@ -139,26 +161,95 @@ def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_e
                 "level1": event.level1_context_name,
                 "level2": event.level2_event_name,
                 "level3": event.level3_action_name,
-                "level4": event.level4_field_name
+                "level4": event.level4_field_name,
+                "lifecycle": lifecycle_state
             }
             relevant_events.append(event)
+            encounter_ids.add(event['visit_id'])
 
     if len(relevant_events) == 0:
-        return trace
+        return XFactory.create_trace()
 
     if remove_duplicates:
         # Remove events with the same name and timestamp
         unique_values = set()
         deduplicated_events = list()
         for event in relevant_events:
-            if not (event["timestamp"], event["name"]) in unique_values:
+            if not (event["timestamp"], event["name"]) in unique_values and 'DUPLICATE' not in event['name']:
                 unique_values.add((event["timestamp"], event["name"]))
                 deduplicated_events.append(event)
         relevant_events = deduplicated_events
 
     relevant_events = sorted(relevant_events, key=lambda e: e['timestamp'])
 
-    for event in relevant_events:
+    if trace_type == 'visitMRN':
+        encounter_traces = {}
+        for event in relevant_events:
+            if event['visit_id'] not in encounter_traces.keys():
+                encounter_traces[event['visit_id']] = []
+            encounter_traces[event['visit_id']].append(event)
+
+        xes_traces = []
+
+        for trace_id in encounter_traces.keys():
+            xes_traces.append(create_xes_trace(trace_information, encounter_traces[trace_id], trace_type))
+    else:
+        xes_traces = []
+        xes_traces.append(create_xes_trace(trace_information, relevant_events, trace_type))
+
+    return xes_traces
+
+def create_xes_trace(trace_information, trace_events, trace_type):
+    """Collect events that belong to a trace in an opyenxes trace.
+
+    Keyword arguments:
+    trace_events -- list of events belonging to a trace
+    abstraction_path -- path to the abstraction table stored as a .csv-file
+    abstraction_delimiter -- column delimiter used in abstraction table
+    abstraction_exact_match -- match only keywords that are identical to the given event name
+    verbose -- flag to enable detailed console output
+    remove_unlisted -- remove all events that are not included in the abstraction table
+    event_filter -- a custom filter to filter events
+    remove_duplicates -- flag for remove duplicate events in a trace
+    """
+
+    trace = XFactory.create_trace()
+
+    if len(trace_events) == 0:
+        return trace
+
+    id_attribute = XFactory.create_attribute_id(
+        "id", str(uuid.uuid4()))
+    trace.get_attributes()["id"] = id_attribute
+
+    if trace_type == "mrn":
+        trace_id = XFactory.create_attribute_literal("concept:name", trace_information["mrn"])
+    else:
+        trace_id = XFactory.create_attribute_literal("concept:name", trace_events[0]['visit_id'])
+
+    trace.get_attributes()["concept:name"] = trace_id
+    trace.get_attributes()["patient:mrn"] = XFactory.create_attribute_literal(
+        "patient:mrn", trace_information["mrn"])
+    trace.get_attributes()["patient:date_of_birth"] = XFactory.create_attribute_literal(
+        "patient:date_of_birth", trace_information["birth"])
+    trace.get_attributes()["patient:address_zip"] = XFactory.create_attribute_literal(
+        "patient:address_zip", trace_information["zip"])
+    trace.get_attributes()["patient:gender"] = XFactory.create_attribute_literal(
+        "patient:gender", trace_information["gender"])
+    trace.get_attributes()["patient:language"] = XFactory.create_attribute_literal(
+        "patient:language", trace_information["language"])
+    trace.get_attributes()["patient:patient_ethnic_group"] = XFactory.create_attribute_literal(
+        "patient:patient_ethnic_group", trace_information["ethnic"])
+    trace.get_attributes()["patient:race"] = XFactory.create_attribute_literal(
+        "patient:race", trace_information["race"])
+    trace.get_attributes()["patient:religion"] = XFactory.create_attribute_literal(
+        "patient:religion", trace_information["religion"])
+    trace.get_attributes()["patient:citizenship"] = XFactory.create_attribute_literal(
+        "patient:citizenship", trace_information["citizenship"])
+    trace.get_attributes()["patient:marital_status_code"] = XFactory.create_attribute_literal(
+        "patient:marital_status_code", trace_information["martial"])
+
+    for event in trace_events:
         # Create opyenxes event and append it to the trace
         log_event = XFactory.create_event()
 
@@ -199,6 +290,10 @@ def create_xes_trace(trace_events, event_filter, abstraction_path, abstraction_e
             "event:facility", event["facility_key"])
         log_event.get_attributes()["event:facility"] = facility_attribute
 
+        lifecycle_attribute = XFactory.create_attribute_literal(
+            "lifecycle:transition", event["lifecycle"])
+        log_event.get_attributes()["lifecycle:transition"] = lifecycle_attribute
+
         level1_attribute = XFactory.create_attribute_literal(
             "event:level1", event["level1"])
         log_event.get_attributes()["event:level1"] = level1_attribute
@@ -234,7 +329,7 @@ def create_xes_traces_from_traces(traces, abstraction_path, abstraction_exact_ma
     remove_duplicates -- flag for remove duplicate events in a trace
     """
     result = traces\
-        .map(lambda trace: create_xes_trace(
+        .map(lambda trace: start_xes_trace_creation(
             trace[1],
             event_filter,
             abstraction_path,
