@@ -101,6 +101,9 @@ class Translator():
                 else:
                     event_name = event.procedure_description
 
+                if event.value.isdecimal():
+                    event_name += ': ' + event.value
+
                 consultation = self.identify_consultation(event_name)
 
                 if consultation is not None:

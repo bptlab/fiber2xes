@@ -173,11 +173,11 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
 
     encounters = cohort.get(EncounterWithVisit())
     print("Fetched Encouters")
-    encounters = encounters.drop(columns=["encounter_type", "encounter_class", "age_in_days"])
+    encounters = encounters.drop(columns=["encounter_type", "encounter_class"])
     patient_events_pd = merge_dataframes(
         patient_events_pd,
         encounters,
-        join_columns=["encounter_key", "medical_record_number"]
+        join_columns=["encounter_key", "medical_record_number", "age_in_days"]
     )
     del encounters
 
@@ -312,7 +312,7 @@ def merge_dataframes(left, right, join_columns) -> pd.DataFrame:
     """
     left = handle_duplicate_column_names(left)
     right = handle_duplicate_column_names(right)
-    result = pd.merge(left, right, on=join_column, how='inner')
+    result = pd.merge(left, right, on=join_columns, how='inner')
     del left
     del right
     return result
@@ -407,6 +407,7 @@ def get_traces_per_patient_by_visit(patient_event_encounters, column_indices):
         .map(lambda row: row + (row[column_indices["encounter_visit_id"]], ))\
         .toDF(list(patient_event_encounters.schema.names) + ["trace_id"])
 
+# TODO: check for mistakes! Getting to much traces in comparison to normal visit_based
 def visit_to_mrn(visit_traces):
     """
     transform visit based traces to mrn based traces
