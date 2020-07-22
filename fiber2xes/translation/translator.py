@@ -94,7 +94,7 @@ class Translator():
                 context_names, context_procedure_code, verbose)
 
             if 'Reported' in event.level2_event_name or 'History' in event.level2_event_name:
-                event_name = 'Anamnese Procedure'
+                event_name = 'Anamnesis Procedure'
             else:
                 if translation is not None:
                     event_name = translation
@@ -119,7 +119,7 @@ class Translator():
                 context_names, context_diagnosis_code, verbose)
 
             if 'Reported' in event.level2_event_name or 'History' in event.level2_event_name:
-                event_name = 'Anamnese Diagnose'
+                event_name = 'Anamnesis Diagnose'
             elif translation is not None:
                 event_name = translation
             else:
@@ -135,7 +135,7 @@ class Translator():
                 context_names, verbose)
 
             if 'Reported' in event.level2_event_name or 'History' in event.level2_event_name:
-                event_name = 'Anamnese Material/Medication'
+                event_name = 'Anamnesis Material/Medication'
             elif translation is not None:
                 event_name = translation
             else:

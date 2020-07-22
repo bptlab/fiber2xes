@@ -20,7 +20,7 @@ def get_abstract_event_name(abstraction_path, abstraction_exact_match,
     event_name -- name of the event that should be abstracted
     remove_unlisted -- flag to remove all events that are not included in the abstraction table
     """
-    if abstraction_path is None:
+    if abstraction_path is None or 'Anamnesis' in event_name:
         return event_name
 
     # Returns abstract name if possible and remove unlisted entries

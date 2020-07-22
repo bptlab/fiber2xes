@@ -416,7 +416,7 @@ def visit_to_mrn(visit_traces):
     """
 
     return visit_traces\
-        .map(lambda trace: (trace[0], trace[1]))\
+        .map(lambda trace: (trace[1][0].medical_record_number, trace[1]))\
         .combineByKey(return_object, merge_lists, merge_lists)
 
 def create_list(object_to_list):

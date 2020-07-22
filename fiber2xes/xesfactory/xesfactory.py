@@ -188,18 +188,31 @@ def start_xes_trace_creation(trace_events,
     if len(relevant_events) == 0:
         return XFactory.create_trace()
 
+    first_file = open(trace_type + "before.txt", "a")
+    first_file.write(str(relevant_events))
+    first_file.close()
+
+    relevant_events = sorted(relevant_events, key=lambda e: (e['timestamp'], e['description']))
+
     if remove_duplicates:
         # Remove events with the same name and timestamp
         unique_values = set()
         deduplicated_events = list()
         for event in relevant_events:
-            if not (event["timestamp"], event["name"]) in unique_values and \
-                'DUPLICATE' not in event['name']:
-                unique_values.add((event["timestamp"], event["name"]))
+            compare_value = event['name']
+            if 'NSAID' in compare_value:
+                compare_value += event['description']
+            if not (event["timestamp"], compare_value) in unique_values and \
+                'DUPLICATE' not in compare_value:
+                unique_values.add((event["timestamp"], compare_value))
                 deduplicated_events.append(event)
         relevant_events = deduplicated_events
 
     relevant_events = sorted(relevant_events, key=lambda e: e['timestamp'])
+
+    second_file = open(trace_type + "after.txt", "a")
+    second_file.write(str(relevant_events))
+    second_file.close()
 
     if trace_type == 'visitMRN':
         encounter_traces = {}
