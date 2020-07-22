@@ -188,10 +188,6 @@ def start_xes_trace_creation(trace_events,
     if len(relevant_events) == 0:
         return XFactory.create_trace()
 
-    first_file = open(trace_type + "before.txt", "a")
-    first_file.write(str(relevant_events))
-    first_file.close()
-
     relevant_events = sorted(relevant_events, key=lambda e: (e['timestamp'], e['description']))
 
     if remove_duplicates:
@@ -209,10 +205,6 @@ def start_xes_trace_creation(trace_events,
         relevant_events = deduplicated_events
 
     relevant_events = sorted(relevant_events, key=lambda e: e['timestamp'])
-
-    second_file = open(trace_type + "after.txt", "a")
-    second_file.write(str(relevant_events))
-    second_file.close()
 
     if trace_type == 'visitMRN':
         encounter_traces = {}
