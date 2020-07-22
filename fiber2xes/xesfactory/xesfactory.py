@@ -35,8 +35,8 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path,
     if not translator.is_known_event(event):
         return None, None, None, None
 
-    event_name, event_type, event_context, event_code = translator.translate_to_event(event,
-                                                                                      verbose)
+    event_name, event_description, event_type, event_context, event_code = \
+        translator.translate_to_event(event, verbose)
 
     abstract_event_name = get_abstract_event_name(abstraction_path,
                                                   abstraction_exact_match,
@@ -45,19 +45,19 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path,
                                                   remove_unlisted)
 
     if abstract_event_name is None:
-        return None, event_name, event_context, event_code
+        return None, event_description, event_context, event_code
     if not verbose:
-        return abstract_event_name, event_name, event_context, event_code
+        return abstract_event_name, event_description, event_context, event_code
 
     result = event_type
 
     if event_context is not None and verbose:
         result += (" (" + event_context + " " + event_code + ")")
 
-    if event_name is not None:
+    if event_description is not None:
         result += (": " + abstract_event_name)
 
-    return result, event_name, event_context, event_code
+    return abstract_event_name, result, event_context, event_code
 
 
 def create_trace_information(event):

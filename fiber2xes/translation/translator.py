@@ -89,6 +89,7 @@ class Translator():
             # Event is procedure
             event_type = "PROCEDURE"
             event_code = context_procedure_code
+            event_description = event.procedure_description
 
             event_context, translation = self.translate_procedure(
                 context_names, context_procedure_code, verbose)
@@ -101,8 +102,8 @@ class Translator():
                 else:
                     event_name = event.procedure_description
 
-                if event.value.isdecimal():
-                    event_name += ': ' + event.value
+                if 'PAIN SCORE' in event_name:
+                    event_description += ': ' + event.value
 
                 consultation = self.identify_consultation(event_name)
 
@@ -114,6 +115,7 @@ class Translator():
             # Event is diagnosis
             event_type = "DIAGNOSIS"
             event_code = context_diagnosis_code
+            event_description = event.description
 
             event_context, translation = self.translate_diagnosis(
                 context_names, context_diagnosis_code, verbose)
@@ -130,6 +132,7 @@ class Translator():
             event_type = "MATERIAL"
             event_code = context_material_code
             event_name = event.material_name
+            event_description = event.material_name
 
             event_context, translation = self.translate_material(
                 context_names, verbose)
@@ -141,7 +144,7 @@ class Translator():
             else:
                 event_name = event.material_name
 
-        return event_name, event_type, event_context, event_code
+        return event_name, event_description, event_type, event_context, event_code
 
     def vocabulary_lookup(self, vocabulary_path, search_term, search_column=0, target_column=1,
                           delimiter=","):
