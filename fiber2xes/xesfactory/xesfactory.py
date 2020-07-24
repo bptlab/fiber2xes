@@ -107,13 +107,43 @@ def start_xes_trace_creation(trace_events,
 
     relevant_events = list()
 
-    medication_dict = {}
-
     encounter_ids = set()
 
     trace_information = create_trace_information(trace_events[0])
 
     trace_events = sorted(trace_events, key=lambda e: e.timestamp)
+    reverse_sorted_trace_events = sorted(trace_events, key=lambda e: e.timestamp, reverse=True)
+
+    seen_end_medications_per_day = {}
+    seen_running_medications_per_day = {}
+
+    for event in reverse_sorted_trace_events:
+
+        event_name, event_descriptor, event_context, event_code = \
+            translate_procedure_diagnosis_material_to_event(
+                abstraction_path=abstraction_path,
+                abstraction_exact_match=abstraction_exact_match,
+                abstraction_delimiter=abstraction_delimiter,
+                event=event,
+                verbose=verbose,
+                remove_unlisted=remove_unlisted
+            )
+
+        if event_name is not None:
+
+            timestamp = event.timestamp.date()
+
+            if 'Anamnesis' not in event_name:
+                if timestamp not in seen_running_medications_per_day.keys():
+                    seen_running_medications_per_day[timestamp] = {}
+                    seen_end_medications_per_day[timestamp] = {}
+                if event_descriptor not in seen_end_medications_per_day[timestamp].keys() and \
+                                                event.level4_field_name == 'End Date':
+                    seen_end_medications_per_day[timestamp][event_descriptor] = event
+                elif event_descriptor not in seen_running_medications_per_day[timestamp].keys():
+                    seen_running_medications_per_day[timestamp][event_descriptor] = event
+
+    medication_list = []
 
     for event in trace_events:
         # Filter out events that do not match the specified events filter
@@ -137,29 +167,35 @@ def start_xes_trace_creation(trace_events,
             level2 = event.level2_event_name
             level4 = event.level4_field_name
             timestamp = event.timestamp
+            day = event.timestamp.date()
             lifecycle_state = "complete"
 
             # if medication related, change concept:name
-            if 'Prescription' in level2 or 'Medication' in level2:
 
-                # if it is the first time we see this drug:
-                if event_descriptor not in medication_dict.keys():
-                    medication_dict[event_descriptor] = {}
-                    medication_dict[event_descriptor]['day'] = timestamp
-                    lifecycle_state = "start"
-                else:
-                    # if there is already an event for this drug at the same day,
-                    # it has to be a duplicate. The medication started on this date
-                    # or there were sig, refill, etc events
-                    if timestamp.date() == medication_dict[event_descriptor]['day'].date():
-                        event_name = 'DUPLICATE: ' + event_name
-                    elif 'End Date' in level4:
-                        medication_dict.pop(event_descriptor, None)
+            if ('Prescription' in level2 or 'Medication' in level2) and 'Anamnesis' not in event_name:
+                first_file = open(trace_type + "before.txt", "w")
+                first_file.write(str(event))
+                first_file.write(str(seen_running_medications_per_day))
+                first_file.close()
+
+                if event_descriptor in seen_running_medications_per_day[day].keys():
+                    if event == seen_running_medications_per_day[day][event_descriptor]:
+                        if event_descriptor not in medication_list:
+                            medication_list.append(event_descriptor)
+                            lifecycle_state = "start"
+                        else:
+                            medication_list.append(event_descriptor)
+                            lifecycle_state = "resume"
+                    else:
+                        event_name = 'DUPLICATE' + event_name
+
+                elif event_descriptor in seen_end_medications_per_day[day].keys():
+                    if event == seen_end_medications_per_day[day][event_descriptor]:
+                        if event_descriptor in medication_list:
+                            medication_list.remove(event_descriptor)
                         lifecycle_state = "complete"
                     else:
-                        medication_dict[event_descriptor]['cycle'] = 'resume'
-                        medication_dict[event_descriptor]['day'] = timestamp
-                        lifecycle_state = "resume"
+                        event_name = 'DUPLICATE' + event_name
 
             new_timestamp = event.timestamp
             if 'Start Date' in level4:
