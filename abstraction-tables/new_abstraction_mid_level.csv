@@ -1,11 +1,11 @@
 NONPHARMACOLOGICAL TREATMENT;NSAID;SKELETAL MUSCLE RELEXANT;OPIOID;OTHER MEDICATION;OTHER MEDICATION;Blacklist;Whitelist;CHRONIC LOW BACK PAIN;LOW BACK PAIN;BACK PAIN
-THERAPEUTIC EXERCISE;acetylsalicylic acid;Dysport;Tramadol;citalopram;methylprednisolone;Diastolic Blood Pressure;;Chronic Low Back Pain;low back pain;back pain
+THERAPEUTIC EXERCISE;acetylsalicylic acid;Dysport;Tramadol;citalopram;methylprednisolone;Diastolic Blood Pressure;PAIN SCORE;Chronic Low Back Pain;low back pain;back pain
 ACUPUNCTURE;Aspirin;Gablofen;Buprenorphine;escitalopram;Prednisolone;Systolic Blood Pressure;;;lumbago;
 MASSAGE THERAPY;Diflunisal;Soma;Tapentadol;fluoxetine;bethamethasone;PULSE;;;;
 REHABILITATION;Dolobid;Lorzone;Morphine;fluvoxamine;Celestone;Temperature, Tympanic;;;;
 yoga;Salicylic acid;Amrix;Hydromorphone;paroxetine;Orapred;Respirations;;;;
 cognitive behavioral therapy;Salsalate;Dantrium;Oxymorphone;sertraline;Prelone;O2 SATURATION;;;;
-cognitive-behavioral therapy;Disalcid;Botox;Codeine;vilazodone;Prednisone;PAIN SCORE;;;;
+cognitive-behavioral therapy;Disalcid;Botox;Codeine;vilazodone;Prednisone;;;;;
 progressive relaxation;Ibuprofen;Norflex;Butorphanol;Celexa;Intensol;HEIGHT;;;;
 transcutaneous electrical nerve stimulation;Dexibuprofen;Skelaxin;Dextromoramide;Lexapro;triamcinolone;WEIGHT;;;;
 ;Naproxen;Robaxin;Dezocine;Prozac;Aristospan;R APACHE TEMPERATURE;;;;
