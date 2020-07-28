@@ -407,7 +407,6 @@ def get_traces_per_patient_by_visit(patient_event_encounters, column_indices):
         .map(lambda row: row + (row[column_indices["encounter_visit_id"]], ))\
         .toDF(list(patient_event_encounters.schema.names) + ["trace_id"])
 
-# TODO: check for mistakes! Getting to much traces in comparison to normal visit_based
 def visit_to_mrn(visit_traces):
     """
     transform visit based traces to mrn based traces
