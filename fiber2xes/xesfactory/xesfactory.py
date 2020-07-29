@@ -174,10 +174,6 @@ def start_xes_trace_creation(trace_events,
 
             if ('Prescription' in level2 or 'Medication' in level2) and \
                 'Anamnesis' not in event_name:
-                first_file = open(trace_type + "before.txt", "w")
-                first_file.write(str(event))
-                first_file.write(str(seen_running_medications_per_day))
-                first_file.close()
 
                 if event_descriptor in seen_running_medications_per_day[day].keys():
                     if event == seen_running_medications_per_day[day][event_descriptor]:
