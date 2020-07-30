@@ -1,6 +1,6 @@
 """
-    A module which holds a necessary functions to create a xes log for
-    an array of events.
+A module which holds a necessary functions to create a xes log for
+an array of events.
 """
 
 import uuid
@@ -19,7 +19,8 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path,
                                                     event,
                                                     verbose,
                                                     remove_unlisted):
-    """Derives an activity identifier for an event.
+    """
+    Derives an activity identifier for an event.
 
     Keyword arguments:
     abstraction_path -- path to the abstraction table stored as a .csv-file
@@ -61,7 +62,8 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path,
 
 
 def create_trace_information(event):
-    """Creates an object with the information of the trace of the event
+    """
+    Creates an object with the information of the trace of the event
 
     Keyword arguments:
     event - the event which is used to determine the trace information
@@ -82,17 +84,19 @@ def create_trace_information(event):
 
     return trace_information
 
-def start_xes_trace_creation(trace_events,
-                             event_filter,
-                             abstraction_path,
-                             abstraction_exact_match,
-                             abstraction_delimiter,
-                             verbose,
-                             remove_unlisted,
-                             remove_duplicates,
-                             trace_type):
+def create_xes_trace_for_events(trace_events,
+                                event_filter,
+                                abstraction_path,
+                                abstraction_exact_match,
+                                abstraction_delimiter,
+                                verbose,
+                                remove_unlisted,
+                                remove_duplicates,
+                                trace_type):
 
-    """Collect events that belong to a trace in an opyenxes trace.
+    """
+    Translating the events into event objects, remove duplicated events and
+    add lifecycle informations.
 
     Keyword arguments:
     trace_events -- list of events belonging to a trace
@@ -117,6 +121,10 @@ def start_xes_trace_creation(trace_events,
     seen_end_medications_per_day = {}
     seen_running_medications_per_day = {}
 
+    # Finding the latest event for each medication for each day. This is used to
+    # chose the right events to discard in the process of removing duplicates while
+    # keeping the timestamp of the medication as concrete as possible
+
     for event in reverse_sorted_trace_events:
 
         event_name, event_descriptor, event_context, event_code = \
@@ -133,7 +141,10 @@ def start_xes_trace_creation(trace_events,
 
             timestamp = event.timestamp.date()
 
-            if 'Anamnesis' not in event_name:
+            if ('Prescription' in event.level2_event_name or \
+                'Medication' in event.level2_event_name) and \
+                'Anamnesis' not in event_name:
+
                 if timestamp not in seen_running_medications_per_day.keys():
                     seen_running_medications_per_day[timestamp] = {}
                     seen_end_medications_per_day[timestamp] = {}
@@ -170,7 +181,9 @@ def start_xes_trace_creation(trace_events,
             day = event.timestamp.date()
             lifecycle_state = "complete"
 
-            # if medication related, change concept:name
+            # if medication related and latest seen event for this medication
+            # at this day, set lifecycle:transition corresponding to metadata
+            # else mark as duplicate
 
             if ('Prescription' in level2 or 'Medication' in level2) and \
                 'Anamnesis' not in event_name:
@@ -224,7 +237,8 @@ def start_xes_trace_creation(trace_events,
     relevant_events = sorted(relevant_events, key=lambda e: (e['timestamp'], e['description']))
 
     if remove_duplicates:
-        # Remove events with the same name and timestamp
+        # Remove events with the same name and timestamp or marked as duplicate
+        # NSAID group inlcudes so many different medications that the concrete description is used
         unique_values = set()
         deduplicated_events = list()
         for event in relevant_events:
@@ -239,6 +253,10 @@ def start_xes_trace_creation(trace_events,
 
     relevant_events = sorted(relevant_events, key=lambda e: e['timestamp'])
 
+
+    # if visitMRN, there are multiple visits in this trace events
+    # -> find those visits and assign events to the corresponding visits
+    # -> start xes trace creation for each visit
     if trace_type == 'visitMRN':
         encounter_traces = {}
         for event in relevant_events:
@@ -259,7 +277,8 @@ def start_xes_trace_creation(trace_events,
     return xes_traces
 
 def create_xes_trace(trace_information, trace_events, trace_type):
-    """Collect events that belong to a trace in an opyenxes trace.
+    """
+    Collect events that belong to a trace in an opyenxes trace.
 
     Keyword arguments:
     trace_events -- list of events belonging to a trace
@@ -382,7 +401,8 @@ def create_xes_traces_from_traces(traces,
                                   event_filter,
                                   remove_duplicates,
                                   trace_type):
-    """Create opyenxes traces for every trace.
+    """
+    Create opyenxes traces for every trace.
 
     Keyword arguments:
     traces -- spark data frame containing all relevant traces
@@ -395,7 +415,7 @@ def create_xes_traces_from_traces(traces,
     remove_duplicates -- flag for remove duplicate events in a trace
     """
     result = traces\
-        .map(lambda trace: start_xes_trace_creation(
+        .map(lambda trace: create_xes_trace_for_events(
             trace[1],
             event_filter,
             abstraction_path,
@@ -410,7 +430,8 @@ def create_xes_traces_from_traces(traces,
 
 
 def save_event_log_to_file(log, file_path):
-    """This method serialises a created log to a file.
+    """
+    This method serialises a created log to a file.
 
     Keyword arguments:
     log -- the log generated by the `cohort_to_event_log` method

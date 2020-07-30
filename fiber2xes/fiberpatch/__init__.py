@@ -1,5 +1,5 @@
 """
-init for fiberbatches
+init for fiberpatches
 """
 
 from .EncounterWithVisit import EncounterWithVisit

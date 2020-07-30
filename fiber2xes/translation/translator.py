@@ -121,7 +121,7 @@ class Translator():
                 context_names, context_diagnosis_code, verbose)
 
             if 'Reported' in event.level2_event_name or 'History' in event.level2_event_name:
-                event_name = 'Anamnesis Diagnose'
+                event_name = 'Anamnesis Diagnosis'
             elif translation is not None:
                 event_name = translation
             else:
