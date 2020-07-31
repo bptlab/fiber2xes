@@ -24,6 +24,8 @@ def get_abstract_event_name(abstraction_path, abstraction_exact_match,
     anamnesis_events -- which anamnesis events should be included in the xes log
     """
     if abstraction_path is None:
+        if anamnesis:
+            return 'Anamnesis: ' + event_name
         return event_name
 
     # Returns abstract name if possible and remove unlisted entries
