@@ -1,7 +1,7 @@
 Blacklist;Whitelist;Group;CHRONIC LOW BACK PAIN;LOW BACK PAIN;BACK PAIN;NSAID;NONPHARMACOLOGICAL TREATMENT;SKELETAL MUSCLE RELEXANT;ANTIDEPRESSANT;BENZODIAZEPINE;OPIOID;COSTEROID;DULOXETINE
-Diastolic Blood Pressure;Anamnesis Diagnosis;;Chronic Low Back Pain;low back pain;back pain;acetylsalicylic acid;THERAPEUTIC EXERCISE;Dysport;citalopram;alprazolam;Tramadol;methylprednisolone;Duloxetine
-Systolic Blood Pressure;Anamnesis Procedure;;;lumbago;;Aspirin;ACUPUNCTURE;Gablofen;escitalopram;clobazam;Buprenorphine;Prednisolone;
-PULSE;Anamnesis Material/Medication;;;;;Diflunisal;MASSAGE THERAPY;Soma;fluoxetine;clonazepam;Tapentadol;bethamethasone;
+Diastolic Blood Pressure;;;Chronic Low Back Pain;low back pain;back pain;acetylsalicylic acid;THERAPEUTIC EXERCISE;Dysport;citalopram;alprazolam;Tramadol;methylprednisolone;Duloxetine
+Systolic Blood Pressure;;;CHRONIC LOWER BACK PAIN;lumbago;;Aspirin;ACUPUNCTURE;Gablofen;escitalopram;clobazam;Buprenorphine;Prednisolone;
+PULSE;;;;;;Diflunisal;MASSAGE THERAPY;Soma;fluoxetine;clonazepam;Tapentadol;bethamethasone;
 Temperature, Tympanic;;;;;;Dolobid;REHABILITATION;Lorzone;fluvoxamine;clorazepate;Morphine;Celestone;
 Respirations;;;;;;Salicylic acid;yoga;Amrix;paroxetine;chlordiazepoxide;Hydromorphone;Orapred;
 O2 SATURATION;;;;;;Salsalate;cognitive behavioral therapy;Dantrium;sertraline;diazepam;Oxymorphone;Prelone;

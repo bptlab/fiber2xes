@@ -18,7 +18,8 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path,
                                                     abstraction_delimiter,
                                                     event,
                                                     verbose,
-                                                    remove_unlisted):
+                                                    remove_unlisted,
+                                                    anamnesis_events):
     """
     Derives an activity identifier for an event.
 
@@ -36,14 +37,16 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path,
     if not translator.is_known_event(event):
         return None, None, None, None
 
-    event_name, event_description, event_type, event_context, event_code = \
+    event_name, event_description, event_type, anamnesis, event_context, event_code = \
         translator.translate_to_event(event, verbose)
 
     abstract_event_name = get_abstract_event_name(abstraction_path,
                                                   abstraction_exact_match,
                                                   abstraction_delimiter,
                                                   event_name,
-                                                  remove_unlisted)
+                                                  remove_unlisted,
+                                                  anamnesis,
+                                                  anamnesis_events)
 
     if abstract_event_name is None:
         return None, event_description, event_context, event_code
@@ -92,7 +95,8 @@ def create_xes_trace_for_events(trace_events,
                                 verbose,
                                 remove_unlisted,
                                 remove_duplicates,
-                                trace_type):
+                                trace_type,
+                                anamnesis_events):
 
     """
     Translating the events into event objects, remove duplicated events and
@@ -107,6 +111,7 @@ def create_xes_trace_for_events(trace_events,
     remove_unlisted -- remove all events that are not included in the abstraction table
     event_filter -- a custom filter to filter events
     remove_duplicates -- flag for remove duplicate events in a trace
+    anamnesis_events -- which anamnesis events should be included in the xes log
     """
 
     relevant_events = list()
@@ -134,7 +139,8 @@ def create_xes_trace_for_events(trace_events,
                 abstraction_delimiter=abstraction_delimiter,
                 event=event,
                 verbose=verbose,
-                remove_unlisted=remove_unlisted
+                remove_unlisted=remove_unlisted,
+                anamnesis_events=anamnesis_events
             )
 
         if event_name is not None:
@@ -172,7 +178,8 @@ def create_xes_trace_for_events(trace_events,
                 abstraction_delimiter=abstraction_delimiter,
                 event=event,
                 verbose=verbose,
-                remove_unlisted=remove_unlisted
+                remove_unlisted=remove_unlisted,
+                anamnesis_events=anamnesis_events
             )
         if event_name is not None:
             level2 = event.level2_event_name
@@ -400,7 +407,8 @@ def create_xes_traces_from_traces(traces,
                                   remove_unlisted,
                                   event_filter,
                                   remove_duplicates,
-                                  trace_type):
+                                  trace_type,
+                                  anamnesis_events):
     """
     Create opyenxes traces for every trace.
 
@@ -413,6 +421,7 @@ def create_xes_traces_from_traces(traces,
     remove_unlisted -- remove all events that are not included in the abstraction table
     event_filter -- a custom filter to filter events
     remove_duplicates -- flag for remove duplicate events in a trace
+    anamnesis_events -- which anamnesis events should be included in the xes log
     """
     result = traces\
         .map(lambda trace: create_xes_trace_for_events(
@@ -425,6 +434,7 @@ def create_xes_traces_from_traces(traces,
             remove_unlisted,
             remove_duplicates,
             trace_type,
+            anamnesis_events,
         ))
     return result.collect()
 

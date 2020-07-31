@@ -1,8 +1,8 @@
 Blacklist;Whitelist;Group;CHRONIC LOW BACK PAIN;LOW BACK PAIN;BACK PAIN;NSAID;NONPHARMACOLOGICAL TREATMENT;SKELETAL MUSCLE RELEXANT;OPIOID;OTHER MEDICATION
 Diastolic Blood Pressure;PAIN SCORE;;Chronic Low Back Pain;low back pain;back pain;acetylsalicylic acid;THERAPEUTIC EXERCISE;Dysport;Tramadol;citalopram
-Systolic Blood Pressure;Anamnesis Diagnosis;;;lumbago;;Aspirin;ACUPUNCTURE;Gablofen;Buprenorphine;escitalopram
-PULSE;Anamnesis Procedure;;;;;Diflunisal;MASSAGE THERAPY;Soma;Tapentadol;fluoxetine
-Temperature, Tympanic;Anamnesis Material/Medication;;;;;Dolobid;REHABILITATION;Lorzone;Morphine;fluvoxamine
+Systolic Blood Pressure;;;CHRONIC LOWER BACK PAIN;lumbago;;Aspirin;ACUPUNCTURE;Gablofen;Buprenorphine;escitalopram
+PULSE;;;;;;Diflunisal;MASSAGE THERAPY;Soma;Tapentadol;fluoxetine
+Temperature, Tympanic;;;;;;Dolobid;REHABILITATION;Lorzone;Morphine;fluvoxamine
 Respirations;;;;;;Salicylic acid;yoga;Amrix;Hydromorphone;paroxetine
 O2 SATURATION;;;;;;Salsalate;cognitive behavioral therapy;Dantrium;Oxymorphone;sertraline
 HEIGHT;;;;;;Disalcid;cognitive-behavioral therapy;Botox;Codeine;vilazodone

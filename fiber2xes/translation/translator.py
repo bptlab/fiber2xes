@@ -83,6 +83,7 @@ class Translator():
         # For verbose output
         event_context = None
         event_code = ""
+        anamnesis = False
 
         # Identify event type
         if self.is_event_procedure(event):
@@ -94,22 +95,22 @@ class Translator():
             event_context, translation = self.translate_procedure(
                 context_names, context_procedure_code, verbose)
 
-            if 'Reported' in event.level2_event_name or 'History' in event.level2_event_name:
-                event_name = 'Anamnesis Procedure'
+            if translation is not None:
+                event_name = translation
             else:
-                if translation is not None:
-                    event_name = translation
-                else:
-                    event_name = event.procedure_description
+                event_name = event.procedure_description
 
-                if 'PAIN SCORE' in event_name:
-                    event_description += ': ' + event.value
+            if 'PAIN SCORE' in event_name:
+                event_description += ': ' + event.value
 
-                consultation = self.identify_consultation(event_name)
+            consultation = self.identify_consultation(event_name)
 
-                if consultation is not None:
-                    event_name = consultation
-                    event_type = "CONSULTATION"
+            if consultation is not None:
+                event_name = consultation
+                event_type = "CONSULTATION"
+
+            if 'Reported' in event.level2_event_name or 'History' in event.level2_event_name:
+                anamnesis = True
 
         elif self.is_event_diagnosis(event):
             # Event is diagnosis
@@ -120,12 +121,13 @@ class Translator():
             event_context, translation = self.translate_diagnosis(
                 context_names, context_diagnosis_code, verbose)
 
-            if 'Reported' in event.level2_event_name or 'History' in event.level2_event_name:
-                event_name = 'Anamnesis Diagnosis'
-            elif translation is not None:
+            if translation is not None:
                 event_name = translation
             else:
                 event_name = event.description
+
+            if 'Reported' in event.level2_event_name or 'History' in event.level2_event_name:
+                anamnesis = True
 
         elif self.is_event_material(event):
             # Event is material
@@ -137,14 +139,15 @@ class Translator():
             event_context, translation = self.translate_material(
                 context_names, verbose)
 
-            if 'Reported' in event.level2_event_name or 'History' in event.level2_event_name:
-                event_name = 'Anamnesis Material/Medication'
-            elif translation is not None:
+            if translation is not None:
                 event_name = translation
             else:
                 event_name = event.material_name
 
-        return event_name, event_description, event_type, event_context, event_code
+            if 'Reported' in event.level2_event_name or 'History' in event.level2_event_name:
+                anamnesis = True
+
+        return event_name, event_description, event_type, anamnesis, event_context, event_code
 
     def vocabulary_lookup(self, vocabulary_path, search_term, search_column=0, target_column=1,
                           delimiter=","):

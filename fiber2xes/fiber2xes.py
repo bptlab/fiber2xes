@@ -66,7 +66,8 @@ def create_spark_df(spark, pandas_df):
 def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
                         remove_duplicates=True, event_filter=None, trace_filter=None,
                         cores=multiprocessing.cpu_count(), window_size=200, abstraction_path=None,
-                        abstraction_exact_match=False, abstraction_delimiter=";"):
+                        abstraction_exact_match=False, abstraction_delimiter=";",
+                        anamnesis_events='all'):
     """
     Converts a fiber cohort to an xes event log.
     Therefore it slices the cohort to smaller windows (because of memory restrictions)
@@ -86,10 +87,14 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     abstraction_exact_match -- flag if the abstraction algorithm should only
                                abstract exacted matches (default False)
     abstraction_delimiter -- the delimiter of the abstraction file (default ;)
+    anamnesis_events -- define which anamnesis events should be extracted: all, listed or none (default all)
     """
 
     if trace_type != "visit" and trace_type != "mrn" and trace_type != 'visitMRN':
         sys.exit("No matching trace type given. Try using visit, mrn or visitMRN")
+    
+    if anamnesis_events != "all" and anamnesis_events != "listed" and anamnesis_events != 'none':
+        sys.exit("No matching anamnesis_events value given. Try using all, listed or none")
 
     manager = multiprocessing.Manager()
     traces = manager.list()
@@ -118,6 +123,7 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
             abstraction_path,
             abstraction_exact_match,
             abstraction_delimiter,
+            anamnesis_events,
             traces
         ))
         process.start()
@@ -137,7 +143,8 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
 
 def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted, remove_duplicates,
                                    event_filter, trace_filter, cores, abstraction_path,
-                                   abstraction_exact_match, abstraction_delimiter, traces):
+                                   abstraction_exact_match, abstraction_delimiter,
+                                   anamnesis_events, traces):
     """
     Converts a window of the patient to XES traces and store them in the given `traces` parameter.
 
@@ -259,6 +266,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
         remove_duplicates=remove_duplicates,
         event_filter=event_filter,
         trace_type=trace_type,
+        anamnesis_events=anamnesis_events,
     )
 
     filtered_traces_per_patient.unpersist()
