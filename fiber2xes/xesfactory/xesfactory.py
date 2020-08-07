@@ -9,6 +9,8 @@ import datetime
 from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
 from opyenxes.factory.XFactory import XFactory
 
+from pyspark.sql import Row
+
 from ..abstraction.abstraction import get_abstract_event_name
 from ..translation import Translator
 
@@ -147,26 +149,30 @@ def create_xes_trace_for_events(trace_events,
 
         if event_name is not None:
 
-            timestamp = event.timestamp.date()
+            day = event.timestamp.date()
 
             if ('Prescription' in event.level2_event_name or \
                 'Medication' in event.level2_event_name) and \
                 'Anamnesis' not in event_name:
 
-                if timestamp not in seen_running_medications_per_day.keys():
-                    seen_running_medications_per_day[timestamp] = {}
-                    seen_end_medications_per_day[timestamp] = {}
-                if event_descriptor not in seen_end_medications_per_day[timestamp].keys() and \
+                if day not in seen_running_medications_per_day.keys():
+                    seen_running_medications_per_day[day] = {}
+                    seen_end_medications_per_day[day] = {}
+                if event_descriptor not in seen_end_medications_per_day[day].keys() and \
                                                 event.level4_field_name == 'End Date':
-                    seen_end_medications_per_day[timestamp][event_descriptor] = event
-                elif event_descriptor not in seen_running_medications_per_day[timestamp].keys():
-                    seen_running_medications_per_day[timestamp][event_descriptor] = event
-            
+                    seen_end_medications_per_day[day][event_descriptor] = event
+                elif event_descriptor not in seen_running_medications_per_day[day].keys():
+                    seen_running_medications_per_day[day][event_descriptor] = event
+
             elif 'BACK PAIN' in event_name:
-                if timestamp not in seen_diagnosis_per_day.keys():
-                    seen_diagnosis_per_day[timestamp] = event
+                if day not in seen_diagnosis_per_day.keys():
+                    seen_diagnosis_per_day[day] = event
                 elif event_name == 'CHRONIC LOW BACK PAIN':
-                    seen_diagnosis_per_day[timestamp] = event
+                    new_merged_event_dict = event.asDict()
+                    new_merged_event_dict['timestamp'] = seen_diagnosis_per_day[day].timestamp
+                    new_merged_event = Row(**new_merged_event_dict)
+                    seen_diagnosis_per_day[day] = new_merged_event
+                    trace_events.append(new_merged_event)
 
 
     medication_list = []
@@ -194,7 +200,6 @@ def create_xes_trace_for_events(trace_events,
         if event_name is not None:
             level2 = event.level2_event_name
             level4 = event.level4_field_name
-            timestamp = event.timestamp
             day = event.timestamp.date()
             lifecycle_state = "complete"
 
@@ -223,7 +228,7 @@ def create_xes_trace_for_events(trace_events,
                         lifecycle_state = "complete"
                     else:
                         event_name = 'DUPLICATE' + event_name
-                
+
             if 'BACK PAIN' in event_name:
                 if event != seen_diagnosis_per_day[day]:
                     event_name = 'DUPLICATE' + event_name
