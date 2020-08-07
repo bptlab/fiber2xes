@@ -130,6 +130,8 @@ def create_xes_trace_for_events(trace_events,
     # chose the right events to discard in the process of removing duplicates while
     # keeping the timestamp of the medication as concrete as possible
 
+    seen_diagnosis_per_day = {}
+
     for event in reverse_sorted_trace_events:
 
         event_name, event_descriptor, event_context, event_code = \
@@ -159,11 +161,19 @@ def create_xes_trace_for_events(trace_events,
                     seen_end_medications_per_day[timestamp][event_descriptor] = event
                 elif event_descriptor not in seen_running_medications_per_day[timestamp].keys():
                     seen_running_medications_per_day[timestamp][event_descriptor] = event
+            
+            elif 'BACK PAIN' in event_name:
+                if timestamp not in seen_diagnosis_per_day.keys():
+                    seen_diagnosis_per_day[timestamp] = event
+                elif event_name == 'CHRONIC LOW BACK PAIN':
+                    seen_diagnosis_per_day[timestamp] = event
+
 
     medication_list = []
 
     for event in trace_events:
         # Filter out events that do not match the specified events filter
+
         if event_filter is None:
             is_relevant = True
         else:
@@ -213,6 +223,10 @@ def create_xes_trace_for_events(trace_events,
                         lifecycle_state = "complete"
                     else:
                         event_name = 'DUPLICATE' + event_name
+                
+            if 'BACK PAIN' in event_name:
+                if event != seen_diagnosis_per_day[day]:
+                    event_name = 'DUPLICATE' + event_name
 
             new_timestamp = event.timestamp
             if 'Start Date' in level4:

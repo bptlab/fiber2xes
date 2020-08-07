@@ -29,7 +29,8 @@ def get_abstract_event_name(abstraction_path, abstraction_exact_match,
         return event_name
 
     # Returns abstract name if possible and remove unlisted entries
-    # If the event is an anamnesis event, "Anamnesis: " will be added before the abstracted event_name
+    # If the event is an anamnesis event, "Anamnesis: " will be added infront of
+    # the abstracted event_name
     table = csv.reader(open(abstraction_path), delimiter=abstraction_delimiter)
 
     abstraction_names = next(table)

@@ -109,7 +109,7 @@ class Translator():
                 event_name = consultation
                 event_type = "CONSULTATION"
 
-            if 'Reported' in event.level2_event_name or 'History' in event.level2_event_name:
+            if 'Reported' in event.level3_action_name:
                 anamnesis = True
 
         elif self.is_event_diagnosis(event):
@@ -126,9 +126,9 @@ class Translator():
             else:
                 event_name = event.description
 
-            if 'Reported' in event.level2_event_name or 'History' in event.level2_event_name:
+            if 'Reported' in event.level3_action_name:
                 anamnesis = True
-
+            
         elif self.is_event_material(event):
             # Event is material
             event_type = "MATERIAL"
@@ -144,7 +144,7 @@ class Translator():
             else:
                 event_name = event.material_name
 
-            if 'Reported' in event.level2_event_name or 'History' in event.level2_event_name:
+            if 'Reported' in event.level3_action_name:
                 anamnesis = True
 
         return event_name, event_description, event_type, anamnesis, event_context, event_code
