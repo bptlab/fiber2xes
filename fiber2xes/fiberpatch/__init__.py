@@ -1,3 +1,7 @@
+"""
+init for fiberpatches
+"""
+
 from .EncounterWithVisit import EncounterWithVisit
 from .DiagnosisWithTime import DiagnosisWithTime
 from .DrugWithTime import DrugWithTime
