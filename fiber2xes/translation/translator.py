@@ -224,7 +224,7 @@ class Translator():
 
     def translate_procedure(self, context_names, context_procedure_code, verbose):
         """
-        Translate an procedure by the context name and procedure code to a textual representation
+        Translate a procedure by the context name and procedure code to a textual representation
 
         Keyword arguments:
         context_names -- the context names
@@ -258,7 +258,7 @@ class Translator():
 
     def translate_diagnosis(self, context_names, context_diagnosis_code, verbose):
         """
-        Translate an diagnosis by the context name and diagnosis code to a textual representation
+        Translate a diagnosis by the context name and diagnosis code to a textual representation
 
         Keyword arguments:
         context_names -- the context names
@@ -289,7 +289,7 @@ class Translator():
 
     def translate_material(self, context_names, verbose):
         """
-        Translate an material by the context name and material code to the textual representation
+        Translate a material by the context name and material code to the textual representation
 
         Keyword arguments:
         context_names -- the context names
