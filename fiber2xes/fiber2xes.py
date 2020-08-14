@@ -87,12 +87,13 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
     abstraction_exact_match -- flag if the abstraction algorithm should only
                                abstract exacted matches (default False)
     abstraction_delimiter -- the delimiter of the abstraction file (default ;)
-    anamnesis_events -- define which anamnesis events should be extracted: all, listed or none (default all)
+    anamnesis_events -- define which anamnesis events should be extracted: all,
+                        listed or none (default all)
     """
 
-    if trace_type != "visit" and trace_type != "mrn" and trace_type != 'visitMRN':
-        sys.exit("No matching trace type given. Try using visit, mrn or visitMRN")
-    
+    if trace_type != "visit" and trace_type != "mrn":
+        sys.exit("No matching trace type given. Try using visit or mrn.")
+
     if anamnesis_events != "all" and anamnesis_events != "listed" and anamnesis_events != 'none':
         sys.exit("No matching anamnesis_events value given. Try using all, listed or none")
 
@@ -239,7 +240,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
     )
 
     # Generate trace ids for every event according to trace type
-    if trace_type == "visit" or trace_type == "visitMRN":
+    if trace_type == "visit":
         traces_per_patient = get_traces_per_patient_by_visit(
             patient_events, column_indices)
     else:
@@ -253,7 +254,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
     filtered_traces_per_patient = filter_traces(
         traces_per_patient, trace_filter=trace_filter)
 
-    if trace_type == "visitMRN":
+    if trace_type == "visit":
         filtered_traces_per_patient = visit_to_mrn(filtered_traces_per_patient)
 
     traces_in_window = create_xes_traces_from_traces(

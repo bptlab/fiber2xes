@@ -125,13 +125,12 @@ def create_xes_trace_for_events(trace_events,
     trace_events = sorted(trace_events, key=lambda e: e.timestamp)
     reverse_sorted_trace_events = sorted(trace_events, key=lambda e: e.timestamp, reverse=True)
 
+    # Finding the latest event for each medication and diagnosis for each day. This is used to
+    # chose the right events to discard in the process of removing duplicates while
+    # keeping the timestamp of the medication/diagnosis as concrete as possible
+
     seen_end_medications_per_day = {}
     seen_running_medications_per_day = {}
-
-    # Finding the latest event for each medication for each day. This is used to
-    # chose the right events to discard in the process of removing duplicates while
-    # keeping the timestamp of the medication as concrete as possible
-
     seen_diagnosis_per_day = {}
 
     for event in reverse_sorted_trace_events:
@@ -164,6 +163,8 @@ def create_xes_trace_for_events(trace_events,
                 elif event_descriptor not in seen_running_medications_per_day[day].keys():
                     seen_running_medications_per_day[day][event_descriptor] = event
 
+            # Right now this part of the code is very specific for the use case of low back pain.
+            # This has to be adapted to keep fiber2xes open for every possible diagnosis
             elif 'BACK PAIN' in event_name:
                 if day not in seen_diagnosis_per_day.keys():
                     seen_diagnosis_per_day[day] = event
@@ -263,8 +264,9 @@ def create_xes_trace_for_events(trace_events,
     relevant_events = sorted(relevant_events, key=lambda e: (e['timestamp'], e['description']))
 
     if remove_duplicates:
-        # Remove events with the same name and timestamp or marked as duplicate
-        # NSAID group inlcudes so many different medications that the concrete description is used
+        # Remove events with the same name and timestamp or marked as duplicate.
+        # It appears that sometimes multiple drugs of the NSAID group are given.
+        # Therefore the concrete description is used.
         unique_values = set()
         deduplicated_events = list()
         for event in relevant_events:
@@ -280,10 +282,10 @@ def create_xes_trace_for_events(trace_events,
     relevant_events = sorted(relevant_events, key=lambda e: e['timestamp'])
 
 
-    # if visitMRN, there are multiple visits in this trace events
+    # if visit, there are multiple visits in this trace events
     # -> find those visits and assign events to the corresponding visits
     # -> start xes trace creation for each visit
-    if trace_type == 'visitMRN':
+    if trace_type == 'visit':
         encounter_traces = {}
         for event in relevant_events:
             if event['visit_id'] not in encounter_traces.keys():
