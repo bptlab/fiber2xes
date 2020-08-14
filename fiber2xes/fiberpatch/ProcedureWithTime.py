@@ -27,4 +27,6 @@ class ProcedureWithTime(_FactCondition):
         description_column,
         code_column,
         fact.ENCOUNTER_KEY,
+        fd_proc.PROCEDURE_CONTROL_KEY,
+        fact.VALUE
     ]

@@ -1,4 +1,9 @@
-class Generic(object):
+"""
+Defines functions to check events for generic condition
+"""
+
+
+class Generic():
     """Filter the traces or events with the given lambda expression.
     The lambda expression gets the trace or event as a parameter and it should return true or false.
     In case of true its a relevant trace or event, otherwise not.

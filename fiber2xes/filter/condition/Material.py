@@ -1,4 +1,8 @@
-class Material(object):
+"""
+Defines functions to check events for material condition
+"""
+
+class Material():
     """Filter for a specific material given by the code. Event and Trace filtering are possible.
 
     Keyword arguments:
