@@ -33,6 +33,7 @@ from opyenxes.factory.XFactory import XLog
 
 from typing import List
 from typing import TypeVar
+from typing import Tuple
 
 from fiber import Cohort  # type: ignore
 from fiber import condition
@@ -371,7 +372,7 @@ def calculate_timestamp(patient_events: DataFrame, column_indices: OrderedDict) 
 
 def timestamp_from_birthdate_and_age_and_time(date,
                                               age_in_days: int,
-                                              time_of_day: int) -> (datetime.datetime, ):
+                                              time_of_day: int) -> Tuple[datetime.datetime, ]:
     """
     Calculates a single timestamp
 
