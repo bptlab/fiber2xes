@@ -2,9 +2,9 @@ from typing import Optional
 
 from sqlalchemy import orm
 
-from fiber.condition import _BaseCondition, _DatabaseCondition
-from fiber.condition.database import _case_insensitive_like
-from fiber.database.table import d_pers, fact
+from fiber.condition import _BaseCondition, _DatabaseCondition  # type: ignore
+from fiber.condition.database import _case_insensitive_like  # type: ignore
+from fiber.database.table import d_pers, fact  # type: ignore
 
 
 class PatientWithAttributes(_DatabaseCondition):
@@ -101,7 +101,7 @@ class PatientWithAttributes(_DatabaseCondition):
         combined to optimize performance.
         """
         if (
-            isinstance(other, Patient)
+            isinstance(other, PatientWithAttributes)
             and not (self._mrns or other._mrns)
         ):
             return self.__class__(

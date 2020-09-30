@@ -1,7 +1,7 @@
 from typing import Optional
 
-from fiber.condition.fact.fact import _FactCondition # type: ignore
-from fiber.database.table import ( # type: ignore
+from fiber.condition.fact.fact import _FactCondition  # type: ignore
+from fiber.database.table import (  # type: ignore
     d_pers,
     d_enc,
     fact,
@@ -57,11 +57,11 @@ class EncounterWithVisit(_FactCondition):
     def _create_clause(self):
         """
         Used to create a SQLAlchemy clause based on the Encounter-condition.
-        It is used to select the correct encoutners based on the category
+        It is used to select the correct encounters based on the category
         provided at initialization-time.
         """
         clause = super()._create_clause()
         if self._attrs['category']:
-            clause &= _case_insensitive_like(
+            clause &= _case_insensitive_like(  # type: ignore
                 d_enc.ENCOUNTER_TYPE, self._attrs['category'])
         return clause
