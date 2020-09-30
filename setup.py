@@ -28,8 +28,7 @@ setup(
             'data-science-types',
             'pytest',
             'pytest-pep8',
-            'pytest-cov',
-
+            'pytest-cov'
         ]
     },
     include_package_data=True,
