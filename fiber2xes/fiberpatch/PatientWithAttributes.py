@@ -48,7 +48,7 @@ class PatientWithAttributes(_DatabaseCondition):
 
         The string parameters are used in the SQL-LIKE statement after being
         converted to uppercase. This means that  ``%``, ``_`` and  ``[]`` can
-        be used to more precisly select patients.
+        be used to more precisely select patients.
         """
         super().__init__(**kwargs)
         self._attrs['gender'] = gender

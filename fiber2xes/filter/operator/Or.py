@@ -2,6 +2,7 @@
 Defines Or operator
 """
 
+
 class Or():
     """It uses two filters and check for both if the trace or event is relevant.
     Returns true if at least one filter is true.

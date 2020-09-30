@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages  # type: ignore
 
 setup(
     name='fiber2xes',
@@ -10,11 +10,11 @@ setup(
     keywords='fiber fiber2xes xes',
     packages=find_packages(),
     install_requires=[
-       'sqlalchemy>=1.3.3',
-       'sqlalchemy-hana>=0.3.0',
-       'opyenxes>=0.3.0',
-       'pandas>=0.25.3',
-       'pyspark>=2.4.5'
+        'sqlalchemy>=1.3.3',
+        'sqlalchemy-hana>=0.3.0',
+        'opyenxes>=0.3.0',
+        'pandas>=0.25.3',
+        'pyspark>=2.4.5'
     ],
     include_package_data=True,
 )

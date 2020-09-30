@@ -6,21 +6,24 @@ an array of events.
 import uuid
 import datetime
 
-from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer
-from opyenxes.factory.XFactory import XFactory
+from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer  # type: ignore
+from opyenxes.factory.XFactory import XFactory  # type: ignore
+from opyenxes.factory.XFactory import XTrace
 
 from pyspark.sql import Row
+
+from typing import List
 
 from ..abstraction.abstraction import get_abstract_event_name
 from ..translation import Translator
 
 
-def translate_procedure_diagnosis_material_to_event(abstraction_path,
-                                                    abstraction_exact_match,
-                                                    abstraction_delimiter,
+def translate_procedure_diagnosis_material_to_event(abstraction_path: str,
+                                                    abstraction_exact_match: bool,
+                                                    abstraction_delimiter: str,
                                                     event,
-                                                    verbose,
-                                                    remove_unlisted,
+                                                    verbose: bool,
+                                                    remove_unlisted: bool,
                                                     anamnesis_events):
     """
     Derives an activity identifier for an event.
@@ -89,6 +92,7 @@ def create_trace_information(event):
 
     return trace_information
 
+
 def create_xes_trace_for_events(trace_events,
                                 event_filter,
                                 abstraction_path,
@@ -98,8 +102,7 @@ def create_xes_trace_for_events(trace_events,
                                 remove_unlisted,
                                 remove_duplicates,
                                 trace_type,
-                                anamnesis_events):
-
+                                anamnesis_events) -> List[XTrace]:
     """
     Translating the events into event objects, remove duplicated events and
     add lifecycle informations.
@@ -123,15 +126,16 @@ def create_xes_trace_for_events(trace_events,
     trace_information = create_trace_information(trace_events[0])
 
     trace_events = sorted(trace_events, key=lambda e: e.timestamp)
-    reverse_sorted_trace_events = sorted(trace_events, key=lambda e: e.timestamp, reverse=True)
+    reverse_sorted_trace_events = sorted(
+        trace_events, key=lambda e: e.timestamp, reverse=True)
 
     # Finding the latest event for each medication and diagnosis for each day. This is used to
     # chose the right events to discard in the process of removing duplicates while
     # keeping the timestamp of the medication/diagnosis as concrete as possible
 
-    seen_end_medications_per_day = {}
-    seen_running_medications_per_day = {}
-    seen_diagnosis_per_day = {}
+    seen_end_medications_per_day: dict = {}
+    seen_running_medications_per_day: dict = {}
+    seen_diagnosis_per_day: dict = {}
 
     for event in reverse_sorted_trace_events:
 
@@ -150,15 +154,15 @@ def create_xes_trace_for_events(trace_events,
 
             day = event.timestamp.date()
 
-            if ('Prescription' in event.level2_event_name or \
-                'Medication' in event.level2_event_name) and \
-                'Anamnesis' not in event_name:
+            if ('Prescription' in event.level2_event_name or
+                    'Medication' in event.level2_event_name) and \
+                    'Anamnesis' not in event_name:
 
                 if day not in seen_running_medications_per_day.keys():
                     seen_running_medications_per_day[day] = {}
                     seen_end_medications_per_day[day] = {}
                 if event_descriptor not in seen_end_medications_per_day[day].keys() and \
-                                                event.level4_field_name == 'End Date':
+                        event.level4_field_name == 'End Date':
                     seen_end_medications_per_day[day][event_descriptor] = event
                 elif event_descriptor not in seen_running_medications_per_day[day].keys():
                     seen_running_medications_per_day[day][event_descriptor] = event
@@ -174,7 +178,6 @@ def create_xes_trace_for_events(trace_events,
                     new_merged_event = Row(**new_merged_event_dict)
                     seen_diagnosis_per_day[day] = new_merged_event
                     trace_events.append(new_merged_event)
-
 
     medication_list = []
 
@@ -209,7 +212,7 @@ def create_xes_trace_for_events(trace_events,
             # else mark as duplicate
 
             if ('Prescription' in level2 or 'Medication' in level2) and \
-                'Anamnesis' not in event_name:
+                    'Anamnesis' not in event_name:
 
                 if event_descriptor in seen_running_medications_per_day[day].keys():
                     if event == seen_running_medications_per_day[day][event_descriptor]:
@@ -261,7 +264,8 @@ def create_xes_trace_for_events(trace_events,
     if len(relevant_events) == 0:
         return XFactory.create_trace()
 
-    relevant_events = sorted(relevant_events, key=lambda e: (e['timestamp'], e['description']))
+    relevant_events = sorted(relevant_events, key=lambda e: (
+        e['timestamp'], e['description']))
 
     if remove_duplicates:
         # Remove events with the same name and timestamp or marked as duplicate.
@@ -274,37 +278,37 @@ def create_xes_trace_for_events(trace_events,
             if 'NSAID' in compare_value:
                 compare_value += event['description']
             if not (event["timestamp"], compare_value) in unique_values and \
-                'DUPLICATE' not in compare_value:
+                    'DUPLICATE' not in compare_value:
                 unique_values.add((event["timestamp"], compare_value))
                 deduplicated_events.append(event)
         relevant_events = deduplicated_events
 
     relevant_events = sorted(relevant_events, key=lambda e: e['timestamp'])
 
+    xes_traces: List[XTrace] = []
 
     # if visit, there are multiple visits in this trace events
     # -> find those visits and assign events to the corresponding visits
     # -> start xes trace creation for each visit
     if trace_type == 'visit':
-        encounter_traces = {}
+        encounter_traces: dict = {}
         for event in relevant_events:
             if event['visit_id'] not in encounter_traces.keys():
                 encounter_traces[event['visit_id']] = []
             encounter_traces[event['visit_id']].append(event)
-
-        xes_traces = []
 
         for trace_id in encounter_traces.keys():
             xes_traces.append(create_xes_trace(trace_information,
                                                encounter_traces[trace_id],
                                                trace_type))
     else:
-        xes_traces = []
-        xes_traces.append(create_xes_trace(trace_information, relevant_events, trace_type))
+        xes_traces.append(create_xes_trace(
+            trace_information, relevant_events, trace_type))
 
     return xes_traces
 
-def create_xes_trace(trace_information, trace_events, trace_type):
+
+def create_xes_trace(trace_information, trace_events, trace_type) -> XFactory.XTrace:
     """
     Collect events that belong to a trace in an opyenxes trace.
 
@@ -329,9 +333,11 @@ def create_xes_trace(trace_information, trace_events, trace_type):
     trace.get_attributes()["id"] = id_attribute
 
     if trace_type == "mrn":
-        trace_id = XFactory.create_attribute_literal("concept:name", trace_information["mrn"])
+        trace_id = XFactory.create_attribute_literal(
+            "concept:name", trace_information["mrn"])
     else:
-        trace_id = XFactory.create_attribute_literal("concept:name", trace_events[0]['visit_id'])
+        trace_id = XFactory.create_attribute_literal(
+            "concept:name", trace_events[0]['visit_id'])
 
     trace.get_attributes()["concept:name"] = trace_id
     trace.get_attributes()["patient:mrn"] = XFactory.create_attribute_literal(
@@ -390,7 +396,8 @@ def create_xes_trace(trace_information, trace_events, trace_type):
 
         caregiver_attribute = XFactory.create_attribute_literal(
             "event:caregiver_group", event["caregiver_group_key"])
-        log_event.get_attributes()["event:caregiver_group"] = caregiver_attribute
+        log_event.get_attributes(
+        )["event:caregiver_group"] = caregiver_attribute
 
         facility_attribute = XFactory.create_attribute_literal(
             "event:facility", event["facility_key"])
@@ -398,7 +405,8 @@ def create_xes_trace(trace_information, trace_events, trace_type):
 
         lifecycle_attribute = XFactory.create_attribute_literal(
             "lifecycle:transition", event["lifecycle"])
-        log_event.get_attributes()["lifecycle:transition"] = lifecycle_attribute
+        log_event.get_attributes(
+        )["lifecycle:transition"] = lifecycle_attribute
 
         level1_attribute = XFactory.create_attribute_literal(
             "event:level1", event["level1"])
@@ -429,7 +437,7 @@ def create_xes_traces_from_traces(traces,
                                   event_filter,
                                   remove_duplicates,
                                   trace_type,
-                                  anamnesis_events):
+                                  anamnesis_events) -> List[XTrace]:
     """
     Create opyenxes traces for every trace.
 

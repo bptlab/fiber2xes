@@ -17,7 +17,7 @@ class Translator():
     """
     Class to translate events into diagnosis, material or procedure events
     """
-    csv_reader = {}
+    csv_reader: dict = {}
 
     def __init__(self):
         pass

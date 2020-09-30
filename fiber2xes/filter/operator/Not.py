@@ -2,6 +2,7 @@
 Defines Not operator
 """
 
+
 class Not():
     """It takes on filter and inverts its result for the given event or trace
 

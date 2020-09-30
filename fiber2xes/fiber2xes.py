@@ -3,6 +3,15 @@
     It contains functions to create a xes log from events extracted from the MSDW.
 """
 
+from .fiberpatch import (
+    DiagnosisWithTime,
+    DrugWithTime,
+    EncounterWithVisit,
+    MetaDataWithOnlyLevels,
+    PatientWithAttributes,
+    ProcedureWithTime
+)
+from .xesfactory import create_xes_traces_from_traces
 import sys
 import functools
 import datetime
@@ -12,22 +21,25 @@ import multiprocessing
 from collections import OrderedDict
 
 import pandas as pd
+from pyspark.sql import DataFrame
+from pyspark.rdd import RDD
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
-from opyenxes.factory.XFactory import XFactory
 
-from fiber import Cohort
+
+from opyenxes.factory.XFactory import XFactory  # type: ignore
+from opyenxes.factory.XFactory import XTrace
+from opyenxes.factory.XFactory import XLog
+
+from typing import List
+from typing import TypeVar
+
+from fiber import Cohort  # type: ignore
 from fiber import condition
+from fiber import operator
 
-from .xesfactory import create_xes_traces_from_traces
-from .fiberpatch import (
-    DiagnosisWithTime,
-    DrugWithTime,
-    EncounterWithVisit,
-    MetaDataWithOnlyLevels,
-    PatientWithAttributes,
-    ProcedureWithTime
-)
+Filter = TypeVar('Filter', condition.Diagnosis, condition.Generic, condition.Material,
+                 condition.Procedure, condition.Time, operator.And, operator.Not, operator.Or)
 
 
 def timer(func):
@@ -63,11 +75,11 @@ def create_spark_df(spark, pandas_df):
 
 
 @timer
-def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
-                        remove_duplicates=True, event_filter=None, trace_filter=None,
-                        cores=multiprocessing.cpu_count(), window_size=200, abstraction_path=None,
-                        abstraction_exact_match=False, abstraction_delimiter=";",
-                        anamnesis_events='all'):
+def cohort_to_event_log(cohort: Cohort, trace_type: str, verbose: bool = False, remove_unlisted: bool = True,
+                        remove_duplicates: bool = True, event_filter: Filter = None, trace_filter: Filter = None,
+                        cores: int = multiprocessing.cpu_count(), window_size: int = 200, abstraction_path: str = None,
+                        abstraction_exact_match: bool = False, abstraction_delimiter: str = ";",
+                        anamnesis_events: str = 'all'):
     """
     Converts a fiber cohort to an xes event log.
     Therefore it slices the cohort to smaller windows (because of memory restrictions)
@@ -95,10 +107,11 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
         sys.exit("No matching trace type given. Try using visit or mrn.")
 
     if anamnesis_events != "all" and anamnesis_events != "listed" and anamnesis_events != 'none':
-        sys.exit("No matching anamnesis_events value given. Try using all, listed or none")
+        sys.exit(
+            "No matching anamnesis_events value given. Try using all, listed or none")
 
     manager = multiprocessing.Manager()
-    traces = manager.list()
+    traces: List[XTrace] = manager.list()
 
     mrns = list(cohort.mrns())
     window_amount = math.ceil(len(mrns)/window_size)
@@ -133,19 +146,19 @@ def cohort_to_event_log(cohort, trace_type, verbose=False, remove_unlisted=True,
             current_window=(i + 1),
             max_window=window_amount,
             window_time=(time.perf_counter() - window_start_time)
-            ))
+        ))
 
-    log = XFactory.create_log()
+    log: XLog = XFactory.create_log()
 
     for trace in traces:
         log.append(trace)
     return log
 
 
-def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted, remove_duplicates,
-                                   event_filter, trace_filter, cores, abstraction_path,
-                                   abstraction_exact_match, abstraction_delimiter,
-                                   anamnesis_events, traces):
+def cohort_to_event_log_for_window(cohort, trace_type: str, verbose: bool, remove_unlisted: bool, remove_duplicates: bool,
+                                   event_filter: Filter, trace_filter: Filter, cores: int, abstraction_path: str,
+                                   abstraction_exact_match: bool, abstraction_delimiter: str,
+                                   anamnesis_events: str, traces: List[XTrace]):
     """
     Converts a window of the patient to XES traces and store them in the given `traces` parameter.
 
@@ -210,7 +223,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
         .set("spark.memory.offHeap.size", "4g")\
         .set("spark.executor.memory", "90g")\
         .set("spark.driver.maxResultSize", "90g")\
-        .set("spark.cores.max", multiprocessing.cpu_count())\
+        .set("spark.cores.max", str(multiprocessing.cpu_count()))\
         .set("spark.sql.execution.arrow.enabled", "true")\
         .set("spark.sql.shuffle.partitions", "200")\
         .setMaster("local[{cores}]".format(cores=cores))
@@ -221,7 +234,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
 
     print("Initialized spark")
 
-    patient_events = create_spark_df(spark, patient_events_pd)
+    patient_events: DataFrame = create_spark_df(spark, patient_events_pd)
 
     # Create column mapping to be able to convert rdds back to data frames
     column_indices = OrderedDict(
@@ -231,7 +244,8 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
         )
     )
 
-    patient_events = calculate_timestamp(patient_events, column_indices)
+    patient_events_with_timestamp: DataFrame = calculate_timestamp(
+        patient_events, column_indices)
     column_indices = OrderedDict(
         zip(
             list(column_indices.keys()) + ["trace_id"],
@@ -239,15 +253,17 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
         )
     )
 
+    patient_events.unpersist()
+
     # Generate trace ids for every event according to trace type
     if trace_type == "visit":
         traces_per_patient = get_traces_per_patient_by_visit(
-            patient_events, column_indices)
+            patient_events_with_timestamp, column_indices)
     else:
         traces_per_patient = get_traces_per_patient_by_mrn(
-            patient_events, column_indices)
+            patient_events_with_timestamp, column_indices)
 
-    patient_events.unpersist()
+    patient_events_with_timestamp.unpersist()
 
     traces_per_patient = traces_per_patient.repartition("trace_id")
 
@@ -257,7 +273,7 @@ def cohort_to_event_log_for_window(cohort, trace_type, verbose, remove_unlisted,
     if trace_type == "visit":
         filtered_traces_per_patient = visit_to_mrn(filtered_traces_per_patient)
 
-    traces_in_window = create_xes_traces_from_traces(
+    traces_in_window: List[List[XTrace]] = create_xes_traces_from_traces(
         filtered_traces_per_patient,
         abstraction_path=abstraction_path,
         abstraction_exact_match=abstraction_exact_match,
@@ -289,7 +305,8 @@ def handle_duplicate_column_names(dataframe) -> pd.DataFrame:
         if column in columns:
             while True:
                 counter += 1
-                new_name = "{column_name}_{counter}".format(column_name=column, counter=counter)
+                new_name = "{column_name}_{counter}".format(
+                    column_name=column, counter=counter)
                 if new_name not in columns:
                     break
             columns.append(new_name)
@@ -299,17 +316,19 @@ def handle_duplicate_column_names(dataframe) -> pd.DataFrame:
     return dataframe
 
 
-def define_column_types_for_patient_events(patient_events) -> pd.DataFrame:
+def define_column_types_for_patient_events(patient_events: pd.DataFrame) -> pd.DataFrame:
     """Redefines the type of columns belonging to the patient_events Pandas DataFrame to strings."""
-    patient_events.date_of_birth = patient_events.date_of_birth.astype('str')
-    patient_events.religion = patient_events.religion.astype('str')
-    patient_events.patient_ethnic_group = patient_events.patient_ethnic_group.astype('str')
-    patient_events.language = patient_events.language.astype('str')
+    patient_events['date_of_birth'] = patient_events['date_of_birth'].astype(
+        str)
+    patient_events['religion'] = patient_events['religion'].astype(str)
+    patient_events['patient_ethnic_group'] = patient_events['patient_ethnic_group'].astype(
+        str)
+    patient_events['language'] = patient_events.language.astype(str)
     return patient_events
 
 
 @timer
-def merge_dataframes(left, right, join_columns) -> pd.DataFrame:
+def merge_dataframes(left: pd.DataFrame, right: pd.DataFrame, join_columns: List[str]) -> pd.DataFrame:
     """
     Merges two Pandas DataFrames with an inner join on a given column and frees the
     original frames from memory.
@@ -319,16 +338,17 @@ def merge_dataframes(left, right, join_columns) -> pd.DataFrame:
     right - one dataframe to join
     join_column - attribute which should be join condition
     """
-    left = handle_duplicate_column_names(left)
-    right = handle_duplicate_column_names(right)
-    result = pd.merge(left, right, on=join_columns, how='inner')
+    deduplicated_left: pd.DataFrame = handle_duplicate_column_names(left)
+    deduplicated_right: pd.DataFrame = handle_duplicate_column_names(right)
+    result = pd.merge(left=deduplicated_left, right=deduplicated_right,
+                      on=join_columns, how='inner')
     del left
     del right
     return result
 
 
 @timer
-def calculate_timestamp(patient_events, column_indices):
+def calculate_timestamp(patient_events: DataFrame, column_indices: OrderedDict) -> DataFrame:
     """
     Calculates the timestamp for all patient_events based on a patient's `date_of_birth`,
     `age_in_days` and the specific `time_of_day`
@@ -338,7 +358,6 @@ def calculate_timestamp(patient_events, column_indices):
     column_indices -- A dictionary containing a mapping from column names to their indices for
                       the DataFrame
     """
-
     return patient_events\
         .filter('not isnan(age_in_days) and date_of_birth <> "MSDW_UNKNOWN"')\
         .rdd\
@@ -351,8 +370,8 @@ def calculate_timestamp(patient_events, column_indices):
 
 
 def timestamp_from_birthdate_and_age_and_time(date,
-                                              age_in_days,
-                                              time_of_day) -> (datetime.datetime, ):
+                                              age_in_days: int,
+                                              time_of_day: int) -> (datetime.datetime, ):
     """
     Calculates a single timestamp
 
@@ -362,7 +381,8 @@ def timestamp_from_birthdate_and_age_and_time(date,
     time_of_day - The time of the day
     """
     time_info = date.split("-")
-    date = datetime.datetime(int(time_info[0]), int(time_info[1]), int(time_info[2]))
+    date = datetime.datetime(int(time_info[0]), int(
+        time_info[1]), int(time_info[2]))
     timestamp = date + \
         datetime.timedelta(days=age_in_days) + \
         datetime.timedelta(minutes=time_of_day)
@@ -370,7 +390,7 @@ def timestamp_from_birthdate_and_age_and_time(date,
 
 
 @timer
-def filter_traces(traces_to_filter, trace_filter=None):
+def filter_traces(traces_to_filter: DataFrame, trace_filter: Filter) -> RDD:
     """
     Filters out traces that do not match the specified trace filter
 
@@ -380,7 +400,7 @@ def filter_traces(traces_to_filter, trace_filter=None):
     """
 
     if trace_filter is None:
-        return traces_to_filter
+        return traces_to_filter.rdd
 
     return traces_to_filter\
         .rdd\
@@ -389,7 +409,7 @@ def filter_traces(traces_to_filter, trace_filter=None):
         .filter(lambda trace: trace_filter.is_relevant_trace(trace[1]))
 
 
-def get_traces_per_patient_by_mrn(patient_events, column_indices):
+def get_traces_per_patient_by_mrn(patient_events: DataFrame, column_indices: OrderedDict):
     """
     Generate traces according to medical record number
 
@@ -403,7 +423,7 @@ def get_traces_per_patient_by_mrn(patient_events, column_indices):
         .toDF(list(patient_events.schema.names) + ["trace_id"])
 
 
-def get_traces_per_patient_by_visit(patient_event_encounters, column_indices):
+def get_traces_per_patient_by_visit(patient_event_encounters: DataFrame, column_indices: OrderedDict) -> DataFrame:
     """
     Generate traces according to encounter visit id
 
@@ -416,7 +436,8 @@ def get_traces_per_patient_by_visit(patient_event_encounters, column_indices):
         .map(lambda row: row + (row[column_indices["encounter_visit_id"]], ))\
         .toDF(list(patient_event_encounters.schema.names) + ["trace_id"])
 
-def visit_to_mrn(visit_traces):
+
+def visit_to_mrn(visit_traces: RDD) -> RDD:
     """
     transform visit based traces to mrn based traces
 
@@ -427,7 +448,8 @@ def visit_to_mrn(visit_traces):
         .map(lambda trace: (trace[1][0].medical_record_number, trace[1]))\
         .combineByKey(return_object, merge_lists, merge_lists)
 
-def create_list(object_to_list):
+
+def create_list(object_to_list: object) -> list:
     """
     Create a list containing the passed object
 
@@ -436,7 +458,8 @@ def create_list(object_to_list):
     """
     return [object_to_list]
 
-def return_object(object_to_return):
+
+def return_object(object_to_return: object) -> object:
     """
     Simply return the object for combineByKey()
 
@@ -445,7 +468,8 @@ def return_object(object_to_return):
     """
     return object_to_return
 
-def merge_lists(list_to_merge1, list_to_merge2):
+
+def merge_lists(list_to_merge1: list, list_to_merge2: list) -> list:
     """
     Merge two lists
 
@@ -455,7 +479,8 @@ def merge_lists(list_to_merge1, list_to_merge2):
     """
     return list_to_merge1 + list_to_merge2
 
-def add_tuple_to_list(present_list, new_element):
+
+def add_tuple_to_list(present_list: list, new_element: object) -> list:
     """
     Add an element to an existing list
 

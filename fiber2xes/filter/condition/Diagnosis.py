@@ -2,6 +2,7 @@
 Defines functions to check events for diagnosis condition
 """
 
+
 class Diagnosis():
     """Filter for a specific diagnosis given by the code. Event and Trace filtering are possible.
 
