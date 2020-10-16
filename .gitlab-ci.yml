@@ -5,12 +5,22 @@ before_script:
 
 build:
   stage: build
-  only:
-    - master
   script:
-    - pip install -e .
+    - pip install -e .[dev]
+
+typecheck:
+  stage: test
+  script:
+    - mypy .
+
+test:
+  stage: test
+  script:
+    - pytest .
 
 trigger_build:
   stage: deploy
+  only:
+    - master
   script:
     - "curl -X POST -F token=159283888a03644a78e683b72d8c55 -F ref=master https://gitlab.hpi.de/api/v4/projects/3536/trigger/pipeline"
