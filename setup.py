@@ -29,7 +29,8 @@ setup(
             'pytest',
             'pytest-pep8',
             'pytest-cov',
-            'sqlalchemy-stubs>=0.3'
+            'sqlalchemy-stubs>=0.3',
+            'pyspark-stubs>=3.0.0'
         ]
     },
     include_package_data=True,
