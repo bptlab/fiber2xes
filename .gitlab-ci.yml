@@ -1,0 +1,16 @@
+image: "python:3.6"
+
+before_script:
+  - python --version
+
+build:
+  stage: build
+  only:
+    - master
+  script:
+    - pip install -e .
+
+trigger_build:
+  stage: deploy
+  script:
+    - "curl -X POST -F token=159283888a03644a78e683b72d8c55 -F ref=master https://gitlab.hpi.de/api/v4/projects/3536/trigger/pipeline"
