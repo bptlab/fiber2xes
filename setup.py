@@ -28,7 +28,8 @@ setup(
             'data-science-types',
             'pytest',
             'pytest-pep8',
-            'pytest-cov'
+            'pytest-cov',
+            'sqlalchemy-stubs>=0.3'
         ]
     },
     include_package_data=True,
