@@ -12,6 +12,7 @@ cache:
   paths:
     - .cache/pip
     - venv/
+  key: ${CI_COMMIT_REF_SLUG}
 
 before_script:
   - python -V
