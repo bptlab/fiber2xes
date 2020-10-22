@@ -17,7 +17,7 @@ before_script:
   - python -V
   - pip install virtualenv
   - virtualenv venv
-  - source venv/bin/activate
+  - source $CI_PROJECT_DIR/venv/bin/activate
 
 build:
   stage: build
@@ -27,12 +27,15 @@ build:
 typecheck:
   stage: test
   script:
-    - venv/mypy .
+    - $CI_PROJECT_DIR/venv/bin/mypy .
 
 test:
   stage: test
   script:
-    - venv/pytest .
+    - cd $CI_PROJECT_DIR/venv/bin
+    - ls -lisah
+    - $CI_PROJECT_DIR
+    - $CI_PROJECT_DIR/venv/bin/pytest .
 
 trigger_build:
   stage: deploy
