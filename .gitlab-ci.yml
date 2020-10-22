@@ -20,7 +20,7 @@ before_script:
   - virtualenv venv
   - source $CI_PROJECT_DIR/venv/bin/activate
   - pip install -e .[dev]
-  - cd $CI_PROJECT_DIR
+  - cd $CI_PROJECT_DIR/..
   - git clone https://github.com/hpi-dhc/fiber.git
   - cd fiber &&
   - git checkout aee2bfefddeb2ebd6832acca926a1755e4b87fbb
@@ -29,18 +29,12 @@ before_script:
 typecheck:
   stage: test
   script:
-    - pwd
-    - ls -lisah
-    - cd $CI_PROJECT_DIR
-    - ls -lisah
-    - cd $CI_PROJECT_DIR/fiber2xes
-    - ls -lisah
-    - $CI_PROJECT_DIR/venv/bin/mypy $CI_PROJECT_DIR/fiber2xes
+    - $CI_PROJECT_DIR/venv/bin/mypy $CI_PROJECT_DIR
 
 test:
   stage: test
   script:
-    - $CI_PROJECT_DIR/venv/bin/py.test $CI_PROJECT_DIR/fiber2xes
+    - $CI_PROJECT_DIR/venv/bin/py.test $CI_PROJECT_DIR
 
 trigger_build:
   stage: deploy
