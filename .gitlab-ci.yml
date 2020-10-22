@@ -23,6 +23,10 @@ build:
   stage: build
   script:
     - pip install -e .[dev]
+    - git clone https://gitlab.hpi.de/fiber/fiber && \
+      cd fiber && \
+      git checkout aee2bfefddeb2ebd6832acca926a1755e4b87fbb && \
+      pip install -e .
 
 typecheck:
   stage: test
@@ -32,10 +36,7 @@ typecheck:
 test:
   stage: test
   script:
-    - cd $CI_PROJECT_DIR/venv/bin
-    - ls -lisah
-    - $CI_PROJECT_DIR
-    - $CI_PROJECT_DIR/venv/bin/pytest .
+    - $CI_PROJECT_DIR/venv/bin/py.test .
 
 trigger_build:
   stage: deploy
