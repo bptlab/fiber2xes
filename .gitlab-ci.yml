@@ -23,10 +23,10 @@ build:
   stage: build
   script:
     - pip install -e .[dev]
-    - git clone https://gitlab.hpi.de/fiber/fiber && \
-      cd fiber && \
-      git checkout aee2bfefddeb2ebd6832acca926a1755e4b87fbb && \
-      pip install -e .
+    - git clone https://github.com/hpi-dhc/fiber.git
+    - cd fiber &&
+    - git checkout aee2bfefddeb2ebd6832acca926a1755e4b87fbb
+    - pip install -e .
 
 typecheck:
   stage: test

@@ -38,6 +38,7 @@ from typing import Tuple
 from fiber import Cohort  # type: ignore
 from .filter import condition
 from .filter import operator
+from fiber.condition import MRNs  # type: ignore
 
 Filter = TypeVar('Filter', condition.Diagnosis, condition.Generic, condition.Material,
                  condition.Procedure, condition.Time, operator.And, operator.Not, operator.Or)
@@ -124,7 +125,7 @@ def cohort_to_event_log(cohort: Cohort, trace_type: str, verbose: bool = False, 
             max_window=window_amount))
         window_start_time = time.perf_counter()
         mrns_in_window = mrns[i * window_size: (i + 1) * window_size]
-        cohort_for_window = Cohort(condition.MRNs(mrns_in_window))
+        cohort_for_window = Cohort(MRNs(mrns_in_window))
 
         process = multiprocessing.Process(target=cohort_to_event_log_for_window, args=(
             cohort_for_window,
