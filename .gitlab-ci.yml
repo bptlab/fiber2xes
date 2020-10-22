@@ -29,6 +29,12 @@ before_script:
 typecheck:
   stage: test
   script:
+    - pwd
+    - ls -lisah
+    - cd $CI_PROJECT_DIR
+    - ls -lisah
+    - cd $CI_PROJECT_DIR/fiber2xes
+    - ls -lisah
     - $CI_PROJECT_DIR/venv/bin/mypy $CI_PROJECT_DIR/fiber2xes
 
 test:
