@@ -29,12 +29,14 @@ before_script:
 typecheck:
   stage: test
   script:
-    - $CI_PROJECT_DIR/venv/bin/mypy $CI_PROJECT_DIR
+    - cd $CI_PROJECT_DIR
+    - $CI_PROJECT_DIR/venv/bin/mypy .
 
 test:
   stage: test
   script:
-    - $CI_PROJECT_DIR/venv/bin/py.test $CI_PROJECT_DIR
+    - cd $CI_PROJECT_DIR
+    - $CI_PROJECT_DIR/venv/bin/pytest -s .
 
 trigger_build:
   stage: deploy
