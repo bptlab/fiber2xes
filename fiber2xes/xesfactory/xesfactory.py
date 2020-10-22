@@ -308,7 +308,7 @@ def create_xes_trace_for_events(trace_events,
     return xes_traces
 
 
-def create_xes_trace(trace_information, trace_events, trace_type) -> XFactory.XTrace:
+def create_xes_trace(trace_information, trace_events, trace_type) -> XTrace:
     """
     Collect events that belong to a trace in an opyenxes trace.
 

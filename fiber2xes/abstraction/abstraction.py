@@ -20,7 +20,7 @@ def get_abstract_event_name(abstraction_path, abstraction_exact_match,
                                the given event name
     event_name -- name of the event that should be abstracted
     remove_unlisted -- flag to remove all events that are not included in the abstraction table
-    anamnesis -- is the passed event an anamnese event
+    anamnesis -- is the passed event an anamnesis event
     anamnesis_events -- which anamnesis events should be included in the xes log
     """
     if abstraction_path is None:
@@ -29,7 +29,7 @@ def get_abstract_event_name(abstraction_path, abstraction_exact_match,
         return event_name
 
     # Returns abstract name if possible and remove unlisted entries
-    # If the event is an anamnesis event, "Anamnesis: " will be added infront of
+    # If the event is an anamnesis event, "Anamnesis: " will be added in front of
     # the abstracted event_name or the event will be discarded.
     # It depends on the choice the user made.
     table = csv.reader(open(abstraction_path), delimiter=abstraction_delimiter)
