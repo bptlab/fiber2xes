@@ -36,6 +36,7 @@ typecheck:
 test:
   stage: test
   script:
+    - mkdir $CI_PROJECT_DIR/../fiber/tests
     - touch $CI_PROJECT_DIR/../fiber/tests/mock_data.db
     - cd $CI_PROJECT_DIR
     - $CI_PROJECT_DIR/venv/bin/pytest -s .
