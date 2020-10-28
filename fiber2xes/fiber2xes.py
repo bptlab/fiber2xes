@@ -34,6 +34,7 @@ from opyenxes.factory.XFactory import XLog
 from typing import List
 from typing import TypeVar
 from typing import Tuple
+from typing import Union
 
 from fiber import Cohort  # type: ignore
 from .filter import condition
@@ -330,7 +331,7 @@ def define_column_types_for_patient_events(patient_events: pd.DataFrame) -> pd.D
 
 
 @timer
-def merge_dataframes(left: pd.DataFrame, right: pd.DataFrame, join_columns: List[str]) -> pd.DataFrame:
+def merge_dataframes(left: pd.DataFrame, right: pd.DataFrame, join_columns) -> pd.DataFrame:
     """
     Merges two Pandas DataFrames with an inner join on a given column and frees the
     original frames from memory.
@@ -342,8 +343,8 @@ def merge_dataframes(left: pd.DataFrame, right: pd.DataFrame, join_columns: List
     """
     deduplicated_left: pd.DataFrame = handle_duplicate_column_names(left)
     deduplicated_right: pd.DataFrame = handle_duplicate_column_names(right)
-    result = pd.merge(left=deduplicated_left, right=deduplicated_right,
-                      on=join_columns, how='inner')
+    result = pd.merge(left=deduplicated_left, right=deduplicated_right,  # type: ignore
+                      on=join_columns, how='inner')  # type: ignore
     del left
     del right
     return result
