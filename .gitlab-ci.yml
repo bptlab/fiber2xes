@@ -21,6 +21,7 @@ before_script:
   - source $CI_PROJECT_DIR/venv/bin/activate
   - pip install -e .[dev]
   - cd $CI_PROJECT_DIR/..
+  - rm -rf fiber
   - git clone https://github.com/hpi-dhc/fiber.git
   - cd fiber &&
   - git checkout aee2bfefddeb2ebd6832acca926a1755e4b87fbb
@@ -35,6 +36,7 @@ typecheck:
 test:
   stage: test
   script:
+    - touch $CI_PROJECT_DIR/../fiber/tests/mock_data.db
     - cd $CI_PROJECT_DIR
     - $CI_PROJECT_DIR/venv/bin/pytest -s .
 
