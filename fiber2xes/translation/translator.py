@@ -1,6 +1,6 @@
 """
     The module contains the class Translation which is used to translate
-    events into text representations of diagnosis, amterial or procedure
+    events into text representations of diagnosis, material or procedure
 """
 
 import os
@@ -30,7 +30,7 @@ class Translator():
         event -- the event
         """
         return event.context_procedure_code != "MSDW_NOT APPLICABLE" and \
-               event.context_procedure_code != "MSDW_UNKNOWN"
+            event.context_procedure_code != "MSDW_UNKNOWN"
 
     def is_event_diagnosis(self, event):
         """
@@ -40,7 +40,7 @@ class Translator():
         event -- the event
         """
         return event.context_diagnosis_code != "MSDW_NOT APPLICABLE" and \
-               event.context_diagnosis_code != "MSDW_UNKNOWN"
+            event.context_diagnosis_code != "MSDW_UNKNOWN"
 
     def is_event_material(self, event):
         """
@@ -50,7 +50,7 @@ class Translator():
         event -- the event
         """
         return event.context_material_code != "MSDW_NOT APPLICABLE" and \
-               event.context_material_code != "MSDW_UNKNOWN"
+            event.context_material_code != "MSDW_UNKNOWN"
 
     def is_known_event(self, event):
         """
@@ -135,7 +135,7 @@ class Translator():
 
             if 'Reported' in event.level3_action_name:
                 anamnesis = True
-            
+
         elif self.is_event_material(event):
             # Event is material
             event_type = "MATERIAL"
@@ -169,20 +169,20 @@ class Translator():
         delimiter -- the row delimiter (default ,)
         """
         if vocabulary_path not in self.csv_reader:
-            self.csv_reader[vocabulary_path] = csv.reader(
-                open(vocabulary_path), delimiter=delimiter)
+            self.csv_reader[vocabulary_path] = list(csv.reader(
+                open(vocabulary_path), delimiter=delimiter))
         reader = self.csv_reader[vocabulary_path]
         for row in reader:
             if len(row) > search_column and len(row) > target_column:
                 if re.search("^" + search_term + "$", row[search_column], re.IGNORECASE) \
-                    is not None:
+                        is not None:
 
                     return row[target_column]
         return None
 
     def translate_icd10(self, code):
         """
-        Translate an ICD-10 code to his textual representation
+        Translate an ICD-10 code to its textual representation
 
         Keyword arguments:
         code -- the ICD-10 code
@@ -196,7 +196,7 @@ class Translator():
 
     def translate_icd9(self, code):
         """
-        Translate an ICD-9 code to his textual representation
+        Translate an ICD-9 code to its textual representation
 
         Keyword arguments:
         code -- the ICD-9 code
@@ -210,7 +210,7 @@ class Translator():
 
     def translate_cpt4(self, code):
         """
-        Translate an CPT-4 code to his textual representation
+        Translate an CPT-4 code to its textual representation
 
         Keyword arguments:
         code -- the CPT-4 code
