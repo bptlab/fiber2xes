@@ -37,9 +37,9 @@ def get_abstract_event_name(abstraction_path, abstraction_exact_match,
     abstraction_names = next(table)
     for row in table:
         for i, entry in enumerate(row):
-            if entry and ((not abstraction_exact_match and \
-                re.search(str(entry), str(event_name), re.IGNORECASE) is not None) or \
-                (abstraction_exact_match and str(entry).lower() == str(event_name).lower())):
+            if entry and ((not abstraction_exact_match and
+                           re.search(str(entry), str(event_name), re.IGNORECASE) is not None) or
+                          (abstraction_exact_match and str(entry).lower() == str(event_name).lower())):
                 if abstraction_names[i].lower() == "group":
                     if anamnesis and anamnesis_events != 'none':
                         return 'Anamnesis: ' + entry
@@ -49,12 +49,12 @@ def get_abstract_event_name(abstraction_path, abstraction_exact_match,
                 if abstraction_names[i].lower() == "whitelist":
                     if anamnesis and anamnesis_events != 'none':
                         return 'Anamnesis: ' + entry
-                    return event_name
+                    return entry
                 if anamnesis and anamnesis_events != 'none':
                     return 'Anamnesis: ' + abstraction_names[i]
                 return abstraction_names[i]
 
-    if remove_unlisted and not (anamnesis and anamnesis_events == 'all'):
+    if remove_unlisted:
         return None
     elif anamnesis and anamnesis_events == 'all':
         return 'Anamnesis: ' + event_name
