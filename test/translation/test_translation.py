@@ -1,19 +1,10 @@
 from fiber2xes.translation.translator import Translator
 
+from mocks.MockEvent import MockEvent
+
 vocabulary_path = "test/test_translation_vocabulary.csv"
 
 translator = Translator()
-
-
-class MockEvent:
-    def __init__(self,
-                 context_procedure_code='MSDW_UNKNOWN',
-                 context_diagnosis_code='MSDW_UNKNOWN',
-                 context_material_code='MSDW_UNKNOWN'):
-        self.context_procedure_code = context_procedure_code
-        self.context_diagnosis_code = context_diagnosis_code
-        self.context_material_code = context_material_code
-
 
 procedure_event = MockEvent(context_procedure_code='SomeProcedureCode')
 
