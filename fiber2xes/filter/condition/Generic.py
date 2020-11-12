@@ -3,9 +3,10 @@ Defines functions to check events for generic condition
 """
 
 from typing import Callable
+from fiber2xes.filter.Filter import Filter
 
 
-class Generic():
+class Generic(Filter):
     """Filter the traces or events with the given lambda expression.
     The lambda expression gets the trace or event as a parameter and it should return true or false.
     In case of true its a relevant trace or event, otherwise not.

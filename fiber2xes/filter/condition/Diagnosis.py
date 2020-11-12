@@ -1,9 +1,10 @@
 """
 Defines functions to check events for diagnosis condition
 """
+from fiber2xes.filter.Filter import Filter
 
 
-class Diagnosis():
+class Diagnosis(Filter):
     """Filter for a specific diagnosis given by the code. Event and Trace filtering are possible.
 
     Keyword arguments:

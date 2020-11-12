@@ -1,8 +1,10 @@
 """
 Defines And operator
 """
+from fiber2xes.filter.Filter import Filter
 
-class And():
+
+class And(Filter):
     """It uses two filters and check for both if the trace or event is relevant.
     Only if both are true, the trace or event is relevant.
 
@@ -11,7 +13,7 @@ class And():
     filter2 -- the second filter
     """
 
-    def __init__(self, filter1, filter2):
+    def __init__(self, filter1: Filter, filter2: Filter):
         self.filter1 = filter1
         self.filter2 = filter2
 

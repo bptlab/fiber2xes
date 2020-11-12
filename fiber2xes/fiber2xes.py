@@ -41,8 +41,7 @@ from .filter import condition
 from .filter import operator
 from fiber.condition import MRNs  # type: ignore
 
-Filter = TypeVar('Filter', condition.Diagnosis, condition.Generic, condition.Material,
-                 condition.Procedure, condition.Time, operator.And, operator.Not, operator.Or)
+from fiber2xes.filter.Filter import Filter
 
 
 def timer(func):

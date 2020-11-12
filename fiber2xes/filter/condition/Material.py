@@ -1,9 +1,10 @@
 """
 Defines functions to check events for material condition
 """
+from fiber2xes.filter.Filter import Filter
 
 
-class Material():
+class Material(Filter):
     """Filter for a specific material given by the code. Event and Trace filtering are possible.
 
     Keyword arguments:

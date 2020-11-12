@@ -2,8 +2,10 @@
 Defines Or operator
 """
 
+from fiber2xes.filter.Filter import Filter
 
-class Or():
+
+class Or(Filter):
     """It uses two filters and check for both if the trace or event is relevant.
     Returns true if at least one filter is true.
 
@@ -12,7 +14,7 @@ class Or():
     filter2 -- the second filter
     """
 
-    def __init__(self, filter1, filter2):
+    def __init__(self, filter1: Filter, filter2: Filter):
         self.filter1 = filter1
         self.filter2 = filter2
 

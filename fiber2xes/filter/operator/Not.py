@@ -1,16 +1,17 @@
 """
 Defines Not operator
 """
+from fiber2xes.filter.Filter import Filter
 
 
-class Not():
+class Not(Filter):
     """It takes on filter and inverts its result for the given event or trace
 
     Keyword arguments:
     filter -- the filter
     """
 
-    def __init__(self, filter1):
+    def __init__(self, filter1: Filter):
         self.filter = filter1
 
     def is_relevant_trace(self, trace) -> bool:

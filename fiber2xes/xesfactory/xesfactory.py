@@ -17,6 +17,8 @@ from typing import List
 from ..abstraction.abstraction import get_abstract_event_name
 from ..translation import Translator
 
+from fiber2xes.filter.Filter import Filter
+
 
 def translate_procedure_diagnosis_material_to_event(abstraction_path: str,
                                                     abstraction_exact_match: bool,
@@ -24,7 +26,7 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path: str,
                                                     event,
                                                     verbose: bool,
                                                     remove_unlisted: bool,
-                                                    anamnesis_events):
+                                                    anamnesis_events: str):
     """
     Derives an activity identifier for an event.
 
@@ -94,15 +96,15 @@ def create_trace_information(event):
 
 
 def create_xes_trace_for_events(trace_events,
-                                event_filter,
-                                abstraction_path,
-                                abstraction_exact_match,
-                                abstraction_delimiter,
-                                verbose,
-                                remove_unlisted,
-                                remove_duplicates,
-                                trace_type,
-                                anamnesis_events) -> List[XTrace]:
+                                event_filter: Filter,
+                                abstraction_path: str,
+                                abstraction_exact_match: bool,
+                                abstraction_delimiter: str,
+                                verbose: bool,
+                                remove_unlisted: bool,
+                                remove_duplicates: bool,
+                                trace_type: str,
+                                anamnesis_events: str) -> List[XTrace]:
     """
     Translating the events into event objects, remove duplicated events and
     add lifecycle informations.
@@ -434,7 +436,7 @@ def create_xes_traces_from_traces(traces,
                                   abstraction_delimiter,
                                   verbose,
                                   remove_unlisted,
-                                  event_filter,
+                                  event_filter: Filter,
                                   remove_duplicates,
                                   trace_type,
                                   anamnesis_events) -> List[XTrace]:

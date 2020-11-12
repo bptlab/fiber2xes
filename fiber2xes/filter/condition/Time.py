@@ -1,13 +1,13 @@
 """
 Defines functions to check events for time condition
 """
-
 from datetime import datetime
+from fiber2xes.filter.Filter import Filter
 
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-class Time():
+class Time(Filter):
     """
     Filter the traces based on timing conditions (see parameter).
     Event filtering is not possible.

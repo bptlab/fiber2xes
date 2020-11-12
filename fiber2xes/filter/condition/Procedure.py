@@ -2,8 +2,10 @@
 Defines functions to check events for procedure condition
 """
 
+from fiber2xes.filter.Filter import Filter
 
-class Procedure():
+
+class Procedure(Filter):
     """Filter for a specific procedure given by the code. Event and Trace filtering are possible.
 
     Keyword arguments:
