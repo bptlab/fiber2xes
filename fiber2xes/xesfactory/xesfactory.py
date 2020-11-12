@@ -9,6 +9,7 @@ import datetime
 from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer  # type: ignore
 from opyenxes.factory.XFactory import XFactory  # type: ignore
 from opyenxes.factory.XFactory import XTrace
+from opyenxes.factory.XFactory import XLog
 
 from pyspark.sql import Row
 
@@ -314,7 +315,7 @@ def create_xes_trace_for_events(trace_events,
     return xes_traces
 
 
-def create_xes_trace(trace_information, trace_events, trace_type) -> XTrace:
+def create_xes_trace(trace_information: dict, trace_events, trace_type: str) -> XTrace:
     """
     Collect events that belong to a trace in an opyenxes trace.
 
@@ -435,14 +436,14 @@ def create_xes_trace(trace_information, trace_events, trace_type) -> XTrace:
 
 
 def create_xes_traces_from_traces(traces,
-                                  abstraction_path,
-                                  abstraction_exact_match,
-                                  abstraction_delimiter,
-                                  verbose,
-                                  remove_unlisted,
+                                  abstraction_path: str,
+                                  abstraction_exact_match: bool,
+                                  abstraction_delimiter: str,
+                                  verbose: bool,
+                                  remove_unlisted: bool,
                                   event_filter: Filter,
-                                  remove_duplicates,
-                                  trace_type,
+                                  remove_duplicates: bool,
+                                  trace_type: str,
                                   anamnesis_events) -> List[XTrace]:
     """
     Create opyenxes traces for every trace.
@@ -474,7 +475,7 @@ def create_xes_traces_from_traces(traces,
     return result.collect()
 
 
-def save_event_log_to_file(log, file_path):
+def save_event_log_to_file(log: XLog, file_path: str):
     """
     This method serialises a created log to a file.
 

@@ -81,7 +81,7 @@ def cohort_to_event_log(cohort: Cohort, trace_type: str, verbose: bool = False, 
                         remove_duplicates: bool = True, event_filter: Filter = None, trace_filter: Filter = None,
                         cores: int = multiprocessing.cpu_count(), window_size: int = 200, abstraction_path: str = None,
                         abstraction_exact_match: bool = False, abstraction_delimiter: str = ";",
-                        anamnesis_events: str = 'all'):
+                        anamnesis_events: str = 'all') -> XLog:
     """
     Converts a fiber cohort to an xes event log.
     Therefore it slices the cohort to smaller windows (because of memory restrictions)
