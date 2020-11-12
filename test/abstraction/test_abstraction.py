@@ -111,7 +111,7 @@ def test_abstraction():
                                                                anamnesis_events="none",
                                                                event_name="abstractATermB")
 
-    assert abstracted_anamnesis_a_discarded == 'AbstractA'
+    assert abstracted_anamnesis_a_discarded == None
 
     abstracted_term_b = get_abstract_event_name(abstraction_path=abstraction_path,
                                                 abstraction_exact_match=True,
@@ -135,7 +135,7 @@ def test_abstraction():
                                                                anamnesis_events="none",
                                                                event_name="abstractBTermB")
 
-    assert abstracted_anamnesis_b_discarded == 'AbstractB'  # todo: should be none
+    assert abstracted_anamnesis_b_discarded == None
 
 
 def test_remove_unlisted():

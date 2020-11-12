@@ -52,6 +52,8 @@ def get_abstract_event_name(abstraction_path, abstraction_exact_match,
                     return entry
                 if anamnesis and anamnesis_events != 'none':
                     return 'Anamnesis: ' + abstraction_names[i]
+                if anamnesis and anamnesis_events == 'none':
+                    return None
                 return abstraction_names[i]
 
     if remove_unlisted:
