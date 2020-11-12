@@ -37,7 +37,7 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path: str,
     remove_unlisted -- remove all events that are not included in the abstraction table
     """
 
-    translator = Translator()
+    translator = Translator()  # todo: make this a singleton!
 
     if not translator.is_known_event(event):
         return None, None, None, None

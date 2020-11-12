@@ -13,7 +13,7 @@ class Not():
     def __init__(self, filter1):
         self.filter = filter1
 
-    def is_relevant_trace(self, trace):
+    def is_relevant_trace(self, trace) -> bool:
         """Applies the filter on the trace and returns the inverted result
 
         Keyword arguments:
@@ -21,7 +21,7 @@ class Not():
         """
         return not self.filter.is_relevant_trace(trace)
 
-    def is_relevant_event(self, event):
+    def is_relevant_event(self, event) -> bool:
         """Applies the filter on the event and returns the inverted result
 
         Keyword arguments:

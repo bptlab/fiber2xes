@@ -2,6 +2,7 @@
 Defines functions to check events for material condition
 """
 
+
 class Material():
     """Filter for a specific material given by the code. Event and Trace filtering are possible.
 
@@ -9,10 +10,10 @@ class Material():
     material_code -- the material code
     """
 
-    def __init__(self, material_code):
+    def __init__(self, material_code: str):
         self.material_code = material_code
 
-    def is_relevant_trace(self, trace):
+    def is_relevant_trace(self, trace) -> bool:
         """Checks if the trace contains the material at least once.
 
         Keyword arguments:
@@ -23,7 +24,7 @@ class Material():
                 return True
         return False
 
-    def is_relevant_event(self, event):
+    def is_relevant_event(self, event) -> bool:
         """Checks if the event is this kind of material
 
         Keyword arguments:

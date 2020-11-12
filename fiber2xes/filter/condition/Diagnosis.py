@@ -10,10 +10,10 @@ class Diagnosis():
     diagnosis_code -- the diagnosis code
     """
 
-    def __init__(self, diagnosis_code):
+    def __init__(self, diagnosis_code: str):
         self.diagnosis_code = diagnosis_code
 
-    def is_relevant_trace(self, trace):
+    def is_relevant_trace(self, trace) -> bool:
         """Checks if the trace contains the diagnosis at least once.
 
         Keyword arguments:
@@ -24,7 +24,7 @@ class Diagnosis():
                 return True
         return False
 
-    def is_relevant_event(self, event):
+    def is_relevant_event(self, event) -> bool:
         """Checks if the event is this kind of diagnosis
 
         Keyword arguments:

@@ -28,24 +28,28 @@ class Time():
         if one_event_after is None:
             self.one_event_after = datetime.min
         else:
-            self.one_event_after = datetime.strptime(one_event_after, DATETIME_FORMAT)
+            self.one_event_after = datetime.strptime(
+                one_event_after, DATETIME_FORMAT)
 
         if one_event_before is None:
             self.one_event_before = datetime.max
         else:
-            self.one_event_before = datetime.strptime(one_event_before, DATETIME_FORMAT)
+            self.one_event_before = datetime.strptime(
+                one_event_before, DATETIME_FORMAT)
 
         if all_events_after is None:
             self.all_events_after = datetime.min
         else:
-            self.all_events_after = datetime.strptime(all_events_after, DATETIME_FORMAT)
+            self.all_events_after = datetime.strptime(
+                all_events_after, DATETIME_FORMAT)
 
         if all_events_before is None:
             self.all_events_before = datetime.max
         else:
-            self.all_events_before = datetime.strptime(all_events_before, DATETIME_FORMAT)
+            self.all_events_before = datetime.strptime(
+                all_events_before, DATETIME_FORMAT)
 
-    def is_relevant_trace(self, trace):
+    def is_relevant_trace(self, trace) -> bool:
         """Checks if the trace is relevant based on the given timing parameters
 
         Keyword arguments:
@@ -65,7 +69,7 @@ class Time():
                 return False
         return one_after and one_before
 
-    def is_relevant_event(self, event):
+    def is_relevant_event(self, event) -> bool:
         """is_relevant_event is not defined and raises an expection.
 
         Keyword arguments:

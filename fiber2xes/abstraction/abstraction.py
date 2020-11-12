@@ -5,10 +5,12 @@ Module containing the function to abstract an event name based on an abstraction
 import csv
 import re
 
+from typing import Optional
 
-def get_abstract_event_name(abstraction_path, abstraction_exact_match,
-                            abstraction_delimiter, event_name, remove_unlisted=False,
-                            anamnesis=False, anamnesis_events='all'):
+
+def get_abstract_event_name(abstraction_path: str, abstraction_exact_match: bool,
+                            abstraction_delimiter: str, event_name: str, remove_unlisted: bool = False,
+                            anamnesis: bool = False, anamnesis_events: str = 'all') -> Optional[str]:
     """
     Abstracts an event name to an abstract activity identifier according to a
     given abstraction table.

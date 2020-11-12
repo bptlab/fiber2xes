@@ -2,6 +2,8 @@
 Defines functions to check events for generic condition
 """
 
+from typing import Callable
+
 
 class Generic():
     """Filter the traces or events with the given lambda expression.
@@ -12,10 +14,10 @@ class Generic():
     lambda_expression -- the lambda expression which will be applied on all traces and events
     """
 
-    def __init__(self, lambda_expression):
+    def __init__(self, lambda_expression: Callable):
         self.lambda_expression = lambda_expression
 
-    def is_relevant_trace(self, trace):
+    def is_relevant_trace(self, trace) -> bool:
         """Returns the value of the lambda expression applied on the trace
 
         Keyword arguments:
@@ -23,7 +25,7 @@ class Generic():
         """
         return self.lambda_expression(trace)
 
-    def is_relevant_event(self, event):
+    def is_relevant_event(self, event) -> bool:
         """Returns the value of the lambda expression applied on the event
 
         Keyword arguments:
