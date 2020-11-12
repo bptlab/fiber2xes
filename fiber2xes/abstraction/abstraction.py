@@ -9,7 +9,7 @@ from typing import Optional
 
 
 def get_abstract_event_name(abstraction_path: str, abstraction_exact_match: bool,
-                            abstraction_delimiter: str, event_name: str, remove_unlisted: bool = False,
+                            abstraction_delimiter: str, event_name: Optional[str], remove_unlisted: bool = False,
                             anamnesis: bool = False, anamnesis_events: str = 'all') -> Optional[str]:
     """
     Abstracts an event name to an abstract activity identifier according to a
@@ -25,6 +25,9 @@ def get_abstract_event_name(abstraction_path: str, abstraction_exact_match: bool
     anamnesis -- is the passed event an anamnesis event
     anamnesis_events -- which anamnesis events should be included in the xes log
     """
+    if event_name is None:
+        return None
+
     if abstraction_path is None:
         if anamnesis:
             return 'Anamnesis: ' + event_name

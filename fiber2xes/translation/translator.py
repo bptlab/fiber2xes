@@ -7,6 +7,12 @@ import os
 import re
 import csv
 
+from typing import (
+    Tuple,
+    Optional,
+    List
+)
+
 dirname = os.path.dirname(__file__)
 DIAGNOSIS_ICD_10_VOCAB_PATH = os.path.join(dirname, "vocab-icd10.csv")
 DIAGNOSIS_ICD_9_VOCAB_PATH = os.path.join(dirname, "vocab-icd9.csv")
@@ -22,7 +28,7 @@ class Translator():
     def __init__(self):
         pass
 
-    def is_event_procedure(self, event):
+    def is_event_procedure(self, event) -> bool:
         """
         Checks if the given event is a procedure.
 
@@ -32,7 +38,7 @@ class Translator():
         return event.context_procedure_code != "MSDW_NOT APPLICABLE" and \
             event.context_procedure_code != "MSDW_UNKNOWN"
 
-    def is_event_diagnosis(self, event):
+    def is_event_diagnosis(self, event) -> bool:
         """
         Checks if the given event is a diagnosis.
 
@@ -42,7 +48,7 @@ class Translator():
         return event.context_diagnosis_code != "MSDW_NOT APPLICABLE" and \
             event.context_diagnosis_code != "MSDW_UNKNOWN"
 
-    def is_event_material(self, event):
+    def is_event_material(self, event) -> bool:
         """
         Checks if the given event is a material.
 
@@ -52,7 +58,7 @@ class Translator():
         return event.context_material_code != "MSDW_NOT APPLICABLE" and \
             event.context_material_code != "MSDW_UNKNOWN"
 
-    def is_known_event(self, event):
+    def is_known_event(self, event) -> bool:
         """
         Checks if the given event is a procedure, diagnosis or material.
 
@@ -62,7 +68,7 @@ class Translator():
         return self.is_event_procedure(event) or self.is_event_diagnosis(event) or \
             self.is_event_material(event)
 
-    def translate_to_event(self, event, verbose):
+    def translate_to_event(self, event, verbose: bool) -> Tuple[Optional[str], str, str, bool, Optional[str], str]:
         """
         Determines event type and applies translations and abstractions to it
 
@@ -76,9 +82,9 @@ class Translator():
         context_diagnosis_code set
         -> diagnosis is event
         """
-        context_diagnosis_code = event.context_diagnosis_code
-        context_material_code = event.context_material_code
-        context_procedure_code = event.context_procedure_code
+        context_diagnosis_code: str = event.context_diagnosis_code
+        context_material_code: str = event.context_material_code
+        context_procedure_code: str = event.context_procedure_code
         context_names = list(filter(lambda c: c != "SYSTEM",
                                     [event.context_name,
                                      event.context_name_1,
@@ -97,7 +103,7 @@ class Translator():
             # Event is procedure
             event_type = "PROCEDURE"
             event_code = context_procedure_code
-            event_description = event.procedure_description
+            event_description: str = event.procedure_description
 
             event_context, translation = self.translate_procedure(
                 context_names, context_procedure_code, verbose)
@@ -107,7 +113,7 @@ class Translator():
             else:
                 event_name = event.procedure_description
 
-            if 'PAIN SCORE' in event_name:
+            if event_name is not None and 'PAIN SCORE' in event_name:
                 event_description += ': ' + event.value
 
             consultation = self.identify_consultation(event_name)
@@ -156,8 +162,8 @@ class Translator():
 
         return event_name, event_description, event_type, anamnesis, event_context, event_code
 
-    def vocabulary_lookup(self, vocabulary_path, search_term, search_column=0, target_column=1,
-                          delimiter=","):
+    def vocabulary_lookup(self, vocabulary_path: str, search_term: str, search_column: int = 0, target_column: int = 1,
+                          delimiter: str = ",") -> Optional[str]:
         """
         Looks for a search term in the vocab tables.
 
@@ -180,7 +186,7 @@ class Translator():
                     return row[target_column]
         return None
 
-    def translate_icd10(self, code):
+    def translate_icd10(self, code: str) -> Optional[str]:
         """
         Translate an ICD-10 code to its textual representation
 
@@ -194,7 +200,7 @@ class Translator():
             target_column=2
         )
 
-    def translate_icd9(self, code):
+    def translate_icd9(self, code) -> Optional[str]:
         """
         Translate an ICD-9 code to its textual representation
 
@@ -208,7 +214,7 @@ class Translator():
             target_column=1
         )
 
-    def translate_cpt4(self, code):
+    def translate_cpt4(self, code) -> Optional[str]:
         """
         Translate an CPT-4 code to its textual representation
 
@@ -222,7 +228,7 @@ class Translator():
             target_column=2
         )
 
-    def translate_procedure(self, context_names, context_procedure_code, verbose):
+    def translate_procedure(self, context_names: List[str], context_procedure_code: str, verbose: bool) -> Tuple[str, Optional[str]]:
         """
         Translate a procedure by the context name and procedure code to a textual representation
 
@@ -256,7 +262,7 @@ class Translator():
 
         return event_context, translation
 
-    def translate_diagnosis(self, context_names, context_diagnosis_code, verbose):
+    def translate_diagnosis(self, context_names: List[str], context_diagnosis_code: str, verbose: bool) -> Tuple[str, Optional[str]]:
         """
         Translate a diagnosis by the context name and diagnosis code to a textual representation
 
@@ -287,7 +293,7 @@ class Translator():
 
         return event_context, translation
 
-    def translate_material(self, context_names, verbose):
+    def translate_material(self, context_names: List[str], verbose: bool) -> Tuple[str, Optional[str]]:
         """
         Translate a material by the context name and material code to the textual representation
 
@@ -308,13 +314,16 @@ class Translator():
 
         return event_context, translation
 
-    def identify_consultation(self, procedure_description):
+    def identify_consultation(self, procedure_description: Optional[str]) -> Optional[str]:
         """
         Identify a consultation event
 
         Keyword arguments:
         procedure_description -- the procedure description
         """
+        if procedure_description is None:
+            return None
+
         result = re.search(
             "^CONSULT TO ", procedure_description, re.IGNORECASE)
         if result is not None:
