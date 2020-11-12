@@ -53,6 +53,7 @@ def test_diagnosis_trace_filter():
 
 
 def test_generic():
+    # todo
     assert True
 
 
@@ -126,7 +127,9 @@ def test_time():
     assert one_before.is_relevant_trace([event_a, event_b, event_c, event_d])
     assert all_before.is_relevant_trace([event_a, event_b, event_c, event_d])
 
-    assert not one_after.is_relevant_trace([event_a, event_b, event_c, event_d])
-    assert not all_after.is_relevant_trace([event_a, event_b, event_c, event_d])
+    assert not one_after.is_relevant_trace(
+        [event_a, event_b, event_c, event_d])
+    assert not all_after.is_relevant_trace(
+        [event_a, event_b, event_c, event_d])
 
-    assert True
+    # todo: add more tests here
