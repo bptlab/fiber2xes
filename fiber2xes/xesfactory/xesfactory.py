@@ -12,7 +12,11 @@ from opyenxes.factory.XFactory import XTrace
 
 from pyspark.sql import Row
 
-from typing import List
+from typing import (
+    List,
+    Optional,
+    Tuple
+)
 
 from ..abstraction.abstraction import get_abstract_event_name
 from ..translation import Translator
@@ -26,7 +30,7 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path: str,
                                                     event,
                                                     verbose: bool,
                                                     remove_unlisted: bool,
-                                                    anamnesis_events: str):
+                                                    anamnesis_events: str) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
     """
     Derives an activity identifier for an event.
 
@@ -71,7 +75,7 @@ def translate_procedure_diagnosis_material_to_event(abstraction_path: str,
     return abstract_event_name, result, event_context, event_code
 
 
-def create_trace_information(event):
+def create_trace_information(event) -> dict:
     """
     Creates an object with the information of the trace of the event
 
