@@ -48,6 +48,8 @@ def get_abstract_event_name(abstraction_path: str, abstraction_exact_match: bool
                 if abstraction_names[i].lower() == "group":
                     if anamnesis and anamnesis_events != 'none':
                         return 'Anamnesis: ' + entry
+                    if anamnesis and anamnesis_events == 'none':
+                        return None
                     return entry
                 if abstraction_names[i].lower() == "blacklist":
                     return None
