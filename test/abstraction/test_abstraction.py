@@ -44,7 +44,7 @@ def test_group():
                                                         anamnesis_events="none",
                                                         event_name="groupTermA",
                                                         anamnesis=True)
-    assert group_anamnesis_discarded == 'groupTermA'
+    assert group_anamnesis_discarded == None
 
     group = get_abstract_event_name(abstraction_path=abstraction_path,
                                     abstraction_exact_match=True,
