@@ -24,7 +24,7 @@ from ..translation import Translator
 
 from fiber2xes.filter.Filter import Filter
 
-
+# todo: anamnesis_events may as well be a boolean
 def translate_procedure_diagnosis_material_to_event(abstraction_path: str,
                                                     abstraction_exact_match: bool,
                                                     abstraction_delimiter: str,
@@ -94,7 +94,7 @@ def create_trace_information(event) -> dict:
         "race": event.race,
         "religion": event.religion,
         "citizenship": event.citizenship,
-        "martial": event.marital_status_code,
+        "marital": event.marital_status_code,
     }
 
     return trace_information

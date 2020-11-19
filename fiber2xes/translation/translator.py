@@ -196,8 +196,8 @@ class Translator():
         return self.vocabulary_lookup(
             vocabulary_path=DIAGNOSIS_ICD_10_VOCAB_PATH,
             search_term=str(code),
-            search_column=1,
-            target_column=2
+            search_column=0,
+            target_column=1
         )
 
     def translate_icd9(self, code) -> Optional[str]:
