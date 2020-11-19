@@ -11,7 +11,9 @@ class MockEvent:
                  context_name_1='MSDW_UNKNOWN',
                  context_name_2='MSDW_UNKNOWN',
                  level3_action_name='MSDW_UNKNOWN',
+                 description='MSDW_UNKNOWN',
                  procedure_description: str = "MSDW_UNKNOWN",
+                 material_name='MSDW_UNKNOWN',
                  timestamp="2020-12-4 08:11:12",
                  date_of_birth="1970-01-01 00:00:00",
                  address_zip="MSDW_UNKNOWN",
@@ -21,6 +23,7 @@ class MockEvent:
                  race="MSDW_UNKNOWN",
                  religion="MSDW_UNKNOWN",
                  marital_status="MSDW_UNKNOWN",
+                 value=None
                  ):
         self.context_procedure_code = context_procedure_code
         self.context_diagnosis_code = context_diagnosis_code
@@ -29,7 +32,9 @@ class MockEvent:
         self.context_name_1 = context_name_1
         self.context_name_2 = context_name_2
         self.level3_action_name = level3_action_name
+        self.description = description
         self.procedure_description = procedure_description
+        self.material_name = material_name
         self.timestamp = datetime.strptime(timestamp, DATETIME_FORMAT)
         self.date_of_birth = datetime.strptime(date_of_birth, DATETIME_FORMAT)
         self.address_zip = address_zip
@@ -39,3 +44,4 @@ class MockEvent:
         self.race = race
         self.religion = religion
         self.marital_status = marital_status
+        self.value = value
