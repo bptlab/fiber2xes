@@ -27,7 +27,7 @@ from ..translation import Translator
 from fiber2xes.filter.Filter import Filter
 
 
-def create_xes_trace_for_events(trace_events: List[dict],
+def create_xes_trace_for_events(trace_events: List,
                                 event_filter: Filter,
                                 abstraction_path: str,
                                 abstraction_exact_match: bool,

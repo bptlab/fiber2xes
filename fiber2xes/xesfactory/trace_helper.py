@@ -107,7 +107,7 @@ def deduplicate_relevant_events(relevant_events: List[dict]) -> List[dict]:
     # It appears that sometimes multiple drugs of the NSAID group are given.
     # Therefore the concrete description is used.
     unique_values = set()
-    deduplicated_events = list()
+    deduplicated_events = List[dict]()
     for event in relevant_events:
         compare_value = event['name']
         if 'NSAID' in compare_value:
@@ -306,10 +306,10 @@ def identify_duplicate_medication_diagnosis_events(trace_events: list, abstracti
     return trace_events, seen_end_medications_per_day, seen_running_medications_per_day, seen_diagnosis_per_day
 
 
-def apply_event_filters(trace_events, event_filter, seen_running_medications_per_day,
-                        seen_end_medications_per_day, seen_diagnosis_per_day,
-                        abstraction_path, abstraction_exact_match, abstraction_delimiter,
-                        verbose, remove_unlisted, anamnesis_events) -> Tuple[List[dict], set]:
+def apply_event_filters(trace_events: list, event_filter: Filter, seen_running_medications_per_day: dict,
+                        seen_end_medications_per_day: dict, seen_diagnosis_per_day: dict,
+                        abstraction_path: str, abstraction_exact_match: bool, abstraction_delimiter: str,
+                        verbose: bool, remove_unlisted: bool, anamnesis_events: str) -> Tuple[List[dict], set]:
     medication_list = []
     encounter_ids = set()
     relevant_events: List[dict] = List[dict]()
@@ -321,6 +321,8 @@ def apply_event_filters(trace_events, event_filter, seen_running_medications_per
             is_relevant = True
         else:
             is_relevant = event_filter.is_relevant_event(event)
+
+        # skip handling this event if it is not relevant
         if not is_relevant:
             continue
 
