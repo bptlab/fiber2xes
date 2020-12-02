@@ -1,4 +1,6 @@
 from fiber2xes.translation.translator import Translator
+from fiber2xes.translation.translator import (
+    is_event_diagnosis, is_event_material, is_event_procedure, is_known_event, identify_consultation, translate_material)
 
 from mocks.MockEvent import MockEvent
 
@@ -20,48 +22,48 @@ not_applicable_event = MockEvent(context_procedure_code='MSDW_NOT APPLICABLE',
 
 
 def test_is_event_procedure():
-    assert translator.is_event_procedure(procedure_event)
+    assert is_event_procedure(procedure_event)
 
-    assert not translator.is_event_procedure(unknown_event)
+    assert not is_event_procedure(unknown_event)
 
-    assert not translator.is_event_procedure(diagnosis_event)
+    assert not is_event_procedure(diagnosis_event)
 
-    assert not translator.is_event_procedure(material_event)
+    assert not is_event_procedure(material_event)
 
-    assert not translator.is_event_procedure(not_applicable_event)
+    assert not is_event_procedure(not_applicable_event)
 
 
 def test_is_event_diagnosis():
-    assert translator.is_event_diagnosis(diagnosis_event)
+    assert is_event_diagnosis(diagnosis_event)
 
-    assert not translator.is_event_diagnosis(unknown_event)
+    assert not is_event_diagnosis(unknown_event)
 
-    assert not translator.is_event_diagnosis(procedure_event)
+    assert not is_event_diagnosis(procedure_event)
 
-    assert not translator.is_event_diagnosis(material_event)
+    assert not is_event_diagnosis(material_event)
 
-    assert not translator.is_event_diagnosis(not_applicable_event)
+    assert not is_event_diagnosis(not_applicable_event)
 
 
 def test_is_event_material():
-    assert translator.is_event_material(material_event)
+    assert is_event_material(material_event)
 
-    assert not translator.is_event_material(unknown_event)
+    assert not is_event_material(unknown_event)
 
-    assert not translator.is_event_material(procedure_event)
+    assert not is_event_material(procedure_event)
 
-    assert not translator.is_event_material(diagnosis_event)
+    assert not is_event_material(diagnosis_event)
 
-    assert not translator.is_event_material(not_applicable_event)
+    assert not is_event_material(not_applicable_event)
 
 
 def test_is_known_event():
-    assert translator.is_known_event(material_event)
-    assert translator.is_known_event(procedure_event)
-    assert translator.is_known_event(diagnosis_event)
+    assert is_known_event(material_event)
+    assert is_known_event(procedure_event)
+    assert is_known_event(diagnosis_event)
 
-    assert not translator.is_known_event(unknown_event)
-    assert not translator.is_known_event(not_applicable_event)
+    assert not is_known_event(unknown_event)
+    assert not is_known_event(not_applicable_event)
 
 
 def test_vocabulary_lookup():
@@ -175,27 +177,27 @@ def test_translate_diagnosis():
 
 
 def test_translate_material():
-    event_context_a, translation_a = translator.translate_material(
+    event_context_a, translation_a = translate_material(
         [], verbose=False)
 
     assert event_context_a == "UNKNOWN"
     assert translation_a == None
 
-    event_context_b, translation_b = translator.translate_material(
+    event_context_b, translation_b = translate_material(
         ["EPIC MEDICATION"], verbose=False)
     assert event_context_b == "EPIC MEDICATION"
     assert translation_b == None
 
 
 def test_identify_consultation():
-    none_description = translator.identify_consultation(None)
+    none_description = identify_consultation(None)
     assert none_description is None
 
-    wrong_description = translator.identify_consultation(
+    wrong_description = identify_consultation(
         "some_other_description")
     assert wrong_description is None
 
-    description = translator.identify_consultation(
+    description = identify_consultation(
         "consult to some specialist")
     assert description == "some specialist"
 
