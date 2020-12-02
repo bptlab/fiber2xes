@@ -30,6 +30,7 @@ setup(
             'pytest-pep8',
             'pytest-cov',
             'pytest-env',
+            'pylint>=2.6.0',
             'sqlalchemy-stubs>=0.3',
             'pyspark-stubs>=3.0.0'
         ]

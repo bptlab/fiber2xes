@@ -1,3 +1,9 @@
+
+"""
+This extends the Encounter Class to also have the Visit key,
+which allows us to filter based on visits
+"""
+
 from typing import Optional
 
 from fiber.condition.fact.fact import _FactCondition  # type: ignore
@@ -6,10 +12,6 @@ from fiber.database.table import (  # type: ignore
     d_enc,
     fact,
 )
-
-"""
-This extends the Encounter Class to also have the Visit key, which allows us to filter based on visits
-"""
 
 
 class EncounterWithVisit(_FactCondition):

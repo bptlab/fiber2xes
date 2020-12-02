@@ -28,47 +28,8 @@ class Translator():
     def __init__(self):
         pass
 
-    def is_event_procedure(self, event) -> bool:
-        """
-        Checks if the given event is a procedure.
-
-        Keyword arguments:
-        event -- the event
-        """
-        return event.context_procedure_code != "MSDW_NOT APPLICABLE" and \
-            event.context_procedure_code != "MSDW_UNKNOWN"
-
-    def is_event_diagnosis(self, event) -> bool:
-        """
-        Checks if the given event is a diagnosis.
-
-        Keyword arguments:
-        event -- the event
-        """
-        return event.context_diagnosis_code != "MSDW_NOT APPLICABLE" and \
-            event.context_diagnosis_code != "MSDW_UNKNOWN"
-
-    def is_event_material(self, event) -> bool:
-        """
-        Checks if the given event is a material.
-
-        Keyword arguments:
-        event -- the event
-        """
-        return event.context_material_code != "MSDW_NOT APPLICABLE" and \
-            event.context_material_code != "MSDW_UNKNOWN"
-
-    def is_known_event(self, event) -> bool:
-        """
-        Checks if the given event is a procedure, diagnosis or material.
-
-        Keyword arguments:
-        event -- the event
-        """
-        return self.is_event_procedure(event) or self.is_event_diagnosis(event) or \
-            self.is_event_material(event)
-
-    def translate_to_event(self, event, verbose: bool) -> Tuple[Optional[str], str, str, bool, Optional[str], str]:
+    def translate_to_event(self, event, verbose: bool) -> Tuple[
+            Optional[str], str, str, bool, Optional[str], str]:
         """
         Determines event type and applies translations and abstractions to it
 
@@ -99,7 +60,7 @@ class Translator():
         anamnesis = False
 
         # Identify event type
-        if self.is_event_procedure(event):
+        if is_event_procedure(event):
             # Event is procedure
             event_type = "PROCEDURE"
             event_code = context_procedure_code
@@ -116,7 +77,7 @@ class Translator():
             if event_name is not None and 'PAIN SCORE' in event_name:
                 event_description += ': ' + event.value
 
-            consultation = self.identify_consultation(event_name)
+            consultation = identify_consultation(event_name)
 
             if consultation is not None:
                 event_name = consultation
@@ -125,7 +86,7 @@ class Translator():
             if 'Reported' in event.level3_action_name:
                 anamnesis = True
 
-        elif self.is_event_diagnosis(event):
+        elif is_event_diagnosis(event):
             # Event is diagnosis
             event_type = "DIAGNOSIS"
             event_code = context_diagnosis_code
@@ -142,14 +103,14 @@ class Translator():
             if 'Reported' in event.level3_action_name:
                 anamnesis = True
 
-        elif self.is_event_material(event):
+        elif is_event_material(event):
             # Event is material
             event_type = "MATERIAL"
             event_code = context_material_code
             event_name = event.material_name
             event_description = event.material_name
 
-            event_context, translation = self.translate_material(
+            event_context, translation = translate_material(
                 context_names, verbose)
 
             if translation is not None:
@@ -162,7 +123,8 @@ class Translator():
 
         return event_name, event_description, event_type, anamnesis, event_context, event_code
 
-    def vocabulary_lookup(self, vocabulary_path: str, search_term: str, search_column: int = 0, target_column: int = 1,
+    def vocabulary_lookup(self, vocabulary_path: str, search_term: str,
+                          search_column: int = 0, target_column: int = 1,
                           delimiter: str = ",") -> Optional[str]:
         """
         Looks for a search term in the vocab tables.
@@ -228,7 +190,9 @@ class Translator():
             target_column=2
         )
 
-    def translate_procedure(self, context_names: List[str], context_procedure_code: str, verbose: bool) -> Tuple[str, Optional[str]]:
+    def translate_procedure(self, context_names: List[str],
+                            context_procedure_code: str,
+                            verbose: bool) -> Tuple[str, Optional[str]]:
         """
         Translate a procedure by the context name and procedure code to a textual representation
 
@@ -262,7 +226,9 @@ class Translator():
 
         return event_context, translation
 
-    def translate_diagnosis(self, context_names: List[str], context_diagnosis_code: str, verbose: bool) -> Tuple[str, Optional[str]]:
+    def translate_diagnosis(self, context_names: List[str],
+                            context_diagnosis_code: str,
+                            verbose: bool) -> Tuple[str, Optional[str]]:
         """
         Translate a diagnosis by the context name and diagnosis code to a textual representation
 
@@ -293,39 +259,85 @@ class Translator():
 
         return event_context, translation
 
-    def translate_material(self, context_names: List[str], verbose: bool) -> Tuple[str, Optional[str]]:
-        """
-        Translate a material by the context name and material code to the textual representation
 
-        Keyword arguments:
-        context_names -- the context names
-        context_material_code -- the context code
-        verbose -- the flag to print additional information to debug
-        """
-        event_context = "UNKNOWN"
-        translation = None
+def translate_material(context_names: List[str], verbose: bool) -> Tuple[str, Optional[str]]:
+    """
+    Translate a material by the context name and material code to the textual representation
 
-        if "EPIC MEDICATION" in context_names:
-            event_context = "EPIC MEDICATION"
-        elif verbose:
-            print("Unknown Material Context")
-            for context in context_names:
-                print(context)
+    Keyword arguments:
+    context_names -- the context names
+    context_material_code -- the context code
+    verbose -- the flag to print additional information to debug
+    """
+    event_context = "UNKNOWN"
+    translation = None
 
-        return event_context, translation
+    if "EPIC MEDICATION" in context_names:
+        event_context = "EPIC MEDICATION"
+    elif verbose:
+        print("Unknown Material Context")
+        for context in context_names:
+            print(context)
 
-    def identify_consultation(self, procedure_description: Optional[str]) -> Optional[str]:
-        """
-        Identify a consultation event
+    return event_context, translation
 
-        Keyword arguments:
-        procedure_description -- the procedure description
-        """
-        if procedure_description is None:
-            return None
 
-        result = re.search(
-            "^CONSULT TO ", procedure_description, re.IGNORECASE)
-        if result is not None:
-            return procedure_description[result.end():]
+def identify_consultation(procedure_description: Optional[str]) -> Optional[str]:
+    """
+    Identify a consultation event
+
+    Keyword arguments:
+    procedure_description -- the procedure description
+    """
+    if procedure_description is None:
         return None
+
+    result = re.search(
+        "^CONSULT TO ", procedure_description, re.IGNORECASE)
+    if result is not None:
+        return procedure_description[result.end():]
+    return None
+
+
+def is_event_procedure(event) -> bool:
+    """
+    Checks if the given event is a procedure.
+
+    Keyword arguments:
+    event -- the event
+    """
+    return event.context_procedure_code != "MSDW_NOT APPLICABLE" and \
+        event.context_procedure_code != "MSDW_UNKNOWN"
+
+
+def is_event_diagnosis(event) -> bool:
+    """
+    Checks if the given event is a diagnosis.
+
+    Keyword arguments:
+    event -- the event
+    """
+    return event.context_diagnosis_code != "MSDW_NOT APPLICABLE" and \
+        event.context_diagnosis_code != "MSDW_UNKNOWN"
+
+
+def is_event_material(event) -> bool:
+    """
+    Checks if the given event is a material.
+
+    Keyword arguments:
+    event -- the event
+    """
+    return event.context_material_code != "MSDW_NOT APPLICABLE" and \
+        event.context_material_code != "MSDW_UNKNOWN"
+
+
+def is_known_event(event) -> bool:
+    """
+    Checks if the given event is a procedure, diagnosis or material.
+
+    Keyword arguments:
+    event -- the event
+    """
+    return is_event_procedure(event) or is_event_diagnosis(event) or \
+        is_event_material(event)

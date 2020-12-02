@@ -2,8 +2,8 @@
 Extension of MetaData class from fiber
 """
 
-from fiber.condition.fact.fact import _FactCondition # type: ignore
-from fiber.database.table import ( # type: ignore
+from fiber.condition.fact.fact import _FactCondition  # type: ignore
+from fiber.database.table import (  # type: ignore
     d_meta,
 )
 

@@ -2,6 +2,33 @@
     Main module of fiber2xes
     It contains functions to create a xes log from events extracted from the MSDW.
 """
+import sys
+import functools
+import datetime
+import time
+import math
+import multiprocessing
+from collections import OrderedDict
+
+
+from typing import List
+from typing import Tuple
+
+import pandas as pd
+from pyspark.sql import DataFrame
+from pyspark.rdd import RDD
+from pyspark.sql import SparkSession
+from pyspark import SparkConf
+
+from opyenxes.factory.XFactory import XFactory  # type: ignore
+from opyenxes.factory.XFactory import XTrace
+from opyenxes.factory.XFactory import XLog
+
+from fiber import Cohort  # type: ignore
+from fiber.condition import MRNs  # type: ignore
+
+from fiber2xes.filter.Filter import Filter
+
 
 from .fiberpatch import (
     DiagnosisWithTime,
@@ -12,36 +39,6 @@ from .fiberpatch import (
     ProcedureWithTime
 )
 from .xesfactory import create_xes_traces_from_traces
-import sys
-import functools
-import datetime
-import time
-import math
-import multiprocessing
-from collections import OrderedDict
-
-import pandas as pd
-from pyspark.sql import DataFrame
-from pyspark.rdd import RDD
-from pyspark.sql import SparkSession
-from pyspark import SparkConf
-
-
-from opyenxes.factory.XFactory import XFactory  # type: ignore
-from opyenxes.factory.XFactory import XTrace
-from opyenxes.factory.XFactory import XLog
-
-from typing import List
-from typing import TypeVar
-from typing import Tuple
-from typing import Union
-
-from fiber import Cohort  # type: ignore
-from .filter import condition
-from .filter import operator
-from fiber.condition import MRNs  # type: ignore
-
-from fiber2xes.filter.Filter import Filter
 
 
 def timer(func):
@@ -77,10 +74,17 @@ def create_spark_df(spark, pandas_df):
 
 
 @timer
-def cohort_to_event_log(cohort: Cohort, trace_type: str, verbose: bool = False, remove_unlisted: bool = True,
-                        remove_duplicates: bool = True, event_filter: Filter = None, trace_filter: Filter = None,
-                        cores: int = multiprocessing.cpu_count(), window_size: int = 200, abstraction_path: str = None,
-                        abstraction_exact_match: bool = False, abstraction_delimiter: str = ";",
+def cohort_to_event_log(cohort: Cohort, trace_type: str,
+                        verbose: bool = False,
+                        remove_unlisted: bool = True,
+                        remove_duplicates: bool = True,
+                        event_filter: Filter = None,
+                        trace_filter: Filter = None,
+                        cores: int = multiprocessing.cpu_count(),
+                        window_size: int = 200,
+                        abstraction_path: str = None,
+                        abstraction_exact_match: bool = False,
+                        abstraction_delimiter: str = ";",
                         anamnesis_events: str = 'all') -> XLog:
     """
     Converts a fiber cohort to an xes event log.
@@ -105,10 +109,10 @@ def cohort_to_event_log(cohort: Cohort, trace_type: str, verbose: bool = False, 
                         listed or none (default all)
     """
 
-    if trace_type != "visit" and trace_type != "mrn":
+    if trace_type not in ('visit', 'mrn'):
         sys.exit("No matching trace type given. Try using visit or mrn.")
 
-    if anamnesis_events != "all" and anamnesis_events != "listed" and anamnesis_events != 'none':
+    if anamnesis_events not in ('none', 'all', 'listed'):
         sys.exit(
             "No matching anamnesis_events value given. Try using all, listed or none")
 
@@ -157,8 +161,10 @@ def cohort_to_event_log(cohort: Cohort, trace_type: str, verbose: bool = False, 
     return log
 
 
-def cohort_to_event_log_for_window(cohort, trace_type: str, verbose: bool, remove_unlisted: bool, remove_duplicates: bool,
-                                   event_filter: Filter, trace_filter: Filter, cores: int, abstraction_path: str,
+def cohort_to_event_log_for_window(cohort, trace_type: str, verbose: bool,
+                                   remove_unlisted: bool, remove_duplicates: bool,
+                                   event_filter: Filter, trace_filter: Filter,
+                                   cores: int, abstraction_path: str,
                                    abstraction_exact_match: bool, abstraction_delimiter: str,
                                    anamnesis_events: str, traces: List[XTrace]):
     """
@@ -425,7 +431,8 @@ def get_traces_per_patient_by_mrn(patient_events: DataFrame, column_indices: Ord
         .toDF(list(patient_events.schema.names) + ["trace_id"])
 
 
-def get_traces_per_patient_by_visit(patient_event_encounters: DataFrame, column_indices: OrderedDict) -> DataFrame:
+def get_traces_per_patient_by_visit(patient_event_encounters: DataFrame,
+                                    column_indices: OrderedDict) -> DataFrame:
     """
     Generate traces according to encounter visit id
 

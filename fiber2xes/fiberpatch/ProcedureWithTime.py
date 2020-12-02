@@ -1,3 +1,6 @@
+"""
+Extension of the Procedure Class
+"""
 from fiber.condition.fact.fact import _FactCondition  # type: ignore
 from fiber.database.table import (  # type: ignore
     d_pers,

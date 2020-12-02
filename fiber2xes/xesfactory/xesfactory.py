@@ -2,29 +2,17 @@
 A module which holds a necessary functions to create a xes log for
 an array of events.
 """
-
-import uuid
-import datetime
-
+from typing import List
 from opyenxes.data_out.XesXmlSerializer import XesXmlSerializer  # type: ignore
 from opyenxes.factory.XFactory import XFactory  # type: ignore
 from opyenxes.factory.XFactory import XTrace
 from opyenxes.factory.XFactory import XLog
-
-from pyspark.sql import Row
-
-from .trace_helper import *
-
-from typing import (
-    List,
-    Optional,
-    Tuple
-)
-
-from ..abstraction.abstraction import get_abstract_event_name
-from ..translation import Translator
-
 from fiber2xes.filter.Filter import Filter
+
+from .trace_helper import TraceHelper
+from .trace_helper import (create_trace_information,
+                           deduplicate_relevant_events,
+                           create_traces_based_on_trace_type)
 
 
 def create_xes_trace_for_events(trace_events: List,
@@ -56,16 +44,21 @@ def create_xes_trace_for_events(trace_events: List,
     helper = TraceHelper(abstraction_path, abstraction_exact_match,
                          abstraction_delimiter, verbose, remove_unlisted, anamnesis_events)
 
-    trace_information = helper.create_trace_information(trace_events[0])
+    trace_information = create_trace_information(trace_events[0])
 
     trace_events = sorted(trace_events, key=lambda e: e.timestamp)
 
-    trace_events, seen_end_medications_per_day, seen_running_medications_per_day, seen_diagnosis_per_day = helper.identify_duplicate_medication_diagnosis_events(
-        trace_events
-    )
+    trace_events, \
+        seen_end_medications_per_day, \
+        seen_running_medications_per_day, \
+        seen_diagnosis_per_day = helper.identify_duplicate_medication_diagnosis_events(
+            trace_events
+        )
 
-    relevant_events, encounter_ids = helper.apply_event_filters(trace_events, event_filter, seen_running_medications_per_day, seen_end_medications_per_day,
-                                                                seen_diagnosis_per_day)
+    relevant_events, _ = helper.apply_event_filters(trace_events, event_filter,
+                                                    seen_running_medications_per_day,
+                                                    seen_end_medications_per_day,
+                                                    seen_diagnosis_per_day)
     if len(relevant_events) == 0:
         return XFactory.create_trace()
 
@@ -73,11 +66,11 @@ def create_xes_trace_for_events(trace_events: List,
         e['timestamp'], e['description']))
 
     if remove_duplicates:
-        relevant_events = helper.deduplicate_relevant_events(relevant_events)
+        relevant_events = deduplicate_relevant_events(relevant_events)
 
     relevant_events = sorted(relevant_events, key=lambda e: e['timestamp'])
 
-    return helper.create_XES_trace_based_on_trace_type(trace_type, relevant_events, trace_information)
+    return create_traces_based_on_trace_type(trace_type, relevant_events, trace_information)
 
 
 def create_xes_traces_from_traces(traces,

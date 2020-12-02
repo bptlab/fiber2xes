@@ -1,3 +1,6 @@
+"""
+Extension of the Patient class
+"""
 from typing import Optional
 
 from sqlalchemy import orm
@@ -56,12 +59,12 @@ class PatientWithAttributes(_DatabaseCondition):
         self._attrs['race'] = race
 
     def _create_clause(self):
-        clause = super()._create_clause()
         """
         Used to create a SQLAlchemy clause based on the Patient-condition.
         It is used to select the correct patients based on the category
         provided at initialization-time.
         """
+        clause = super()._create_clause()
 
         if self._attrs['gender']:
             clause &= _case_insensitive_like(
@@ -110,5 +113,5 @@ class PatientWithAttributes(_DatabaseCondition):
                 children=[self, other],
                 operator=_BaseCondition.AND,
             )
-        else:
-            return super().__and__(self, other)
+
+        return super().__and__(self, other)

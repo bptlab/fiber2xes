@@ -1,3 +1,7 @@
+"""
+Extension of the Drug Class
+"""
+
 from typing import Optional
 
 from fiber.database.table import fd_mat  # type: ignore
@@ -26,24 +30,31 @@ class DrugWithTime(MaterialWithTime):
 
     @property
     def name(self):
+        """
+        Returns the name of the drug
+        """
         return self._attrs['name']
 
     def _create_clause(self):
         clause = super()._create_clause()
         if self.name:
             clause &= (
-                _multi_like_clause(fd_mat.MATERIAL_NAME, self.name) | # type: ignore
-                _multi_like_clause(fd_mat.GENERIC_NAME, self.name) | # type: ignore
-                _multi_like_clause(fd_mat.BRAND1, self.name) | # type: ignore
-                _multi_like_clause(fd_mat.BRAND2, self.name) # type: ignore
+                # type: ignore
+                _multi_like_clause(fd_mat.MATERIAL_NAME, self.name) |
+                # type: ignore
+                _multi_like_clause(fd_mat.GENERIC_NAME, self.name) |
+                _multi_like_clause(fd_mat.BRAND1, self.name) |  # type: ignore
+                _multi_like_clause(fd_mat.BRAND2, self.name)  # type: ignore
             )
         if self._attrs['brand']:
             clause &= (
-                _multi_like_clause(fd_mat.BRAND1, self._attrs['brand']) | # type: ignore
-                _multi_like_clause(fd_mat.BRAND2, self._attrs['brand']) # type: ignore
+                # type: ignore
+                _multi_like_clause(fd_mat.BRAND1, self._attrs['brand']) |
+                _multi_like_clause(
+                    fd_mat.BRAND2, self._attrs['brand'])  # type: ignore
             )
         if self._attrs['generic']:
-            clause &= _multi_like_clause( # type: ignore
+            clause &= _multi_like_clause(  # type: ignore
                 fd_mat.GENERIC_NAME, self._attrs['generic'])
 
         return clause
