@@ -388,7 +388,7 @@ def create_trace_object(trace_events: list,
     trace.get_attributes()["patient:citizenship"] = XFactory.create_attribute_literal(
         "patient:citizenship", trace_information["citizenship"])
     trace.get_attributes()["patient:marital_status_code"] = XFactory.create_attribute_literal(
-        "patient:marital_status_code", trace_information["martial"])
+        "patient:marital_status_code", trace_information["marital"])
 
     return trace
 
