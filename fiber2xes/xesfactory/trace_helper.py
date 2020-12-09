@@ -27,19 +27,18 @@ class TraceHelper():
     A class which provides helper functions for creating XES traces out of the extracted events.
     """
 
-    # todo: anamnesis_events may as well be a boolean
     def __init__(self, abstraction_path: str,
                  abstraction_exact_match: bool,
                  abstraction_delimiter: str,
                  verbose: bool,
                  remove_unlisted: bool,
-                 anamnesis_events: str):
+                 include_anamnesis_events: bool):
         self.abstraction_path = abstraction_path
         self.abstraction_exact_match = abstraction_exact_match
         self.abstraction_delimiter = abstraction_delimiter
         self.verbose = verbose
         self.remove_unlisted = remove_unlisted
-        self.anamnesis_events = anamnesis_events
+        self.include_anamnesis_events = include_anamnesis_events
 
     def translate_procedure_diagnosis_material_to_event(self, event) -> Tuple[Optional[str],
                                                                               Optional[str],
@@ -71,7 +70,7 @@ class TraceHelper():
                                                       event_name,
                                                       self.remove_unlisted,
                                                       anamnesis,
-                                                      self.anamnesis_events)
+                                                      self.include_anamnesis_events)
 
         if abstract_event_name is None:
             return None, event_description, event_context, event_code

@@ -17,7 +17,7 @@ def test_no_abstraction():
                                                 abstraction_exact_match=True,
                                                 abstraction_delimiter=delimiter,
                                                 event_name="some_event",
-                                                anamnesis_events="none",
+                                                include_anamnesis_events=False,
                                                 anamnesis=True)
     assert anamnesis_discard == 'Anamnesis: some_event'
 
@@ -41,7 +41,7 @@ def test_group():
     group_anamnesis_discarded = get_abstract_event_name(abstraction_path=abstraction_path,
                                                         abstraction_exact_match=True,
                                                         abstraction_delimiter=delimiter,
-                                                        anamnesis_events="none",
+                                                        include_anamnesis_events=False,
                                                         event_name="groupTermA",
                                                         anamnesis=True)
     assert group_anamnesis_discarded == None
@@ -82,7 +82,7 @@ def test_whitelist():
                                                                    abstraction_exact_match=True,
                                                                    abstraction_delimiter=delimiter,
                                                                    anamnesis=True,
-                                                                   anamnesis_events="none",
+                                                                   include_anamnesis_events=False,
                                                                    event_name="whitelistTermB")
 
     assert whitelisted_term_anamnesis_discarded == 'whitelistTermB'
@@ -108,7 +108,7 @@ def test_abstraction():
                                                                abstraction_exact_match=True,
                                                                abstraction_delimiter=delimiter,
                                                                anamnesis=True,
-                                                               anamnesis_events="none",
+                                                               include_anamnesis_events=False,
                                                                event_name="abstractATermB")
 
     assert abstracted_anamnesis_a_discarded == None
@@ -132,7 +132,7 @@ def test_abstraction():
                                                                abstraction_exact_match=True,
                                                                abstraction_delimiter=delimiter,
                                                                anamnesis=True,
-                                                               anamnesis_events="none",
+                                                               include_anamnesis_events=False,
                                                                event_name="abstractBTermB")
 
     assert abstracted_anamnesis_b_discarded == None
@@ -170,7 +170,7 @@ def test_remove_unlisted():
                                                          abstraction_exact_match=True,
                                                          abstraction_delimiter=delimiter,
                                                          anamnesis=True,
-                                                         anamnesis_events="none",
+                                                         include_anamnesis_events=False,
                                                          remove_unlisted=True,
                                                          event_name="unlisted")
 

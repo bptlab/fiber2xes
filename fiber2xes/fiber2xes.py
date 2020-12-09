@@ -85,7 +85,7 @@ def cohort_to_event_log(cohort: Cohort, trace_type: str,
                         abstraction_path: str = None,
                         abstraction_exact_match: bool = False,
                         abstraction_delimiter: str = ";",
-                        anamnesis_events: str = 'all') -> XLog:
+                        include_anamnesis_events: bool = True) -> XLog:
     """
     Converts a fiber cohort to an xes event log.
     Therefore it slices the cohort to smaller windows (because of memory restrictions)
@@ -105,16 +105,11 @@ def cohort_to_event_log(cohort: Cohort, trace_type: str,
     abstraction_exact_match -- flag if the abstraction algorithm should only
                                abstract exacted matches (default False)
     abstraction_delimiter -- the delimiter of the abstraction file (default ;)
-    anamnesis_events -- define which anamnesis events should be extracted: all,
-                        listed or none (default all)
+    include_anamnesis_events -- define whether anamnesis events should be extracted (default True)
     """
 
     if trace_type not in ('visit', 'mrn'):
         sys.exit("No matching trace type given. Try using visit or mrn.")
-
-    if anamnesis_events not in ('none', 'all', 'listed'):
-        sys.exit(
-            "No matching anamnesis_events value given. Try using all, listed or none")
 
     manager = multiprocessing.Manager()
     traces: List[XTrace] = manager.list()
@@ -143,7 +138,7 @@ def cohort_to_event_log(cohort: Cohort, trace_type: str,
             abstraction_path,
             abstraction_exact_match,
             abstraction_delimiter,
-            anamnesis_events,
+            include_anamnesis_events,
             traces
         ))
         process.start()
@@ -166,7 +161,7 @@ def cohort_to_event_log_for_window(cohort, trace_type: str, verbose: bool,
                                    event_filter: Filter, trace_filter: Filter,
                                    cores: int, abstraction_path: str,
                                    abstraction_exact_match: bool, abstraction_delimiter: str,
-                                   anamnesis_events: str, traces: List[XTrace]):
+                                   include_anamnesis_events: bool, traces: List[XTrace]):
     """
     Converts a window of the patient to XES traces and store them in the given `traces` parameter.
 
@@ -291,7 +286,7 @@ def cohort_to_event_log_for_window(cohort, trace_type: str, verbose: bool,
         remove_duplicates=remove_duplicates,
         event_filter=event_filter,
         trace_type=trace_type,
-        anamnesis_events=anamnesis_events,
+        include_anamnesis_events=include_anamnesis_events,
     )
 
     filtered_traces_per_patient.unpersist()

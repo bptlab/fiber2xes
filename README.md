@@ -58,7 +58,7 @@ cohort_to_event_log(
   abstraction_path=None,
   abstraction_exact_match=False,
   abstraction_delimiter=";",
-  anamnesis_events
+  include_anamnesis_events
 )
 ```
 
@@ -76,7 +76,7 @@ Parameters:
 - **abstraction_path=None**: The path to the abstraction file (default None)
 - **abstraction_exact_match=False**: Flag if the abstraction algorithm should only abstract exacted matches (default False)
 - **abstraction_delimiter=";"**: The delimiter of the abstraction file (default ;)
-- **anamnesis_events=";"**: Which anamnesis events are included in the log; all, only if event is listed in abstraction file or none
+- **include_anamnesis_events=True**: Should anamnesis events be included in the log (default True)
 
 ### Log serialisation
 

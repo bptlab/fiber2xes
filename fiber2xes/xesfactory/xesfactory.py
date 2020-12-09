@@ -24,7 +24,7 @@ def create_xes_trace_for_events(trace_events: List,
                                 remove_unlisted: bool,
                                 remove_duplicates: bool,
                                 trace_type: str,
-                                anamnesis_events: str) -> List[XTrace]:
+                                include_anamnesis_events: bool) -> List[XTrace]:
     """
     Translating the events into event objects, remove duplicated events and
     add lifecycle informations.
@@ -38,11 +38,11 @@ def create_xes_trace_for_events(trace_events: List,
     remove_unlisted -- remove all events that are not included in the abstraction table
     event_filter -- a custom filter to filter events
     remove_duplicates -- flag for remove duplicate events in a trace
-    anamnesis_events -- which anamnesis events should be included in the xes log
+    include_anamnesis_events -- should anamnesis events be included in the xes log
     """
 
     helper = TraceHelper(abstraction_path, abstraction_exact_match,
-                         abstraction_delimiter, verbose, remove_unlisted, anamnesis_events)
+                         abstraction_delimiter, verbose, remove_unlisted, include_anamnesis_events)
 
     trace_information = create_trace_information(trace_events[0])
 
@@ -82,7 +82,7 @@ def create_xes_traces_from_traces(traces,
                                   event_filter: Filter,
                                   remove_duplicates: bool,
                                   trace_type: str,
-                                  anamnesis_events) -> List[XTrace]:
+                                  include_anamnesis_events: bool) -> List[XTrace]:
     """
     Create opyenxes traces for every trace.
 
@@ -95,7 +95,7 @@ def create_xes_traces_from_traces(traces,
     remove_unlisted -- remove all events that are not included in the abstraction table
     event_filter -- a custom filter to filter events
     remove_duplicates -- flag for remove duplicate events in a trace
-    anamnesis_events -- which anamnesis events should be included in the xes log
+    include_anamnesis_events -- should anamnesis events be included in the xes log
     """
     result = traces\
         .map(lambda trace: create_xes_trace_for_events(
@@ -108,7 +108,7 @@ def create_xes_traces_from_traces(traces,
             remove_unlisted,
             remove_duplicates,
             trace_type,
-            anamnesis_events,
+            include_anamnesis_events,
         ))
     return result.collect()
 

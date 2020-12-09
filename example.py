@@ -33,6 +33,7 @@ event_log = cohort_to_event_log(
     verbose=False,
     remove_duplicates=True,
     abstraction_path="./abstraction-tables/abstraction_high_level.csv",
+    include_anamnesis_events=False
 )
 
 # Write event log to file

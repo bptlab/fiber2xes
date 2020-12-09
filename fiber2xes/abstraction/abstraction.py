@@ -11,7 +11,7 @@ from typing import Optional
 def get_abstract_event_name(abstraction_path: str, abstraction_exact_match: bool,
                             abstraction_delimiter: str, event_name: Optional[str],
                             remove_unlisted: bool = False, anamnesis: bool = False,
-                            anamnesis_events: str = 'all') -> Optional[str]:
+                            include_anamnesis_events: bool = True) -> Optional[str]:
     """
     Abstracts an event name to an abstract activity identifier according to a
     given abstraction table.
@@ -24,7 +24,7 @@ def get_abstract_event_name(abstraction_path: str, abstraction_exact_match: bool
     event_name -- name of the event that should be abstracted
     remove_unlisted -- flag to remove all events that are not included in the abstraction table
     anamnesis -- is the passed event an anamnesis event
-    anamnesis_events -- which anamnesis events should be included in the xes log
+    include_anamnesis_events -- should anamnesis events be included in the xes log
     """
     if event_name is None:
         return None
@@ -48,25 +48,25 @@ def get_abstract_event_name(abstraction_path: str, abstraction_exact_match: bool
                           (abstraction_exact_match and
                            str(entry).lower() == str(event_name).lower())):
                 if abstraction_names[i].lower() == "group":
-                    if anamnesis and anamnesis_events != 'none':
+                    if anamnesis and include_anamnesis_events:
                         return 'Anamnesis: ' + entry
-                    if anamnesis and anamnesis_events == 'none':
+                    if anamnesis and not include_anamnesis_events:
                         return None
                     return entry
                 if abstraction_names[i].lower() == "blacklist":
                     return None
                 if abstraction_names[i].lower() == "whitelist":
-                    if anamnesis and anamnesis_events != 'none':
+                    if anamnesis and include_anamnesis_events:
                         return 'Anamnesis: ' + entry
                     return entry
-                if anamnesis and anamnesis_events != 'none':
+                if anamnesis and include_anamnesis_events:
                     return 'Anamnesis: ' + abstraction_names[i]
-                if anamnesis and anamnesis_events == 'none':
+                if anamnesis and not include_anamnesis_events:
                     return None
                 return abstraction_names[i]
 
     if remove_unlisted:
         return None
-    if anamnesis and anamnesis_events == 'all':
+    if anamnesis and include_anamnesis_events:
         return 'Anamnesis: ' + event_name
     return event_name
