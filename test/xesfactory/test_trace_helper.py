@@ -166,4 +166,3 @@ def test_create_trace_object_for_trace_type():
     assert type(visit_trace) == XTrace
     assert visit_trace.get_attributes().get(
         "concept:name").get_value() == 'someVisit'
-

@@ -337,3 +337,36 @@ def test_event_translation():
     assert result == "abstractATermA"
     assert event_context == "UNKNOWN"
     assert event_code == "abstractATermA"
+
+
+def test_duplicate_medication_diagnosis_detection():
+    # identify_duplicate_medication_diagnosis_events
+    trace_helper = TraceHelper(abstraction_path=ABSTRACTION_PATH,
+                               abstraction_exact_match=True,
+                               abstraction_delimiter=",",
+                               verbose=False,
+                               remove_unlisted=False,
+                               include_anamnesis_events=False)
+
+    material_prescription = copy.copy(material_event)
+    material_prescription.level2_event_name = "Medication someMedication"
+    back_pain_event = copy.copy(diagnosis_event)
+    back_pain_event.context_diagnosis_code = "BACK PAIN"
+    back_pain_event.description = "BACK PAIN"
+    trace_events, meds, running_meds, diagnoses = trace_helper.identify_duplicate_medication_diagnosis_events(
+        [material_prescription, material_prescription,
+            back_pain_event, back_pain_event]
+    )
+    assert trace_events == [material_prescription, material_prescription,
+                            back_pain_event, back_pain_event]
+    assert running_meds == {
+        material_prescription.timestamp.date(): {
+            'abstractATermA': material_prescription
+        }
+    }
+    assert diagnoses == {
+        back_pain_event.timestamp.date():
+            back_pain_event
+
+    }
+    assert meds == {material_prescription.timestamp.date(): {}}
