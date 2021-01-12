@@ -44,6 +44,7 @@ class TraceHelper():
         self.include_anamnesis_events = include_anamnesis_events
         self.duplicate_event_identifier = duplicate_event_identifier
         self.event_identifier_to_merge = event_identifier_to_merge
+        self.translator = Translator()
 
     def translate_procedure_diagnosis_material_to_event(self, event) -> Tuple[Optional[str],
                                                                               Optional[str],
@@ -61,13 +62,11 @@ class TraceHelper():
         remove_unlisted -- remove all events that are not included in the abstraction table
         """
 
-        translator = Translator()  # todo: make this a singleton!
-
         if not is_known_event(event):
             return None, None, None, None
 
         event_name, event_description, event_type, anamnesis, event_context, event_code = \
-            translator.translate_to_event(event, self.verbose)
+            self.translator.translate_to_event(event, self.verbose)
 
         abstract_event_name = get_abstract_event_name(self.abstraction_path,
                                                       self.abstraction_exact_match,
