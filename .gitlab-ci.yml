@@ -33,6 +33,12 @@ typecheck:
     - cd $CI_PROJECT_DIR
     - $CI_PROJECT_DIR/venv/bin/mypy .
 
+lint:
+  stage: test
+  script:
+    - cd $CI_PROJECT_DIR
+    - $CI_PROJECT_DIR/venv/bin/pylint fiber2xes
+
 test:
   stage: test
   script:
