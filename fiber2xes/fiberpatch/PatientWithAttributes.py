@@ -114,4 +114,4 @@ class PatientWithAttributes(_DatabaseCondition):
                 operator=_BaseCondition.AND,
             )
 
-        return super().__and__(self, other)
+        return super().__and__(self, other)  # pylint: disable=too-many-function-args

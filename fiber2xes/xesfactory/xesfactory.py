@@ -44,7 +44,9 @@ def create_xes_trace_for_events(trace_events: List,
     """
 
     helper = TraceHelper(abstraction_path, abstraction_exact_match,
-                         abstraction_delimiter, verbose, remove_unlisted, include_anamnesis_events, duplicate_event_identifier, event_identifier_to_merge)
+                         abstraction_delimiter, verbose, remove_unlisted,
+                         include_anamnesis_events, duplicate_event_identifier,
+                         event_identifier_to_merge)
 
     trace_information = create_trace_information(trace_events[0])
 

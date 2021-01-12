@@ -1,3 +1,6 @@
+"""
+Provides the different filter conditions.
+"""
 from .Diagnosis import Diagnosis
 from .Procedure import Procedure
 from .Material import Material

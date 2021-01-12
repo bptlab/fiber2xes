@@ -130,17 +130,20 @@ class TraceHelper():
                     elif event_descriptor not in seen_running_medications_per_day[day].keys():
                         seen_running_medications_per_day[day][event_descriptor] = event
 
-                elif self.duplicate_event_identifier is not None and self.duplicate_event_identifier in event_name:
+                elif self.duplicate_event_identifier is not None and \
+                        self.duplicate_event_identifier in event_name:
                     if day not in seen_diagnosis_per_day.keys():
                         seen_diagnosis_per_day[day] = event
-                    elif self.event_identifier_to_merge is not None and event_name == self.event_identifier_to_merge:
+                    elif self.event_identifier_to_merge is not None and \
+                            event_name == self.event_identifier_to_merge:
                         new_merged_event_dict = event.asDict()
                         new_merged_event_dict['timestamp'] = seen_diagnosis_per_day[day].timestamp
                         new_merged_event = Row(**new_merged_event_dict)
                         seen_diagnosis_per_day[day] = new_merged_event
                         trace_events.append(new_merged_event)
 
-        return trace_events, seen_end_medications_per_day, seen_running_medications_per_day, seen_diagnosis_per_day
+        return trace_events, seen_end_medications_per_day, \
+            seen_running_medications_per_day, seen_diagnosis_per_day
 
     def apply_event_filters(self, trace_events: list, event_filter: Filter,
                             seen_running_medications_per_day: dict,
@@ -203,7 +206,8 @@ class TraceHelper():
                         else:
                             event_name = 'DUPLICATE' + event_name
 
-                if self.duplicate_event_identifier is not None and self.duplicate_event_identifier in event_name:
+                if self.duplicate_event_identifier is not None and \
+                        self.duplicate_event_identifier in event_name:
                     if event != seen_diagnosis_per_day[day]:
                         event_name = 'DUPLICATE' + event_name
 
@@ -241,7 +245,7 @@ def create_traces_based_on_trace_type(trace_type,
                 encounter_traces[event['visit_id']] = []
             encounter_traces[event['visit_id']].append(event)
 
-        for trace_id in encounter_traces.keys():
+        for trace_id in encounter_traces:
             xes_traces.append(
                 create_trace_object_for_trace_type(trace_information,
                                                    encounter_traces[trace_id],
@@ -413,7 +417,8 @@ def deduplicate_relevant_events(relevant_events: List[dict]) -> List[dict]:
 
 
 def create_event_dict(event, event_name: str, event_descriptor: Optional[str],
-                      event_context: Optional[str], event_code: Optional[str],  lifecycle_state: str, timestamp) -> dict:
+                      event_context: Optional[str], event_code: Optional[str],
+                      lifecycle_state: str, timestamp) -> dict:
     """
     Creates a dict containing all necessary event information from a passed event.
     """

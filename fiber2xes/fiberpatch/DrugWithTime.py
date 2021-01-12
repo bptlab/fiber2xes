@@ -14,6 +14,8 @@ class DrugWithTime(MaterialWithTime):
     This is an extension of the Drug Class, to also contain time of day-keys.
     """
 
+    # pylint: disable=keyword-arg-before-vararg
+
     def __init__(
         self,
         name: Optional[str] = '',
