@@ -24,7 +24,9 @@ def create_xes_trace_for_events(trace_events: List,
                                 remove_unlisted: bool,
                                 remove_duplicates: bool,
                                 trace_type: str,
-                                include_anamnesis_events: bool) -> List[XTrace]:
+                                include_anamnesis_events: bool,
+                                duplicate_event_identifier: str,
+                                event_identifier_to_merge: str) -> List[XTrace]:
     """
     Translating the events into event objects, remove duplicated events and
     add lifecycle informations.
@@ -42,7 +44,7 @@ def create_xes_trace_for_events(trace_events: List,
     """
 
     helper = TraceHelper(abstraction_path, abstraction_exact_match,
-                         abstraction_delimiter, verbose, remove_unlisted, include_anamnesis_events)
+                         abstraction_delimiter, verbose, remove_unlisted, include_anamnesis_events, duplicate_event_identifier, event_identifier_to_merge)
 
     trace_information = create_trace_information(trace_events[0])
 
@@ -82,7 +84,9 @@ def create_xes_traces_from_traces(traces,
                                   event_filter: Filter,
                                   remove_duplicates: bool,
                                   trace_type: str,
-                                  include_anamnesis_events: bool) -> List[XTrace]:
+                                  include_anamnesis_events: bool,
+                                  duplicate_event_identifier: str,
+                                  event_identifier_to_merge: str) -> List[XTrace]:
     """
     Create opyenxes traces for every trace.
 
@@ -109,6 +113,8 @@ def create_xes_traces_from_traces(traces,
             remove_duplicates,
             trace_type,
             include_anamnesis_events,
+            duplicate_event_identifier,
+            event_identifier_to_merge
         ))
     return result.collect()
 

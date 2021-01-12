@@ -85,7 +85,9 @@ def cohort_to_event_log(cohort: Cohort, trace_type: str,
                         abstraction_path: str = None,
                         abstraction_exact_match: bool = False,
                         abstraction_delimiter: str = ";",
-                        include_anamnesis_events: bool = True) -> XLog:
+                        include_anamnesis_events: bool = True,
+                        duplicate_event_identifier: str = "BACK PAIN",
+                        event_identifier_to_merge: str = "CHRONIC LOW BACK PAIN") -> XLog:
     """
     Converts a fiber cohort to an xes event log.
     Therefore it slices the cohort to smaller windows (because of memory restrictions)
@@ -139,7 +141,9 @@ def cohort_to_event_log(cohort: Cohort, trace_type: str,
             abstraction_exact_match,
             abstraction_delimiter,
             include_anamnesis_events,
-            traces
+            traces,
+            duplicate_event_identifier,
+            event_identifier_to_merge
         ))
         process.start()
         process.join()
@@ -161,7 +165,9 @@ def cohort_to_event_log_for_window(cohort, trace_type: str, verbose: bool,
                                    event_filter: Filter, trace_filter: Filter,
                                    cores: int, abstraction_path: str,
                                    abstraction_exact_match: bool, abstraction_delimiter: str,
-                                   include_anamnesis_events: bool, traces: List[XTrace]):
+                                   include_anamnesis_events: bool, traces: List[XTrace],
+                                   duplicate_event_identifier: str,
+                                   event_identifier_to_merge: str):
     """
     Converts a window of the patient to XES traces and store them in the given `traces` parameter.
 
@@ -287,6 +293,8 @@ def cohort_to_event_log_for_window(cohort, trace_type: str, verbose: bool,
         event_filter=event_filter,
         trace_type=trace_type,
         include_anamnesis_events=include_anamnesis_events,
+        duplicate_event_identifier=duplicate_event_identifier,
+        event_identifier_to_merge=event_identifier_to_merge
     )
 
     filtered_traces_per_patient.unpersist()

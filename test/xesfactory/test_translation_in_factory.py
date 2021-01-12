@@ -154,7 +154,10 @@ def test_unknown_event_translation():
                                abstraction_delimiter=",",
                                verbose=False,
                                remove_unlisted=False,
-                               include_anamnesis_events=False)
+                               include_anamnesis_events=False,
+                               duplicate_event_identifier=None,
+                               event_identifier_to_merge=None
+                               )
     abstract_event_name, result, event_context, event_code = trace_helper.translate_procedure_diagnosis_material_to_event(
         unknown_event)
     assert abstract_event_name is None
@@ -178,7 +181,10 @@ def test_event_translation():
                                abstraction_delimiter=",",
                                verbose=False,
                                remove_unlisted=False,
-                               include_anamnesis_events=False)
+                               include_anamnesis_events=False,
+                               duplicate_event_identifier=None,
+                               event_identifier_to_merge=None
+                               )
     abstract_event_name, result, event_context, event_code = trace_helper.translate_procedure_diagnosis_material_to_event(
         procedure_event)
 
@@ -192,7 +198,10 @@ def test_event_translation():
                                abstraction_delimiter=",",
                                verbose=False,
                                remove_unlisted=True,
-                               include_anamnesis_events=False)
+                               include_anamnesis_events=False,
+                               duplicate_event_identifier=None,
+                               event_identifier_to_merge=None
+                               )
     procedure_event_unlisted = copy.copy(procedure_event)
     procedure_event_unlisted.context_procedure_code = "unlisted"
     procedure_event_unlisted.procedure_description = "unlisted"
@@ -209,7 +218,10 @@ def test_event_translation():
                                abstraction_delimiter=",",
                                verbose=False,
                                remove_unlisted=False,
-                               include_anamnesis_events=False)
+                               include_anamnesis_events=False,
+                               duplicate_event_identifier=None,
+                               event_identifier_to_merge=None
+                               )
     abstract_event_name, result, event_context, event_code = trace_helper.translate_procedure_diagnosis_material_to_event(
         procedure_event_anamnesis)
 
@@ -223,7 +235,10 @@ def test_event_translation():
                                abstraction_delimiter=",",
                                verbose=False,
                                remove_unlisted=False,
-                               include_anamnesis_events=True)
+                               include_anamnesis_events=True,
+                               duplicate_event_identifier=None,
+                               event_identifier_to_merge=None
+                               )
     abstract_event_name, result, event_context, event_code = trace_helper.translate_procedure_diagnosis_material_to_event(
         procedure_event_anamnesis)
 
@@ -238,7 +253,10 @@ def test_event_translation():
                                abstraction_delimiter=",",
                                verbose=False,
                                remove_unlisted=False,
-                               include_anamnesis_events=False)
+                               include_anamnesis_events=False,
+                               duplicate_event_identifier=None,
+                               event_identifier_to_merge=None
+                               )
     abstract_event_name, result, event_context, event_code = trace_helper.translate_procedure_diagnosis_material_to_event(
         diagnosis_event)
 
@@ -252,7 +270,10 @@ def test_event_translation():
                                abstraction_delimiter=",",
                                verbose=False,
                                remove_unlisted=True,
-                               include_anamnesis_events=False)
+                               include_anamnesis_events=False,
+                               duplicate_event_identifier=None,
+                               event_identifier_to_merge=None
+                               )
     diagnosis_event_unlisted = copy.copy(diagnosis_event)
     diagnosis_event_unlisted.context_diagnosis_code = "unlisted"
     diagnosis_event_unlisted.description = "unlisted"
@@ -269,7 +290,10 @@ def test_event_translation():
                                abstraction_delimiter=",",
                                verbose=False,
                                remove_unlisted=False,
-                               include_anamnesis_events=False)
+                               include_anamnesis_events=False,
+                               duplicate_event_identifier=None,
+                               event_identifier_to_merge=None
+                               )
     abstract_event_name, result, event_context, event_code = trace_helper.translate_procedure_diagnosis_material_to_event(
         diagnosis_event_anamnesis)
 
@@ -283,7 +307,10 @@ def test_event_translation():
                                abstraction_delimiter=",",
                                verbose=False,
                                remove_unlisted=False,
-                               include_anamnesis_events=True)
+                               include_anamnesis_events=True,
+                               duplicate_event_identifier=None,
+                               event_identifier_to_merge=None
+                               )
     abstract_event_name, result, event_context, event_code = trace_helper.translate_procedure_diagnosis_material_to_event(
         diagnosis_event_anamnesis)
 
@@ -298,7 +325,10 @@ def test_event_translation():
                                abstraction_delimiter=",",
                                verbose=False,
                                remove_unlisted=False,
-                               include_anamnesis_events=False)
+                               include_anamnesis_events=False,
+                               duplicate_event_identifier=None,
+                               event_identifier_to_merge=None
+                               )
     abstract_event_name, result, event_context, event_code = trace_helper.translate_procedure_diagnosis_material_to_event(
         material_event)
 
@@ -312,7 +342,10 @@ def test_event_translation():
                                abstraction_delimiter=",",
                                verbose=False,
                                remove_unlisted=True,
-                               include_anamnesis_events=False)
+                               include_anamnesis_events=False,
+                               duplicate_event_identifier=None,
+                               event_identifier_to_merge=None
+                               )
     material_event_unlisted = copy.copy(material_event)
     material_event_unlisted.context_material_code = "unlisted"
     material_event_unlisted.material_name = "unlisted"
@@ -329,7 +362,10 @@ def test_event_translation():
                                abstraction_delimiter=",",
                                verbose=False,
                                remove_unlisted=False,
-                               include_anamnesis_events=False)
+                               include_anamnesis_events=False,
+                               duplicate_event_identifier=None,
+                               event_identifier_to_merge=None
+                               )
     abstract_event_name, result, event_context, event_code = trace_helper.translate_procedure_diagnosis_material_to_event(
         material_event_anaemnis)
 
@@ -343,7 +379,10 @@ def test_event_translation():
                                abstraction_delimiter=",",
                                verbose=False,
                                remove_unlisted=False,
-                               include_anamnesis_events=True)
+                               include_anamnesis_events=True,
+                               duplicate_event_identifier=None,
+                               event_identifier_to_merge=None
+                               )
     abstract_event_name, result, event_context, event_code = trace_helper.translate_procedure_diagnosis_material_to_event(
         material_event_anaemnis)
 
@@ -360,7 +399,10 @@ def test_duplicate_medication_diagnosis_detection():
                                abstraction_delimiter=",",
                                verbose=False,
                                remove_unlisted=False,
-                               include_anamnesis_events=False)
+                               include_anamnesis_events=False,
+                               duplicate_event_identifier="BACK PAIN",
+                               event_identifier_to_merge=None
+                               )
 
     material_prescription = copy.copy(material_event)
     material_prescription.level2_event_name = "Medication someMedication"
@@ -393,7 +435,10 @@ def test_apply_event_filters():
                                abstraction_delimiter=",",
                                verbose=False,
                                remove_unlisted=False,
-                               include_anamnesis_events=False)
+                               include_anamnesis_events=False,
+                               duplicate_event_identifier=None,
+                               event_identifier_to_merge=None
+                               )
     material_prescription = copy.copy(material_event)
     material_prescription.level2_event_name = "Medication someMedication"
     back_pain_event = copy.copy(diagnosis_event)

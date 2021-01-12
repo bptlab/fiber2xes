@@ -32,13 +32,18 @@ class TraceHelper():
                  abstraction_delimiter: str,
                  verbose: bool,
                  remove_unlisted: bool,
-                 include_anamnesis_events: bool):
+                 include_anamnesis_events: bool,
+                 duplicate_event_identifier: Optional[str],
+                 event_identifier_to_merge: Optional[str],
+                 ):
         self.abstraction_path = abstraction_path
         self.abstraction_exact_match = abstraction_exact_match
         self.abstraction_delimiter = abstraction_delimiter
         self.verbose = verbose
         self.remove_unlisted = remove_unlisted
         self.include_anamnesis_events = include_anamnesis_events
+        self.duplicate_event_identifier = duplicate_event_identifier
+        self.event_identifier_to_merge = event_identifier_to_merge
 
     def translate_procedure_diagnosis_material_to_event(self, event) -> Tuple[Optional[str],
                                                                               Optional[str],
@@ -125,14 +130,10 @@ class TraceHelper():
                     elif event_descriptor not in seen_running_medications_per_day[day].keys():
                         seen_running_medications_per_day[day][event_descriptor] = event
 
-                # Right now this part of the code is very specific for
-                # the use case of low back pain.
-                # This has to be adapted to keep fiber2xes
-                # open for every possible diagnosis
-                elif 'BACK PAIN' in event_name:
+                elif self.duplicate_event_identifier is not None and self.duplicate_event_identifier in event_name:
                     if day not in seen_diagnosis_per_day.keys():
                         seen_diagnosis_per_day[day] = event
-                    elif event_name == 'CHRONIC LOW BACK PAIN':
+                    elif self.event_identifier_to_merge is not None and event_name == self.event_identifier_to_merge:
                         new_merged_event_dict = event.asDict()
                         new_merged_event_dict['timestamp'] = seen_diagnosis_per_day[day].timestamp
                         new_merged_event = Row(**new_merged_event_dict)
@@ -202,7 +203,7 @@ class TraceHelper():
                         else:
                             event_name = 'DUPLICATE' + event_name
 
-                if 'BACK PAIN' in event_name:
+                if self.duplicate_event_identifier is not None and self.duplicate_event_identifier in event_name:
                     if event != seen_diagnosis_per_day[day]:
                         event_name = 'DUPLICATE' + event_name
 

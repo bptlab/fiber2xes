@@ -21,7 +21,9 @@ exact_trace_helper_with_unlisted = TraceHelper(
     abstraction_exact_match=True,
     verbose=False,
     remove_unlisted=False,
-    include_anamnesis_events=False
+    include_anamnesis_events=False,
+    duplicate_event_identifier=None,
+    event_identifier_to_merge=None
 )
 
 exact_trace_helper = TraceHelper(
@@ -30,7 +32,9 @@ exact_trace_helper = TraceHelper(
     abstraction_exact_match=True,
     verbose=False,
     remove_unlisted=True,
-    include_anamnesis_events=False
+    include_anamnesis_events=False,
+    duplicate_event_identifier=None,
+    event_identifier_to_merge=None
 )
 
 exact_trace_helper_with_anamnesis = TraceHelper(
@@ -39,8 +43,11 @@ exact_trace_helper_with_anamnesis = TraceHelper(
     abstraction_exact_match=True,
     verbose=False,
     remove_unlisted=False,
-    include_anamnesis_events=True
+    include_anamnesis_events=True,
+    duplicate_event_identifier=None,
+    event_identifier_to_merge=None
 )
+
 
 verbose_event = MockEvent(medical_record_number='someMRN',
                           visit_id="someVisit",
