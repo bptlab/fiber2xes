@@ -4,6 +4,20 @@ from fiber2xes.xesfactory.trace_helper import TraceHelper
 
 from mocks.MockEvent import MockEvent
 
+from fiber2xes.filter.operator import (
+    And,
+    Or,
+    Not
+)
+
+from fiber2xes.filter.condition import (
+    Diagnosis,
+    Generic,
+    Material,
+    Procedure,
+    Time
+)
+
 ABSTRACTION_PATH = "test/test_abstraction_table.csv"
 
 unknown_event = MockEvent()
@@ -353,7 +367,7 @@ def test_duplicate_medication_diagnosis_detection():
     back_pain_event = copy.copy(diagnosis_event)
     back_pain_event.context_diagnosis_code = "BACK PAIN"
     back_pain_event.description = "BACK PAIN"
-    trace_events, meds, running_meds, diagnoses = trace_helper.identify_duplicate_medication_diagnosis_events(
+    trace_events, end_meds, running_meds, diagnoses = trace_helper.identify_duplicate_medication_diagnosis_events(
         [material_prescription, material_prescription,
             back_pain_event, back_pain_event]
     )
@@ -369,4 +383,39 @@ def test_duplicate_medication_diagnosis_detection():
             back_pain_event
 
     }
-    assert meds == {material_prescription.timestamp.date(): {}}
+    assert end_meds == {material_prescription.timestamp.date(): {}}
+
+
+def test_apply_event_filters():
+    # apply_event_filters
+    trace_helper = TraceHelper(abstraction_path=ABSTRACTION_PATH,
+                               abstraction_exact_match=True,
+                               abstraction_delimiter=",",
+                               verbose=False,
+                               remove_unlisted=False,
+                               include_anamnesis_events=False)
+    material_prescription = copy.copy(material_event)
+    material_prescription.level2_event_name = "Medication someMedication"
+    back_pain_event = copy.copy(diagnosis_event)
+    back_pain_event.context_diagnosis_code = "BACK PAIN"
+    back_pain_event.description = "BACK PAIN"
+    trace_events = [material_prescription, material_prescription,
+                    back_pain_event, back_pain_event]
+    trace_events, end_meds, running_meds, diagnoses = trace_helper.identify_duplicate_medication_diagnosis_events(
+        trace_events
+    )
+
+    events, visits = trace_helper.apply_event_filters(
+        trace_events, None, running_meds, end_meds, diagnoses)
+    assert visits == {'someVisit'}
+    assert events is not None
+    assert len(events) == 4
+
+    diagnosis_filter = Diagnosis("BACK PAIN")
+    medication_filter = Material("Not Present Material")
+    event_filter = Or(diagnosis_filter, medication_filter)
+    filtered_events, filtered_visits = trace_helper.apply_event_filters(
+        trace_events, event_filter, running_meds, end_meds, diagnoses)
+
+    assert filtered_visits == {'someVisit'}
+    assert len(filtered_visits) == 1
