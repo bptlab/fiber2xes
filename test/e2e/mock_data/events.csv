@@ -1,0 +1,5 @@
+medical_record_number,age_in_days,context_name,time_of_day_key,caregiver_group_key,facility_key,meta_data_key,description,context_diagnosis_code,encounter_key,procedure_description,context_procedure_code,procedure_control_key,value,material_name,context_material_code
+1,30712,ICD-10,123,9876,12436,3789,Low back pain,M54.5,1,MSDW_NOT APPLICABLE,MSDW_NOT APPLICABLE,,,MSDW_NOT APPLICABLE,MSDW_NOT APPLICABLE
+1,30700,ICD-10,234,9876,12436,3789,Low back pain,M54.5,2,MSDW_NOT APPLICABLE,MSDW_NOT APPLICABLE,,,MSDW_NOT APPLICABLE,MSDW_NOT APPLICABLE
+2,30712,ICD-10,123,9876,12436,3789,Low back pain,M54.5,3,MSDW_NOT APPLICABLE,MSDW_NOT APPLICABLE,,,MSDW_NOT APPLICABLE,MSDW_NOT APPLICABLE
+2,30700,ICD-10,234,9876,12436,3789,Low back pain,M54.5,4,MSDW_NOT APPLICABLE,MSDW_NOT APPLICABLE,,,MSDW_NOT APPLICABLE,MSDW_NOT APPLICABLE

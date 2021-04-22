@@ -1,0 +1,3 @@
+medical_record_number,date_of_birth,month_of_birth,gender,religion,race,patient_ethnic_group,deceased_indicator,mother_account_number,address_zip,marital_status_code,language,citizenship
+1,1990-01-01,January,Female,Catholic,Other,14,,,100,Single,,
+2,1980-08-01,August,Male,,,,,,100,Single,,

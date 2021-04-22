@@ -1,0 +1,105 @@
+<?xml version="1.0" ?>
+<!--This file has been generated with the OpenXES library. It conforms-->
+<!--to the XML serialization of the XES standard for log storage and-->
+<!--management.-->
+<!--XES standard version: 1.0-->
+<!--OpenXES library version: 1.0RC7-->
+<!--OpenXES is available from http://www.openxes.org/-->
+<log xes.version="1.0" xes.features="nested-attributes" openxes.version="1.0RC7">
+	<trace>
+		<id key="id" value="684770f7-58e0-4d9e-a214-b2c7758ac69a"/>
+		<string key="concept:name" value="1"/>
+		<string key="patient:mrn" value="1"/>
+		<string key="patient:date_of_birth" value="1990-01-01"/>
+		<string key="patient:address_zip" value="100"/>
+		<string key="patient:gender" value="Female"/>
+		<string key="patient:language" value="None"/>
+		<string key="patient:patient_ethnic_group" value="14.0"/>
+		<string key="patient:race" value="Other"/>
+		<string key="patient:religion" value="Catholic"/>
+		<string key="patient:citizenship" value="None"/>
+		<string key="patient:marital_status_code" value="Single"/>
+		<event>
+			<date key="time:timestamp" value="2074-01-20T03:54:00.000Z"/>
+			<string key="concept:name" value="Anamnesis: Low back pain"/>
+			<string key="event:visit_id" value="2"/>
+			<string key="event:encounter_id" value="2"/>
+			<string key="event:description" value="DIAGNOSIS (ICD-10 M54.5): Anamnesis: Low back pain"/>
+			<string key="event:context" value="ICD-10"/>
+			<string key="event:code" value="M54.5"/>
+			<string key="event:caregiver_group" value="9876"/>
+			<string key="event:facility" value="12436"/>
+			<string key="lifecycle:transition" value="complete"/>
+			<string key="event:level1" value="EPIC"/>
+			<string key="event:level2" value="Medical History"/>
+			<string key="event:level3" value="Reported"/>
+			<string key="event:level4" value="Reported Date"/>
+			<boolean key="event:is_duplicate" value="false"/>
+		</event>
+		<event>
+			<date key="time:timestamp" value="2074-02-01T02:03:00.000Z"/>
+			<string key="concept:name" value="Anamnesis: Low back pain"/>
+			<string key="event:visit_id" value="1"/>
+			<string key="event:encounter_id" value="1"/>
+			<string key="event:description" value="DIAGNOSIS (ICD-10 M54.5): Anamnesis: Low back pain"/>
+			<string key="event:context" value="ICD-10"/>
+			<string key="event:code" value="M54.5"/>
+			<string key="event:caregiver_group" value="9876"/>
+			<string key="event:facility" value="12436"/>
+			<string key="lifecycle:transition" value="complete"/>
+			<string key="event:level1" value="EPIC"/>
+			<string key="event:level2" value="Medical History"/>
+			<string key="event:level3" value="Reported"/>
+			<string key="event:level4" value="Reported Date"/>
+			<boolean key="event:is_duplicate" value="false"/>
+		</event>
+	</trace>
+	<trace>
+		<id key="id" value="a6c76935-c30d-406e-8740-cefaab48f03d"/>
+		<string key="concept:name" value="2"/>
+		<string key="patient:mrn" value="2"/>
+		<string key="patient:date_of_birth" value="1980-08-01"/>
+		<string key="patient:address_zip" value="100"/>
+		<string key="patient:gender" value="Male"/>
+		<string key="patient:language" value="None"/>
+		<string key="patient:patient_ethnic_group" value="None"/>
+		<string key="patient:race" value="None"/>
+		<string key="patient:religion" value="None"/>
+		<string key="patient:citizenship" value="None"/>
+		<string key="patient:marital_status_code" value="Single"/>
+		<event>
+			<date key="time:timestamp" value="2064-08-20T03:54:00.000Z"/>
+			<string key="concept:name" value="Anamnesis: Low back pain"/>
+			<string key="event:visit_id" value="4"/>
+			<string key="event:encounter_id" value="4"/>
+			<string key="event:description" value="DIAGNOSIS (ICD-10 M54.5): Anamnesis: Low back pain"/>
+			<string key="event:context" value="ICD-10"/>
+			<string key="event:code" value="M54.5"/>
+			<string key="event:caregiver_group" value="9876"/>
+			<string key="event:facility" value="12436"/>
+			<string key="lifecycle:transition" value="complete"/>
+			<string key="event:level1" value="EPIC"/>
+			<string key="event:level2" value="Medical History"/>
+			<string key="event:level3" value="Reported"/>
+			<string key="event:level4" value="Reported Date"/>
+			<boolean key="event:is_duplicate" value="false"/>
+		</event>
+		<event>
+			<date key="time:timestamp" value="2064-09-01T02:03:00.000Z"/>
+			<string key="concept:name" value="Anamnesis: Low back pain"/>
+			<string key="event:visit_id" value="3"/>
+			<string key="event:encounter_id" value="3"/>
+			<string key="event:description" value="DIAGNOSIS (ICD-10 M54.5): Anamnesis: Low back pain"/>
+			<string key="event:context" value="ICD-10"/>
+			<string key="event:code" value="M54.5"/>
+			<string key="event:caregiver_group" value="9876"/>
+			<string key="event:facility" value="12436"/>
+			<string key="lifecycle:transition" value="complete"/>
+			<string key="event:level1" value="EPIC"/>
+			<string key="event:level2" value="Medical History"/>
+			<string key="event:level3" value="Reported"/>
+			<string key="event:level4" value="Reported Date"/>
+			<boolean key="event:is_duplicate" value="false"/>
+		</event>
+	</trace>
+</log>

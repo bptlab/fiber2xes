@@ -1,16 +1,56 @@
 image: "python:3.6"
 
-before_script:
-  - python --version
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
-build:
-  stage: build
-  only:
-    - master
+# Pip's cache doesn't store the python packages
+# https://pip.pypa.io/en/stable/reference/pip_install/#caching
+#
+# If you want to also cache the installed packages, you have to install
+# them in a virtualenv and cache it as well.
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .cache/pip
+    - venv/
+
+before_script:
+  - python -V
+  - pip install virtualenv
+  - virtualenv venv
+  - source $CI_PROJECT_DIR/venv/bin/activate
+  - pip install -e .[dev]
+  - cd $CI_PROJECT_DIR/..
+  - rm -rf fiber
+  - git clone https://github.com/hpi-dhc/fiber.git
+  - cd fiber &&
+  - git checkout aee2bfefddeb2ebd6832acca926a1755e4b87fbb
+  - pip install -e .
+
+typecheck:
+  stage: test
   script:
-    - pip install -e .
+    - cd $CI_PROJECT_DIR
+    - $CI_PROJECT_DIR/venv/bin/mypy fiber2xes
+
+lint:
+  stage: test
+  script:
+    - cd $CI_PROJECT_DIR
+    - $CI_PROJECT_DIR/venv/bin/pylint fiber2xes
+
+test:
+  stage: test
+  script:
+    - apt-get update && apt-get install -y default-jre default-jdk
+    - mkdir $CI_PROJECT_DIR/../fiber/tests
+    - touch $CI_PROJECT_DIR/../fiber/tests/mock_data.db
+    - cd $CI_PROJECT_DIR
+    - $CI_PROJECT_DIR/venv/bin/pytest -s . -vv
 
 trigger_build:
   stage: deploy
+  only:
+    - master
   script:
     - "curl -X POST -F token=159283888a03644a78e683b72d8c55 -F ref=master https://gitlab.hpi.de/api/v4/projects/3536/trigger/pipeline"

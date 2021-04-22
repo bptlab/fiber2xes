@@ -1,0 +1,72 @@
+level1_context_name,level2_event_name,level3_action_name,level4_field_name,meta_data_key
+CERNER,Add Person (A28),Patient Identification (PID),<factless>,458
+CERNER,Update Person Information (A31),Patient Identification (PID),<factless>,459
+EPIC,Patient Profile,Advance Directives,Flag,3262
+EPIC,Allergy Assessment,Allergy,Reaction,3339
+EPIC,Allergy Assessment,Allergy,Comments,3340
+EPIC,Employment History,Occupation,Description,3410
+EPIC,Family History,Problem,Description,3414
+EPIC,Family History,Problem,Relative,3415
+EPIC,Immunization,Administered,Injection Type,3472
+EPIC,Immunization,Administered,Dose,3473
+EPIC,Immunization,Administered,Site,3474
+EPIC,Immunization,Administered,Route,3475
+EPIC,Immunization,Administered,Lot,3476
+EPIC,Immunization,Administered,Expiration Date,3477
+EPIC,Immunization,Administered,Immunization Date,3478
+EPIC,Encounter,Patient Instructions,Return Instruction,3481
+EPIC,Patient Profile,Power of Attorney,Flag,3484
+EPIC,Problem List,Problem,Comments,3490
+EPIC,Problem List,Problem Noted,<factless>,3491
+EPIC,Problem List,Problem Resolved,<factless>,3492
+EPIC,Progress Note,Signed,Note Text[01],3560
+EPIC,Progress Note,Addended,Note Text[01],3561
+EPIC,Prescription,Sent,Start Date,3705
+EPIC,Prescription,Suspend,Start Date,3742
+EPIC,Prescription,Others,Start Date,3743
+EPIC,Prescription,Sent,End Date,3749
+EPIC,Prescription,Others,End Date,3753
+EPIC,Medical History,Reported,Reported Date,3789
+EPIC,Surgical History,Reported,Reported Date,3795
+EPIC,Surgical History,Reported,Comments,3796
+EPIC,Social History,Education,Education Level,3799
+EPIC,Social History,Tobacco,Tobacco Use,3802
+EPIC,Social History,Alcohol,Alcohol Use,3807
+EPIC,Prescription,Sent,SIG,3810
+EPIC,Prescription,Suspend,SIG,3813
+EPIC,Prescription,Others,SIG,3814
+EPIC,Prescription,Sent,Route,3820
+EPIC,Prescription,Suspend,Route,3823
+EPIC,Prescription,Others,Route,3824
+EPIC,Prescription,Sent,Refills,3830
+EPIC,Prescription,Suspend,Refills,3833
+EPIC,Prescription,Others,Refills,3834
+EPIC,Prescription,Sent,Dispense,3840
+EPIC,Prescription,Suspend,Dispense,3843
+EPIC,Prescription,Others,Dispense,3844
+EPIC,Prescription,Sent,Order Class,3845
+EPIC,Social History,Illicit Drug,Drug Use,3867
+EPIC,Social History,Sexual Habits,Sexual Activity,3870
+EPIC,Vital Sign,Final Result,Clinical Result,3889
+EPIC,Prescription,Suspend,Order Class,3893
+EPIC,Prescription,Others,Order Class,3894
+EPIC,Patient Profile,Allergy Review,<factless>,3913
+EPIC,Encounter,Start,<factless>,3951
+EPIC,Encounter,Medication Review,<factless>,3952
+EPIC,Encounter Order,Sent,Order Type,3962
+EPIC,Encounter Order,Completed,Order Type,3969
+EPIC,Progress Note,Signed,Note Entry/Update Date,4020
+EPIC,Progress Note,Addended,Note Entry/Update Date,4021
+EPIC,Social History,Narrative,Comments[01],5061
+EPIC,Medication Reported,Reported,Start Date,5525
+EPIC,Medication Reported,Reported,End Date,5526
+EPIC,Medication Reported,Reported,SIG,5528
+EPIC,Medication Reported,Reported,Route,5529
+EPIC,Medication Reported,Reported,Dispensed,5531
+EPIC,Medication Reported,Reported,Order Class,5532
+EPIC,Diagnosis,Reason For Visit,Comments,5710
+EPIC,Diagnosis,Reason For Visit,Onset Date,5711
+EPIC,Diagnosis,Encounter Diagnosis,Dx Annotation,5719
+EPIC,Diagnosis,Encounter Diagnosis,Primary Dx Flag,5721
+EPIC,Encounter Order,Sent,Procedure Start Time,6369
+EPIC,Encounter Order,Completed,Procedure Start Time,6370

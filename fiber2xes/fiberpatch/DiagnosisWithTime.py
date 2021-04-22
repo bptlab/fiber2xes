@@ -1,8 +1,8 @@
 """
 Extension of diagnosis class
 """
-from fiber.condition.fact.fact import _FactCondition
-from fiber.database.table import (
+from fiber.condition.fact.fact import _FactCondition  # type: ignore
+from fiber.database.table import (  # type: ignore
     d_pers,
     fact,
     fd_diag,
