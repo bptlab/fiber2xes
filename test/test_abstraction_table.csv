@@ -1,0 +1,3 @@
+Blacklist,Whitelist,Group,AbstractA,AbstractB
+blacklistTermA,whitelistTermA,groupTermA,abstractATermA,abstractBTermA
+blacklistTermB,whitelistTermB,groupTermB,abstractATermB,abstractBTermB

@@ -1,3 +1,6 @@
+"""
+Provides the different filter operators.
+"""
 from .And import And
 from .Or import Or
 from .Not import Not
