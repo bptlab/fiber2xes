@@ -169,7 +169,7 @@ class TraceHelper():
                             seen_running_medications_per_day, seen_end_medications_per_day,
                             medication_list, self.duplicate_event_identifier)
                 else:
-                    lifecycle_state = "complete"
+                    lifecycle_state = "unknown"
                     new_timestamp = event.timestamp
 
                 event = create_event_dict(event, event_name, event_descriptor,

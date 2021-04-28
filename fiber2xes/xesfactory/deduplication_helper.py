@@ -63,7 +63,7 @@ def apply_time_lifecycle_duplicate_detection(event, event_name: str,
     level2 = event.level2_event_name
     level4 = event.level4_field_name
     day = event.timestamp.date()
-    lifecycle_state = "complete"
+    lifecycle_state = "unknown"
 
     if ('Prescription' in level2 or 'Medication' in level2) and \
             'Anamnesis' not in event_name:

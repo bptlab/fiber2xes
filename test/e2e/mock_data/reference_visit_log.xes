@@ -29,7 +29,7 @@
 			<string key="event:code" value="M54.5"/>
 			<string key="event:caregiver_group" value="9876"/>
 			<string key="event:facility" value="12436"/>
-			<string key="lifecycle:transition" value="complete"/>
+			<string key="lifecycle:transition" value="unknown"/>
 			<string key="event:level1" value="EPIC"/>
 			<string key="event:level2" value="Medical History"/>
 			<string key="event:level3" value="Reported"/>
@@ -60,7 +60,7 @@
 			<string key="event:code" value="M54.5"/>
 			<string key="event:caregiver_group" value="9876"/>
 			<string key="event:facility" value="12436"/>
-			<string key="lifecycle:transition" value="complete"/>
+			<string key="lifecycle:transition" value="unknown"/>
 			<string key="event:level1" value="EPIC"/>
 			<string key="event:level2" value="Medical History"/>
 			<string key="event:level3" value="Reported"/>
@@ -91,7 +91,7 @@
 			<string key="event:code" value="M54.5"/>
 			<string key="event:caregiver_group" value="9876"/>
 			<string key="event:facility" value="12436"/>
-			<string key="lifecycle:transition" value="complete"/>
+			<string key="lifecycle:transition" value="unknown"/>
 			<string key="event:level1" value="EPIC"/>
 			<string key="event:level2" value="Medical History"/>
 			<string key="event:level3" value="Reported"/>
@@ -122,7 +122,7 @@
 			<string key="event:code" value="M54.5"/>
 			<string key="event:caregiver_group" value="9876"/>
 			<string key="event:facility" value="12436"/>
-			<string key="lifecycle:transition" value="complete"/>
+			<string key="lifecycle:transition" value="unknown"/>
 			<string key="event:level1" value="EPIC"/>
 			<string key="event:level2" value="Medical History"/>
 			<string key="event:level3" value="Reported"/>
