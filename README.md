@@ -11,9 +11,17 @@ Follow these steps to install `fiber2xes`:
 2. Download and install Spark according to their [installation guide](https://spark.apache.org/downloads.html). [This](https://www.tutorialspoint.com/pyspark/pyspark_environment_setup.htm) website provides a concise overview of how the Spark environment can be set up.
 3. Run the pip installation to install `fiber2xes`:
 
-```
+```bash
 pip install git+https://gitlab.hpi.de/pm1920/fiber2xes.git
 ```
+
+For development and testing, all dev dependencies can be installed using
+
+```bash
+pip install -e .[dev]
+```
+
+If you're using `zsh`, escape the square brackets: `pip install -e .\[dev\]`
 
 ## Example
 
@@ -34,7 +42,7 @@ The following chapters contains more details about these methods.
 
 To create a log from a fiber cohort, just call the `cohort_to_event_log`-method:
 
-```
+```python
 from fiber2xes import cohort_to_event_log
 
 cohort_to_event_log(
@@ -49,7 +57,11 @@ cohort_to_event_log(
   window_size=500,
   abstraction_path=None,
   abstraction_exact_match=False,
-  abstraction_delimiter=";"
+  abstraction_delimiter=";",
+  include_anamnesis_events,
+  duplicate_event_identifier,
+  event_identifier_to_merge,
+  perform_complex_duplicate_detection
 )
 ```
 
@@ -67,12 +79,16 @@ Parameters:
 - **abstraction_path=None**: The path to the abstraction file (default None)
 - **abstraction_exact_match=False**: Flag if the abstraction algorithm should only abstract exacted matches (default False)
 - **abstraction_delimiter=";"**: The delimiter of the abstraction file (default ;)
+- **include_anamnesis_events=True**: Should anamnesis events be included in the log (default True)
+- **duplicate_event_identifier="BACK PAIN"**: Event identifier to be analysed separately for duplications (default "BACK PAIN")
+- **event_identifier_to_merge="CHRONIC LOW BACK PAIN"**: Event identifier to be used for separately identified duplicates (default "CHRONIC LOW BACK PAIN")
+- **perform_complex_duplicate_detection=False**: should complex time- and lifecycle-based duplicate detection be performed (default False)
 
 ### Log serialisation
 
 The method `save_event_log_to_file` serialises a created log to a file.
 
-```
+```python
 from fiber2xes import save_event_log_to_file
 
 save_event_log_to_file(log, file_path)
@@ -100,52 +116,56 @@ These can be combined by [And](https://gitlab.hpi.de/pm1920/fiber2xes#and), [Or]
 
 A filter for a specific diagnosis given by the code.
 
-```
+```python
 from fiber2xes.filter.condition import Diagnosis
 
 filter = Diagnosis(diagnosis_code)
 ```
 
 Parameter:
+
 - **diagnosis_code**: The diagnosis code
 
 #### Material
 
 A filter for a specific material given by the code.
 
-```
+```python
 from fiber2xes.filter.condition import Material
 
 filter = Material(material_code)
 ```
 
 Parameter:
+
 - **material_code**: The material code
 
 #### Procedure
 
 A filter for a specific procedure given by the code
 
-```
+```python
 from fiber2xes.filter.condition import Procedure
 
 filter = Procedure(procedure_code)
 ```
 
 Parameter:
+
 - **procedure_code**: The procedure code
 
 #### Time
 
 A filter the traces based on timing conditions (see parameter)
 
-```
+```python
 from fiber2xes.filter.condition import Time
 
 filter = Time(one_event_after=None, one_event_before=None, all_events_after=None, all_events_before=None)
 ```
 
 Parameters:
+
 - **one_event_after**: The trace is relevant if one event of the trace was after the given date
 - **one_event_before**: The trace is relevant if one event of the trace was before the given date
 - **all_events_after**: The trace is relevant if all events of the are were after the given date
@@ -155,53 +175,63 @@ Parameters:
 
 A filter the traces or events with the given lambda expression. The lambda expression gets the trace or event as a parameter and it should return true or false. In case of true its a relevant trace or event, otherwise not.
 
-```
+```python
 from fiber2xes.filter.condition import Generic
 
 filter = Generic(lambda_expression)
 ```
 
 Parameter:
+
 - **lambda_expression**: The lambda expression which will be applied on all traces and events
 
 #### And
 
 An aggregation of two other filters with a logical _and_ as aggregation function.
 
-```
+```python
 from fiber2xes.filter.operator import And
 
 filter = And(filter1, filter2)
 ```
 
 Parameter:
+
 - **filter1** and **filter2**: Two other trace or event filters which will be aggregated by a logical *and*.
 
 #### Or
 
 An aggregation of two other filters with a logical _or_ as aggregation function.
 
-```
+```python
 from fiber2xes.filter.operator import Or
 
 filter = Or(filter1, filter2)
 ```
 
 Parameter:
+
 - **filter1** and **filter2**: Two other trace or event filters which will be aggregated by a logical *or*.
 
 #### Not
 
 An inverter of the result of another filter.
 
-```
+```python
 from fiber2xes.filter.operator import Not
 
 filter = Not(filter)
 ```
 
 Parameter:
+
 - **filter**: The result of the given filter will be negated.
+
+## Spark Configuration
+
+This pipeline tool utilises spark for transforming large event data sets. For local development, or for using the tool on differently equipped hardware,
+it can be sensible to change memory requirements and other spark configuration options. For this, the `.env` file in the project's root directory can be used
+in order to override the default options passed to the spark calls.
 
 ## Contribution
 

@@ -1,14 +1,20 @@
-class Diagnosis(object):
+"""
+Defines functions to check events for diagnosis condition
+"""
+from fiber2xes.filter.Filter import Filter
+
+
+class Diagnosis(Filter):
     """Filter for a specific diagnosis given by the code. Event and Trace filtering are possible.
 
     Keyword arguments:
     diagnosis_code -- the diagnosis code
     """
 
-    def __init__(self, diagnosis_code):
+    def __init__(self, diagnosis_code: str):
         self.diagnosis_code = diagnosis_code
 
-    def is_relevant_trace(self, trace):
+    def is_relevant_trace(self, trace) -> bool:
         """Checks if the trace contains the diagnosis at least once.
 
         Keyword arguments:
@@ -19,7 +25,7 @@ class Diagnosis(object):
                 return True
         return False
 
-    def is_relevant_event(self, event):
+    def is_relevant_event(self, event) -> bool:
         """Checks if the event is this kind of diagnosis
 
         Keyword arguments:

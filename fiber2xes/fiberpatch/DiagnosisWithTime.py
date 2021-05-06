@@ -1,5 +1,8 @@
-from fiber.condition.fact.fact import _FactCondition
-from fiber.database.table import (
+"""
+Extension of diagnosis class
+"""
+from fiber.condition.fact.fact import _FactCondition  # type: ignore
+from fiber.database.table import (  # type: ignore
     d_pers,
     fact,
     fd_diag,
@@ -8,7 +11,7 @@ from fiber.database.table import (
 
 class DiagnosisWithTime(_FactCondition):
     """
-    This is an extension of the Diagnosis Class, to also contain time of day-keys.
+    This is an extension of the Diagnosis Class to also contain time of day-keys.
     """
     dimensions = {'DIAGNOSIS'}
     d_table = fd_diag
@@ -23,6 +26,7 @@ class DiagnosisWithTime(_FactCondition):
         fact.TIME_OF_DAY_KEY,
         fact.CAREGIVER_GROUP_KEY,
         fact.FACILITY_KEY,
+        fact.META_DATA_KEY,
         description_column,
         code_column,
         fact.ENCOUNTER_KEY,

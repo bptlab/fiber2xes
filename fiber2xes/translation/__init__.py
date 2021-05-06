@@ -1,5 +1,10 @@
-from .translation import Translation
+"""
+Provides the translation class for translating event names
+"""
+
+from .translator import (Translator, is_known_event)
 
 __all__ = [
-    'Translation'
+    'Translator',
+    'is_known_event'
 ]

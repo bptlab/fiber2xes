@@ -1,0 +1,5 @@
+medical_record_number,age_in_days,encounter_type,encounter_class,begin_date_age_in_days,end_date_age_in_days,encounter_visit_id,encounter_key
+1,30712,Outpatient,Outpatient,0,0,1,1
+1,30700,Inpatient,Inpatient,0,0,2,2
+2,30712,Outpatient,Outpatient,0,0,3,3
+2,30700,Inpatient,Inpatient,0,0,4,4

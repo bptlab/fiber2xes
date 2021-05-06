@@ -1,5 +1,8 @@
-from fiber.condition.fact.fact import _FactCondition
-from fiber.database.table import (
+"""
+Extension of the Material Class
+"""
+from fiber.condition.fact.fact import _FactCondition  # type: ignore
+from fiber.database.table import (  # type: ignore
     d_pers,
     fact,
     fd_mat,
@@ -23,6 +26,7 @@ class MaterialWithTime(_FactCondition):
         fact.FACILITY_KEY,
         d_table.CONTEXT_NAME,
         fact.ENCOUNTER_KEY,
+        fact.META_DATA_KEY,
         description_column,
         code_column,
     ]

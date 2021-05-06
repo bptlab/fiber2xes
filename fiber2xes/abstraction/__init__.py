@@ -1,5 +1,8 @@
-from .abstraction import Abstraction
+"""
+Exposes the abstraction functionality
+"""
+from .abstraction import get_abstract_event_name
 
 __all__ = [
-    'Abstraction'
+    'get_abstract_event_name'
 ]

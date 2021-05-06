@@ -1,5 +1,8 @@
-from fiber.condition.fact.fact import _FactCondition
-from fiber.database.table import (
+"""
+Extension of the Procedure Class
+"""
+from fiber.condition.fact.fact import _FactCondition  # type: ignore
+from fiber.database.table import (  # type: ignore
     d_pers,
     fact,
     fd_proc,
@@ -23,7 +26,10 @@ class ProcedureWithTime(_FactCondition):
         fact.TIME_OF_DAY_KEY,
         fact.CAREGIVER_GROUP_KEY,
         fact.FACILITY_KEY,
+        fact.META_DATA_KEY,
         description_column,
         code_column,
         fact.ENCOUNTER_KEY,
+        fd_proc.PROCEDURE_CONTROL_KEY,
+        fact.VALUE
     ]
