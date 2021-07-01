@@ -2,8 +2,8 @@ from setuptools import setup, find_packages  # type: ignore
 
 
 requirements = [
-    'sqlalchemy>=1.3.3',
-    'sqlalchemy-hana>=0.3.0',
+    'sqlalchemy==1.3.3',
+    'sqlalchemy-hana==0.3.0',
     'opyenxes>=0.3.0',
     'pandas>=0.25.3',
     'pyspark>=2.4.5',

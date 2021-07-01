@@ -19,13 +19,13 @@ before_script:
   - pip install virtualenv
   - virtualenv venv
   - source $CI_PROJECT_DIR/venv/bin/activate
-  - pip install -e .[dev]
+  - pip install -e .[dev] --use-deprecated=legacy-resolver
   - cd $CI_PROJECT_DIR/..
   - rm -rf fiber
   - git clone https://github.com/hpi-dhc/fiber.git
   - cd fiber &&
   - git checkout aee2bfefddeb2ebd6832acca926a1755e4b87fbb
-  - pip install -e .
+  - pip install -e . --use-deprecated=legacy-resolver
 
 typecheck:
   stage: test
