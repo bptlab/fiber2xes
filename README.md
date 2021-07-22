@@ -22,7 +22,12 @@ pip install -e .[dev]
 ```
 
 If you're using `zsh`, escape the square brackets: `pip install -e .\[dev\]`
+In case you encounter version or dependency issues in relation to `fiber`, it is advisable to run
 
+```bash
+sed -i 's/==/>=/' requirements.txt
+```
+in the `fiber` directory in order to allow the installation of `fiber2xes` to override the right dependency versions.  
 ## Example
 
 After following all installation steps, `example.py`, a demo file containing a short overview of how fiber2xes can be executed, can be run by calling
