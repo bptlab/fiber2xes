@@ -7,7 +7,9 @@ disable=too-many-arguments,
   too-many-statements,
   invalid-name,
   undefined-variable,
-  duplicate-code
+  duplicate-code,
+  consider-using-with,
+  consider-using-dict-items
 
 [FORMAT]
 max-line-length=100

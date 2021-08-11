@@ -1,5 +1,5 @@
 import datetime
-from opyenxes.factory.XFactory import XTrace
+from opyenxes.factory.XFactory import XTrace  # type: ignore
 
 from fiber2xes.xesfactory.trace_helper import (
     TraceHelper,

@@ -110,8 +110,8 @@ def test_metadata():
 def test_spark_df_creation(sql_context: SQLContext):
     pandas_df = pd.read_csv("test/e2e/mock_data/patient_events_pd_3.csv")
 
-    pandas_df = pandas_df.replace({'None': None})
-    pandas_df = pandas_df.applymap(str)
+    pandas_df = pandas_df.replace({'None': None}) # type: ignore
+    pandas_df = pandas_df.applymap(str) # type: ignore
 
     patient_events_df = create_spark_df(sql_context, pandas_df)
     patient_events_df = patient_events_df.replace('nan', None)

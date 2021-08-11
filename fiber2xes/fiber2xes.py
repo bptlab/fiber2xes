@@ -23,7 +23,7 @@ from fiber import Cohort  # type: ignore
 from fiber.condition import MRNs  # type: ignore
 
 from fiber2xes.filter.Filter import Filter
-import fiber2xes.helper as helper
+from fiber2xes import helper
 
 from .fiberpatch import (
     DiagnosisWithTime,
