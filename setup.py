@@ -2,12 +2,12 @@ from setuptools import setup, find_packages  # type: ignore
 
 
 requirements = [
-    'sqlalchemy==1.3.3',
-    'sqlalchemy-hana==0.3.0',
-    'opyenxes>=0.3.0',
-    'pandas>=0.25.3',
-    'pyspark>=2.4.5',
-    'python-dotenv>=0.17.0'
+    'sqlalchemy~=1.3.3',
+    'sqlalchemy-hana~=0.3.0',
+    'opyenxes~=0.3.0',
+    'pandas~=1.3.1',
+    'pyspark~=3.1.2',
+    'python-dotenv~=0.19.0'
 ]
 
 
@@ -23,18 +23,17 @@ setup(
     install_requires=requirements,
     extras_require={
         'dev': [
-            'typing-extensions>=3.7.4.3',
-            'mypy>=0.782',
-            'mypy-extensions>=0.4.3',
+            'typing-extensions~=3.10.0.0',
+            'mypy~=0.910',
+            'mypy-extensions~=0.4.3',
             'data-science-types',
-            'pytest',
-            'pytest-pep8',
-            'pytest-cov',
-            'pytest-env',
-            'pylint>=2.6.0',
-            'sqlalchemy-stubs>=0.3',
-            'pyspark-stubs>=3.0.0',
-            'chispa>=0.7.0'
+            'pytest~=6.2.4',
+            'pytest-pep8~=1.0.6',
+            'pytest-cov~=2.12.1',
+            'pytest-env~=0.6.2',
+            'pylint~=2.9.6',
+            'sqlalchemy-stubs~=0.4',
+            'chispa~=0.8.2'
         ]
     },
     include_package_data=True,
