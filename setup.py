@@ -5,7 +5,7 @@ requirements = [
     'sqlalchemy~=1.3.3',
     'sqlalchemy-hana~=0.3.0',
     'opyenxes~=0.3.0',
-    'pandas~=1.3.1',
+    'pandas~=1.3.0',
     'pyspark~=3.1.2',
     'python-dotenv~=0.19.0'
 ]
